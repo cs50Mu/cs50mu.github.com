@@ -1,0 +1,8 @@
+---
+layout: post
+title: "Hello,World"
+date: 2013-06-12 20:45
+comments: true
+categories: 
+---
+Hello,_Octopress_!This is my first post!
