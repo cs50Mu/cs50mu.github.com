@@ -132,6 +132,18 @@ Octopress使用Pygments来高亮代码， &hellip;">
 
 <h2>发布流程</h2>
 
+<p>首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）</p>
+
+<pre><code>workon blog_env
+</code></pre>
+
+<p>退出这个虚拟环境需要</p>
+
+<pre><code>deactivate
+</code></pre>
+
+<p>然后就可以开始啦！</p>
+
 <ol>
 <li>用<code>rake new_post["new post name"]</code>命令新建blog文章。</li>
 <li>在<code>souce/_post</code>文件夹用vim编辑新建的blog文件。</li>

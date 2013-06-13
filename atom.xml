@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2013-06-13T14:57:52+08:00</updated>
+  <updated>2013-06-13T15:10:37+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -54,6 +54,18 @@
 <p>根据我粗浅的理解，安装完成后博客的结构在github上是这样的：博客代码库名称是cs50mu.github.com，下面有两个分支，master分支是根据源码生成的blog静态页面；source分支是用于生成blog的源码，所以每次提交静态页面后还需要提交更新的blog源码，这个不要忘记了。</p>
 
 <h2>发布流程</h2>
+
+<p>首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）</p>
+
+<pre><code>workon blog_env
+</code></pre>
+
+<p>退出这个虚拟环境需要</p>
+
+<pre><code>deactivate
+</code></pre>
+
+<p>然后就可以开始啦！</p>
 
 <ol>
 <li>用<code>rake new_post["new post name"]</code>命令新建blog文章。</li>
