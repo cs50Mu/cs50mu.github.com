@@ -72,3 +72,9 @@ categories:
 ## 不错的Markdown示例
 - [Markdown语法示例](http://equation85.github.io/blog/markdown-examples/)，非常不错！上面代码，下面展示效果，非常直观。
 - [Markdown 语法说明](http://wowubuntu.com/markdown/#list)
+
+### update:
+终于找到Markdown中插入代码不起作用的原因了！原来在列表中嵌套的代码需要缩进2个tab才起作用。  
+> To put a code block within a list item, the code block needs to be indented twice — 8 spaces or two tabs.
+[Ref](http://daringfireball.net/projects/markdown/syntax#list)
+
