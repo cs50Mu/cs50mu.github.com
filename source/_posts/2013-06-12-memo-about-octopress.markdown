@@ -39,6 +39,16 @@ categories:
 
 ## 发布流程
 
+首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）
+
+	workon blog_env
+
+退出这个虚拟环境需要
+
+	deactivate
+
+然后就可以开始啦！
+
 1. 用`rake new_post["new post name"]`命令新建blog文章。
 2. 在`souce/_post`文件夹用vim编辑新建的blog文件。
 3. `rake preview`在本机预览。
