@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2013-06-23T21:36:00+08:00</updated>
+  <updated>2013-06-30T17:52:42+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,19 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[操蛋的GFW]]></title>
+    <link href="http://cs50Mu.github.io/blog/2013/06/30/fuck-gfw/"/>
+    <updated>2013-06-30T17:33:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2013/06/30/fuck-gfw</id>
+    <content type="html"><![CDATA[<p>Google Reader要被Google关掉了，网上已经出了一堆替代品了，前段时间就试了试，可每次都没导入成功，每次都卡在google认证上了，能登录但登录后无法选择“接受”，换用GoAgent后依然不行，折腾了很久后还是不行，遂放弃。</p>
+
+<p>今天不是最后一天了嘛！再不导出就没机会了。。于是，跑到segmentfault上问了下，有人还是怀疑墙的问题，我自己也觉得除了这个应该也不会有别的问题了，可自己暂时也没别的翻墙方式了啊，猛然又想起自己的独立博客空间貌似有ssh帐号，于是一番折腾后，终于用ssh翻墙成功，于是，问题解决了！</p>
+
+<p>总结：Fuck you,GFW!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在WR703N上刷openwrt]]></title>
