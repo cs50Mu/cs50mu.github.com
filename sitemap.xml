@@ -25,8 +25,12 @@
         <lastmod>2013-07-03T22:01:07+08:00</lastmod>
     </url>
     <url>
+        <loc>http://cs50Mu.github.io/blog/2013/07/07/amazing-social-psychology/</loc>
+        <lastmod>2013-07-09T22:09:09+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2013-07-03T22:01:07+08:00</lastmod>
+        <lastmod>2013-07-09T22:09:09+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/robots.txt</loc>
@@ -34,6 +38,6 @@
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2013-07-03T22:01:07+08:00</lastmod>
+        <lastmod>2013-07-09T22:09:09+08:00</lastmod>
     </url>
 </urlset>
