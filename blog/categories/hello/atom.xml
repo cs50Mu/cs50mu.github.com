@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: hello | The Hard Way Is Easier]]></title>
+  <link href="http://cs50Mu.github.io/blog/categories/hello/atom.xml" rel="self"/>
+  <link href="http://cs50Mu.github.io/"/>
+  <updated>2013-10-07T17:30:51+08:00</updated>
+  <id>http://cs50Mu.github.io/</id>
+  <author>
+    <name><![CDATA[linuxfish]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Hello,World]]></title>
+    <link href="http://cs50Mu.github.io/blog/2013/06/12/hello/"/>
+    <updated>2013-06-12T20:45:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2013/06/12/hello</id>
+    <content type="html"><![CDATA[<p>Hello,<em>Octopress</em>!This is my first post!</p>
+]]></content>
+  </entry>
+  
+</feed>
