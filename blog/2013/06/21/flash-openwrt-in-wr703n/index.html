@@ -1,99 +1,86 @@
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<!DOCTYPE HTML>
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>在WR703N上刷openwrt - The Hard Way Is Easier</title>
-  <meta name="author" content="linuxfish">
+	<meta charset="utf-8">
+	<title>在WR703N上刷openwrt - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
-  <meta name="description" content="买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错， &hellip;">
-  
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
 
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
-  
-  <link rel="canonical" href="http://cs50Mu.github.io/blog/2013/06/21/flash-openwrt-in-wr703n">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
 
-  
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
 
 </head>
 
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">The Hard Way Is Easier</a></h1>
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
   
-    <h2>learn one thing at a time</h2>
   
-</hgroup>
+  
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
 
 </header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:cs50Mu.github.io" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
 
-</nav>
-  <div id="main">
-    <div id="content">
-      <div>
-<article class="hentry" role="article">
-  
-  <header>
-    
-      <h1 class="entry-title">在WR703N上刷openwrt</h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-21T21:16:00+08:00" pubdate data-updated="true">Jun 21<span>st</span>, 2013</time>
-        
-         | <a href="#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-<div class="entry-content"><p>买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错，好多用它来刷开源固件的，看得心痒痒啊，特别是这篇：<a href="http://zihua.li/2012/03/about-tl-wr703n/">入手神器TL-WR703N一日谈</a>，害我直接又多买了个8G U盘！</p>
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">在WR703N上刷openwrt</h2>
+	<div class="entry-content"><p>买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错，好多用它来刷开源固件的，看得心痒痒啊，特别是这篇：<a href="http://zihua.li/2012/03/about-tl-wr703n/">入手神器TL-WR703N一日谈</a>，害我直接又多买了个8G U盘！</p>
 
 <p>刷机教程看了很多篇，不过最后主要是参照这篇来的：<a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a>，写得很不错，我基本是按着他的步骤来的，一开始有一步没照着他的来，结果最后从USB启动后连接不上无线了。。。然后，晚上睡觉的时候突然想到会不会是因为没有做这一步导致的呢？于是早上起来后重新弄，因为无线和有线都连接不上了，所以一开始又折腾了好久，还好openwrt有安全模式，进入方式在上面的帖子里也有介绍，他说的这个方法是正确的，我一开始用的是openwrt文档里说的方法，说开机后要先等个2秒钟什么的，然后按住reset键，等指示灯快速闪烁后就ok了。可是我试了下根本不管用，还是那个帖子里说的靠谱些，正确的做法是：<strong>开机后立即持续的按reset键，不要按住就不放了，要不停的按住松开，间隔时间要短。</strong></p>
 
@@ -159,100 +146,51 @@
 <a href="http://blog.csdn.net/tianlesoftware/article/details/5315039">Linux Crontab 定时任务 命令详解 </a></p>
 </div>
 
-
-  <footer>
-    <p class="meta">
-      
-  
-
-<span class="byline author vcard">Posted by <span class="fn">linuxfish</span></span>
-
-      
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-21T21:16:00+08:00" pubdate data-updated="true">Jun 21<span>st</span>, 2013</time>
-      
-
-
-    </p>
-    
-      <div class="sharing">
-  
-  
-  
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/06/21/flash-openwrt-in-wr703n/#disqus_thread">Comments</a></span>
+	
 </div>
-
-    
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/2013/06/16/regular-expressions/" title="Previous Post: 学习正则表达式">&laquo; 学习正则表达式</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/2013/06/30/fuck-gfw/" title="Next Post: 操蛋的GFW">操蛋的GFW &raquo;</a>
-      
-    </p>
-  </footer>
 </article>
 
-  <section>
-    <h1>Comments</h1>
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
     <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
-  </section>
-
-</div>
-
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2013/09/30/some-python-practices/">Python复习</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/11/two-more-books-about-macro-economics/">Two More Books About Macro Economics</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/01/macro-economics/">宏观经济学</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/08/02/wonderful-journey-to-tibet/">西藏，最接近天堂的地方</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/07/amazing-social-psychology/">初读《社会心理学》</a>
-      </li>
-    
-  </ul>
 </section>
 
-  
-</aside>
-
-
     </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - linuxfish -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2013
 
-</footer>
-  
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
 
 <script type="text/javascript">
       var disqus_shortname = 'thehardwayiseasier';
@@ -274,11 +212,14 @@
 
 
 
-
-
-
-
-
-
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
 </body>
 </html>

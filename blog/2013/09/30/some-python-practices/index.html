@@ -1,99 +1,86 @@
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<!DOCTYPE HTML>
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>python复习 - The Hard Way Is Easier</title>
-  <meta name="author" content="linuxfish">
+	<meta charset="utf-8">
+	<title>python复习 - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫The Practice of Computing Using Python，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
-  <meta name="description" content="发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫The Practice of Computing Using Python，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序， &hellip;">
-  
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
 
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
-  
-  <link rel="canonical" href="http://cs50Mu.github.io/blog/2013/09/30/some-python-practices">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
 
-  
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
 
 </head>
 
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">The Hard Way Is Easier</a></h1>
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
   
-    <h2>learn one thing at a time</h2>
   
-</hgroup>
+  
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
 
 </header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:cs50Mu.github.io" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
 
-</nav>
-  <div id="main">
-    <div id="content">
-      <div>
-<article class="hentry" role="article">
-  
-  <header>
-    
-      <h1 class="entry-title">Python复习</h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-30T21:47:00+08:00" pubdate data-updated="true">Sep 30<span>th</span>, 2013</time>
-        
-         | <a href="#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-<div class="entry-content"><p>发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫<strong>The Practice of Computing Using Python</strong>，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！</p>
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Python复习</h2>
+	<div class="entry-content"><p>发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫<strong>The Practice of Computing Using Python</strong>，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！</p>
 
 <p>书中在程序开发进阶一章中讲到了一点机器学习(machine learning)的东西，例子是一个预测乳腺癌的程序，基本的过程是这样的：首先，有一个数据样本，样本的参数是肿瘤的属性描述和是否为良性和恶性肿瘤的诊断结果，程序读入数据样本来构造分类器，构造的方法是，分别求出良性和恶性肿瘤的属性的平均值，然后再求这两个平均值的平均值，最后用这个分类器去预测一个肿瘤是良性还是恶性的。预测的方法是投票，若某个属性倾向于良性属性，则良性记一票，反之，恶性记一票，统计所有的属性，票数多者取胜。</p>
 
@@ -204,98 +191,51 @@ doctest  unittest</p>
 2. 递归是如何实现的呢？是通过栈(stack)来实现的，栈是一种后进先出的数据结构，计算机通过栈来对函数的调用进行跟踪。</p>
 </div>
 
-
-  <footer>
-    <p class="meta">
-      
-  
-
-<span class="byline author vcard">Posted by <span class="fn">linuxfish</span></span>
-
-      
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-30T21:47:00+08:00" pubdate data-updated="true">Sep 30<span>th</span>, 2013</time>
-      
-
-
-    </p>
-    
-      <div class="sharing">
-  
-  
-  
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/09/30/some-python-practices/#disqus_thread">Comments</a></span>
+	
 </div>
-
-    
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/2013/09/11/two-more-books-about-macro-economics/" title="Previous Post: two more books about macro economics">&laquo; two more books about macro economics</a>
-      
-      
-    </p>
-  </footer>
 </article>
 
-  <section>
-    <h1>Comments</h1>
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
     <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
-  </section>
-
-</div>
-
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2013/09/30/some-python-practices/">Python复习</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/11/two-more-books-about-macro-economics/">Two More Books About Macro Economics</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/09/01/macro-economics/">宏观经济学</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/08/02/wonderful-journey-to-tibet/">西藏，最接近天堂的地方</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/07/07/amazing-social-psychology/">初读《社会心理学》</a>
-      </li>
-    
-  </ul>
 </section>
 
-  
-</aside>
-
-
     </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - linuxfish -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2013
 
-</footer>
-  
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
 
 <script type="text/javascript">
       var disqus_shortname = 'thehardwayiseasier';
@@ -317,11 +257,14 @@ doctest  unittest</p>
 
 
 
-
-
-
-
-
-
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
 </body>
 </html>
