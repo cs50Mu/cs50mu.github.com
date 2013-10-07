@@ -3,7 +3,9 @@ layout: post
 title: "操蛋的GFW"
 date: 2013-06-30 17:33
 comments: true
-categories: 
+categories:
+- GFW
+- google reader
 ---
 
 Google Reader要被Google关掉了，网上已经出了一堆替代品了，前段时间就试了试，可每次都没导入成功，每次都卡在google认证上了，能登录但登录后无法选择“接受”，换用GoAgent后依然不行，折腾了很久后还是不行，遂放弃。   

@@ -3,6 +3,8 @@ layout: post
 title: "Hello,World"
 date: 2013-06-12 20:45
 comments: true
-categories: 
+categories:
+- hello
+- Octopress
 ---
 Hello,_Octopress_!This is my first post!

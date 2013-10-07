@@ -4,6 +4,7 @@ title: "python复习"
 date: 2013-09-30 21:47
 comments: true
 categories: 
+- python
 ---
 
 发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫**The Practice of Computing Using Python**，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！   

@@ -3,7 +3,8 @@ layout: post
 title: "初读《社会心理学》"
 date: 2013-07-07 20:09
 comments: true
-categories: 
+categories:
+- 社会心理学
 ---
 
 继《心理学与生活》后，又攻下一本心理学大部头。。HOHO～～   

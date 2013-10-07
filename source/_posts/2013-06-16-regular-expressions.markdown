@@ -4,6 +4,7 @@ title: "学习正则表达式"
 date: 2013-06-16 22:38
 comments: true
 categories: 
+- regular expression
 ---
 
 正则表达式真的很强大啊！

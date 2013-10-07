@@ -3,7 +3,10 @@ layout: post
 title: "归并排序的非递归算法"
 date: 2013-07-03 21:24
 comments: true
-categories: 
+categories:
+- 算法
+- merge sort
+- python
 ---
 
 归并排序的效率很高，复杂度只有NlogN，但想起来很费劲啊。。尤其是递归算法，绕来绕去的被绕晕了。。今天在看《Python编程实践》（Practical Programming-An Introduction to Computer Science Using Python）时看到一个归并排序的非递归算法，很好理解，记录下。   

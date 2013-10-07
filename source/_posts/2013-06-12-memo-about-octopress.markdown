@@ -4,6 +4,8 @@ title: "Octopress搭建备忘"
 date: 2013-06-12 22:19
 comments: true
 categories: 
+- Octopress
+- Markdown
 ---
 
 ## 缘由

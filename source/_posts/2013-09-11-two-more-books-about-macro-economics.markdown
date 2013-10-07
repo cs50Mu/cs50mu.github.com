@@ -3,7 +3,8 @@ layout: post
 title: "two more books about macro economics"
 date: 2013-09-11 12:18
 comments: true
-categories: 
+categories:
+- macro economics
 ---
 ###《一转念》 by 兰小欢
 书中大部分内容讲的是用经济学的供求原理来解释生活中一些看似古怪的现象，还有一些作者的随想。以下是摘录：
