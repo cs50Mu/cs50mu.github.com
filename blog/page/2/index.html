@@ -6,7 +6,7 @@
 	<title>The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content=" Published on: Jun 12th, 2013 Tags: Octopress, hello Hello,Octopress!This is my first post! Comments ">
+	<meta name="description" content="Published on: Jun 21st, 2013 Tags: WR703N, crontab, openwrt, 路由器 买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -94,6 +94,306 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/06/21/flash-openwrt-in-wr703n/">
+		
+			在WR703N上刷openwrt</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-21T21:16:00+08:00" pubdate data-updated="true">Jun 21<span>st</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/wr703n/'>WR703N</a>, <a class='category' href='/blog/categories/crontab/'>crontab</a>, <a class='category' href='/blog/categories/openwrt/'>openwrt</a>, <a class='category' href='/blog/categories/lu-you-qi/'>路由器</a>
+
+
+</div>
+    </div>
+		<p>买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错，好多用它来刷开源固件的，看得心痒痒啊，特别是这篇：<a href="http://zihua.li/2012/03/about-tl-wr703n/">入手神器TL-WR703N一日谈</a>，害我直接又多买了个8G U盘！</p>
+
+<p>刷机教程看了很多篇，不过最后主要是参照这篇来的：<a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a>，写得很不错，我基本是按着他的步骤来的，一开始有一步没照着他的来，结果最后从USB启动后连接不上无线了。。。然后，晚上睡觉的时候突然想到会不会是因为没有做这一步导致的呢？于是早上起来后重新弄，因为无线和有线都连接不上了，所以一开始又折腾了好久，还好openwrt有安全模式，进入方式在上面的帖子里也有介绍，他说的这个方法是正确的，我一开始用的是openwrt文档里说的方法，说开机后要先等个2秒钟什么的，然后按住reset键，等指示灯快速闪烁后就ok了。可是我试了下根本不管用，还是那个帖子里说的靠谱些，正确的做法是：<strong>开机后立即持续的按reset键，不要按住就不放了，要不停的按住松开，间隔时间要短。</strong></p>
+
+<p>然后就是配置U盘扩展了，这真是一个绝佳的workaround，把系统装在U盘里，这真是太妙了啊！因为路由器的内存和flash都很低，可能刚刚够装开源固件的（这算好的，一些路由器没法装就是因为flash太小，装不下！），但要想玩点别的，比如装个vpn支持，装个python啥的就别想了。但一旦把系统装在U盘里就没有空间限制了，可以随便折腾。安装过程帖子里写的很详细了，有几点不明白：</p>
+
+<ul>
+<li><code>mount -o bind / /tmp/root</code>的含义，我知道是把根目录绑定到/tmp/root下，但我想深入了解下，为什么需要先绑定再复制？为什么不直接复制呢？ <br/>
+解答：bind参数的意思是将已挂载的文件系统挂载到目录树的另一个位置，所以我猜这么做的原因是若直接<code>cp /* /mnt/usb -a</code>会引起歧义，因为<code>/*</code>也包括<code>/mnt/usb</code></li>
+<li><p><code>/etc/config/fstab</code>中的配置如何理解？为何需要1G的交换空间？有必要分这么多吗？ <br/>
+解答：<a href="http://wiki.openwrt.org/doc/techref/flash.layout">The OpenWrt Flash Layout</a>，这篇wiki详细讲了openwrt对存储结构的定义，特别是讲到了<code>/</code> <code>/rom</code> <code>/overlay</code>三个文件夹的作用。 <br/>
+根据这篇wiki<a href="http://wiki.openwrt.org/doc/uci/fstab">Fstab Configuration</a>，swap没必要设置这么大，内存512M以下设置为内存的2倍就可以了，所以重新分了区，把原来的1G swap分区删掉合并到原来的数据分区里，建了个64M的swap文件：</p>
+
+<pre><code>  $ dd if=/dev/zero of=/swapfile bs=1M count=64
+  $ mkswap /swapfile
+  $ swapon /swapfile
+</code></pre>
+
+<p>但是这样需要手动激活swap空间，想了下，在<code>/etc/rc.local</code>里添加<code>swapon /swapfile</code>解决！</p></li>
+<li><p>我没有照做的一步是设置/etc/config/network时，没有更改lan的ip地址为192.168.20.1（默认是192.168.1.1），虽然改了后重新配置后问题就解决了，但我还是不理解为什么。</p></li>
+<li><p>最后一个问题是pptp client的问题，安装很容易，按照官方文档很轻松设置完成后，ssh到路由器上ping外网已经可以ping通了，问题是在我的笔记本上ping外网却不行，总是提示network unreachable。。根据官方文档设置最后需要指定一下路由，之前都没有太关注过路由的概念，所以现在还是很迷糊。。不知道该怎么设置路由，按说路由器上能访问外网，那不用做什么设置客户端就应该能访问外网啊！折腾了好久也没搞明白，最后按照网上搜到的一个方法莫名其妙的搞定了。。不过，依然不太明白原理。具体做法如下，在<code>/etc/config/network</code>里添加：</p>
+
+<pre><code>  config 'zone'
+      option 'name'      'wan'
+      option 'network'   'wan vpn'
+      option 'input'     'REJECT'
+      option 'forward'   'REJECT'
+      option 'output'    'ACCEPT'
+      option 'masq'      '1' 
+</code></pre></li>
+</ul>
+
+
+<p>不过，按上面设置后还是不起作用的，又到web界面的<code>network--&gt;firewall</code>里设置了下才ok的，就改了下covered network选项，原来就只有wan选上了，我看到上面的配置文件里network选项里有两个（wan和vpn），所以我把vpn也勾选上了，然后重启firewall后就ok了。。。</p>
+
+<h4>Crontab定时任务</h4>
+
+<p><code>crontab -l</code> 显示定时任务 <br/>
+<code>crontab -e</code> 编辑定时任务 <br/>
+<code>crontab -r</code> 删除定时任务</p>
+
+<h5>格式说明：</h5>
+
+<p><code>* * * * * /command path</code>  前5个字段分别表示分钟（0-59），小时（1-23），日期（1-31），月份（1-12），星期（0-6，0表示周日）</p>
+
+<h5>特殊符号：</h5>
+
+<p><code>*</code>表示任意时刻 <br/>
+<code>,</code>表示分割 <br/>
+<code>-</code>表示一个时间段 <br/>
+<code>/n</code>表示每n单位执行一次 <br/>
+如果不想让定时任务的执行信息打印到屏幕上的话，可以这样<code>0 2 * * * /u01/test.sh &gt;/dev/null 2&gt;&amp;1 &amp;</code>，这句话的意思就是在后台执行这条命令，并将错误输出2重定向到标准输出1，然后将标准输出1全部放到/dev/null 文件，也就是清空。</p>
+
+<h5><code>2&gt;&amp;1</code>写在后面的原因</h5>
+
+<p>首先是<code>command &gt; file</code>将标准输出重定向到file中，<code>2&gt;&amp;1</code>是标准错误拷贝了标准输出，也就是同样被重定向到file中，最终结果就是标准输出和错误都被重定向到file中。 <br/>
+如果改成： <code>command 2&gt;&amp;1 &gt;file</code>，<code>2&gt;&amp;1</code>标准错误拷贝了标准输出的行为，但此时标准输出还是在终端。<code>&gt;file</code>后输出才被重定向到file，但标准错误仍然保持在终端。</p>
+
+<h3>参考</h3>
+
+<p><a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a> <br/>
+<a href="http://dev.bjtu.edu.cn/ideal/2013/04/14/use-openwrt-as-bt-downloader/">使用tp-link tl-wr703n和openwrt作为bt下载机</a>  <br/>
+<a href="http://www.openwrt.org.cn/bbs/forum.php?mod=viewthread&amp;tid=1480">openwrt下pptp-vpn client的使用！！</a> <br/>
+<a href="http://blog.csdn.net/tianlesoftware/article/details/5315039">Linux Crontab 定时任务 命令详解 </a></p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/06/21/flash-openwrt-in-wr703n//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/06/16/regular-expressions/">
+		
+			学习正则表达式</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-16T22:38:00+08:00" pubdate data-updated="true">Jun 16<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/regular-expression/'>regular expression</a>
+
+
+</div>
+    </div>
+		<p>正则表达式真的很强大啊！</p>
+
+<p>但我在用的过程中写的表达式总是不能达到期望的效果，今天又认真看了下，对它又有了一些新的理解。</p>
+
+<ul>
+<li>贪婪模式Vs非贪婪模式。我写的表达式没效果的原因十有八九是因为这个，缺了个?。默认情况下，正则表达式的匹配都是贪婪的，也就是匹配尽可能多的字符，比如妄图用<code>&lt;img.*&gt;</code>来匹配所有的图片标签是不可行的，因为在贪婪模式下这会一直匹配到文末的<code>&gt;</code>处。正确的方法是使用非贪婪模式，即最小匹配，<code>&lt;img.*?&gt;</code>，保险起见，最好写成<code>&lt;img[^&gt;]*?&gt;</code>，表示在<code>&lt;img</code>标签后跟任意个非<code>&gt;</code>的字符然后再跟一个<code>&gt;</code>。</li>
+<li>组与捕获。在实际应用中，通常需要匹配两个或更多方案中的任意一种正则表达式，通常还需要捕获匹配的内容以备进一步处理，所有这些都可以通过<code>()</code>来实现，在多种方案中选取一个的情况则使用交替字符<code>|</code>。比如，<code>(air(craft|plane)|jet)</code>可表示aircraft airplane jet，这里<code>()</code>有两个作用：对表达式进行组合，捕获匹配某个表达式的文本。如果匹配的是前半部分的话（aircraft或airplane），会有两次捕获：aircraft或airplane作为第一次捕获，craft或plane作为第二次捕获；如果匹配的是后半部分的话（jet），就只有一次捕获。可以通过在左括号后面跟随一个<code>?:</code>来关闭捕获，比如，<code>(air(?:craft|plane)jet)</code>，这样的话，如果前半部分匹配，也只会有一次捕获了，即aircraft和airplane，通过关闭一些不需要的捕获，能方便后面对它的引用。 <br/>
+对前面的捕获，可以通过反向引用对其进行引用，有两种方法可以实现引用：一种是使用<code>\i</code>，这里的i指的是前面捕获号。每次捕获都会有一个编号，从1开始，从左到右，每次遇到一个新的左圆括号时进行一次新的捕获编号。比如，为匹配重复单词，使用<code>(\w+)\s+\1</code>，表示匹配开始一个单词，之后至少一个空白字符，再之后是与捕获的单词相同的单词。方法二，在较长的或复杂的正则表达式中，为维护方便，通常对捕获进行命名而不是使用编号。为对捕获进行命名，须在左圆括号后跟随<code>?P&lt;name&gt;</code>，后面进行反向引用的语法是<code>(?P=name)</code>，比如，<code>(?P&lt;word&gt;\w+)\s+(?P=word)</code></li>
+<li>反义。有时候需要查找不属于某个字符类的字符，比如除了数字其他字符都可以的情况，这时需要用到反义。比如，<code>\S</code>匹配任意不是空白符的字符，<code>\D</code>匹配任意非数字的字符；还有一种描述反义的方式是使用<code>[]</code>，比如，<code>[^x]</code>表示除了x外的任意字符。</li>
+<li>断言。断言不会匹配任何文本，而是对断言所在的文本施加某些规定和约束，如果不使用断言的话可能会匹配到一些我们不需要的文本，使用断言可以提高正则表达式的清晰度。比如用正则表达式<code>jet</code>来匹配文本&#8221;the jet and jetski are noisy&#8221;会出现两次匹配，即jet和jetski中的jet，这可能不是我们想要的结果，但是使用正则表达式<code>\bjet\b</code>将只匹配一次，即单词jet。</li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/06/16/regular-expressions//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/06/12/memo-about-octopress/">
+		
+			Octopress搭建备忘</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-06-12T22:19:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/markdown/'>Markdown</a>, <a class='category' href='/blog/categories/octopress/'>Octopress</a>
+
+
+</div>
+    </div>
+		<h2>缘由</h2>
+
+<p>突然想玩玩Octopress，于是开始搜索，发现在Archlinux上使用Octopress会有两个问题</p>
+
+<ul>
+<li>Ruby版本问题。Arch上的Ruby版本已经更新到2.0版本了，而Octopress用的是1.9版本的</li>
+<li>Octopress使用Pygments来高亮代码，而Pygments不支持Arch默认的Python 3</li>
+</ul>
+
+
+<p>重新以“octopress archlinux”为参数搜索，找到一篇很好的针对Arch的教程，不过它是针对zsh写的，所以bash用户需要略做修改。</p>
+
+<h2>安装过程</h2>
+
+<p>基本比较顺利，只记录下遇到的问题</p>
+
+<ul>
+<li><p>rbenv exec gem install bundler 这一步死活进行不下去！提示找不到bundler，搜索后说是可能是<code>http://rubygems.org/</code>无法访问了，在浏览器看了下访问正常啊！但就是不行。。最终解决办法，换源（尼玛还是GFW的事）:</p>
+
+<pre><code>  gem sources --remove http://rubygems.ogr/
+  gem sources -a http://ruby.taobao.org/   # 淘宝的RubyGems镜像
+  gem sources -l
+  *** CURRENT SOURCES ***
+
+  http://ruby.taobao.org
+</code></pre></li>
+<li><p>安装python-virtualenvwrapper的时候，有一个包一直装不上，提示不存在，纠结了很久，最后才恍然大悟，更新系统源后解决。</p></li>
+<li><p>新建帖子时不能用中文，否则标题会出乱码,可以先在<code>rake new_post["new post name"]</code>中使用英文名字，然后在具体编辑帖子的时候，修改title选项使用中文。</p></li>
+</ul>
+
+
+<h2>网站结构</h2>
+
+<p>根据我粗浅的理解，安装完成后博客的结构在github上是这样的：博客代码库名称是cs50mu.github.com，下面有两个分支，master分支是根据源码生成的blog静态页面；source分支是用于生成blog的源码，所以每次提交静态页面后还需要提交更新的blog源码，这个不要忘记了。</p>
+
+<h2>发布流程</h2>
+
+<p>首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）</p>
+
+<pre><code>workon blog_env
+</code></pre>
+
+<p>退出这个虚拟环境需要</p>
+
+<pre><code>deactivate
+</code></pre>
+
+<p>然后就可以开始啦！</p>
+
+<ol>
+<li>用<code>rake new_post["new post name"]</code>命令新建blog文章。</li>
+<li>在<code>souce/_post</code>文件夹用vim编辑新建的blog文件。</li>
+<li><code>rake preview</code>在本机预览。</li>
+<li><code>rake generate</code>和<code>rake deploy</code>提交到github。</li>
+<li><p>最后，不要忘记将更新后的源码提交到source分支。</p>
+
+<pre><code> git add .
+ git commit -m 'some comment'
+ git push origin source
+</code></pre></li>
+</ol>
+
+
+<h2>To-Do List</h2>
+
+<ul>
+<li>换一套博客模板,目前用的是系统默认的，我发现太多懒人了。。</li>
+<li>添加评论系统</li>
+<li>去掉twitter等在天朝不和谐的东东</li>
+</ul>
+
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="http://www.wongdev.com/blog/2013/01/16/octopress-on-archlinux/">Octopress on Arch Linux</a></li>
+<li><a href="http://shadow.ma/blog/2013/04/07/octopress-on-arch-linux/">Octopress 在 Arch Linux 下的一些問題</a></li>
+<li><a href="http://ishalou.com/blog/2012/10/15/how-to-use-octopress/">使用Octopress + Github管理blog</a>,这篇很不错，很适合我这样的菜鸟，看了它后基本理解了整个搭建原理。</li>
+</ul>
+
+
+<h2>不错的Markdown示例</h2>
+
+<ul>
+<li><a href="http://equation85.github.io/blog/markdown-examples/">Markdown语法示例</a>，非常不错！上面代码，下面展示效果，非常直观。</li>
+<li><a href="http://wowubuntu.com/markdown/#list">Markdown 语法说明</a></li>
+</ul>
+
+
+<h3>update:</h3>
+
+<p>终于找到Markdown中插入代码不起作用的原因了！原来在列表中嵌套的代码需要缩进2个tab才起作用。</p>
+
+<blockquote><p>To put a code block within a list item, the code block needs to be indented twice — 8 spaces or two tabs.
+<a href="http://daringfireball.net/projects/markdown/syntax#list">Ref</a></p></blockquote>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/06/12/memo-about-octopress//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">

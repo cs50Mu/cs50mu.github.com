@@ -1,0 +1,197 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>confused about cronie - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。 于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？ 发现Archlinux论坛上也有人有这样的疑问，思路整理如下： 目前，可以使用crontab - &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
+
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
+
+</head>
+
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
+  
+  <!-- GitHub -->
+  <li>
+  <a href="https://github.com/cs50mu" class="github" title="Github"></a>
+  </li>
+  
+  
+  <!-- Google Plus -->
+  <li>
+  <a href="http://plus.google.com/linuxfish.exe@gmail.com?rel=author" class="google" title="Google+"></a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li>
+  <a href="http://www.twitter.com/linuxfish" class="twitter" title="Twitter"></a>
+  </li>
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
+
+</header>
+
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Confused About Cronie</h2>
+	<div class="entry-content"><p>昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。  <br/>
+于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？</p>
+
+<p>发现Archlinux论坛上也有人有这样的疑问，思路整理如下：</p>
+
+<p>目前，可以使用<code>crontab -e</code>来添加命令或者把想定时运行的命令放在相应的<code>cron.{hourly,daily,monthly,weekly}</code>文件夹中。两者的区别是，通过<code>crontab -e</code>添加的任务可以指定具体的运行时间，可以精确到分钟，但需要保证机器一直运行，若在指定的时间点计算机没有在线，那么任务就不会运行；而放在那几个文件夹的脚本不可以指定精确的运行时间，但不要求计算机一直在线，计算机一旦在线就会检查相应文件夹下的脚本是否应该执行，若符合执行的条件则执行。那么它是通过什么方法来检查的呢？配置文件<code>/etc/anacrontab</code>的一个字段<code>period in days</code>指定了某个文件夹下的脚本的运行间隔时间，若计算机看到某个脚本距上次执行时间已经有n天或大于n天，那么它就会运行这个脚本。  <br/>
+以下的专业解释来自Man，哈哈</p>
+
+<blockquote><p>Anacron  is used to execute commands periodically, with a frequency specified in days.  Unlike cron(8),it does not assume that the machine is running continuously.  Hence, it can be used  on  machines  that are not running 24 hours a day to control regular jobs as daily, weekly, and monthly jobs.</p>
+
+<p>Anacron  reads  a  list  of jobs from the /etc/anacrontab configuration file (see anacrontab(5)).  This file contains the list of jobs that Anacron controls.  Each job entry specifies a  period  in  days, a delay in minutes, a unique job identifier, and a shell command.</p>
+
+<p>For each job, Anacron checks whether this job has been executed in the last n days, where n is the time period specified for that job.  If a job has not been executed in n days  or  more,  Anacron  runs  the job&rsquo;s shell command, after waiting for the number of minutes specified as the delay parameter.</p>
+
+<p>After  the  command exits, Anacron records the date (excludes the hour) in a special timestamp file for that job, so it knows when to execute that job again.</p></blockquote>
+
+<p>To summerize then,if you want to execute a script at a particular time, you should use <code>crontab -e</code>.If you just want the script to execute regardless of the time, you should drop it in the appropriate folder.</p>
+
+<p>做完上面这些后，我悲催的发现crond其实不适合用于定时运行每日一图的脚本。。最后加在awesome的开机启动，通过<code>theme.wallpaper</code>参数可以来设置墙纸，不过有一个矛盾，只能先设置墙纸然后才能下载每日一图。。暂时没找到很好的可以先下载再设置的方法。所以，目前用不了当天的图，用的是前一天的图。。</p>
+</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/10/08/confused-about-cronie/#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+    </div>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2013
+
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'thehardwayiseasier';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cs50Mu.github.io/blog/2013/10/08/confused-about-cronie/';
+        var disqus_url = 'http://cs50Mu.github.io/blog/2013/10/08/confused-about-cronie/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
+</body>
+</html>
