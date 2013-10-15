@@ -2,67 +2,71 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/06/12/hello/</loc>
-        <lastmod>2013-10-07T17:23:06+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/06/12/memo-about-octopress/</loc>
-        <lastmod>2013-10-07T17:23:52+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/06/16/regular-expressions/</loc>
-        <lastmod>2013-10-07T17:24:26+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/06/21/flash-openwrt-in-wr703n/</loc>
-        <lastmod>2013-10-07T17:25:13+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/06/30/fuck-gfw/</loc>
-        <lastmod>2013-10-07T17:25:59+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/07/03/merge-sort/</loc>
-        <lastmod>2013-10-07T17:30:20+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/07/07/amazing-social-psychology/</loc>
-        <lastmod>2013-10-07T17:27:23+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/08/02/wonderful-journey-to-tibet/</loc>
-        <lastmod>2013-10-07T17:28:24+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/09/01/macro-economics/</loc>
-        <lastmod>2013-10-07T17:28:52+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/09/11/two-more-books-about-macro-economics/</loc>
-        <lastmod>2013-10-07T17:29:30+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/09/30/some-python-practices/</loc>
-        <lastmod>2013-10-07T17:29:56+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/10/08/confused-about-cronie/</loc>
-        <lastmod>2013-10-08T15:35:45+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/10/08/change-the-default-theme-for-octopress/</loc>
-        <lastmod>2013-10-10T11:40:48+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/10/09/a-day-to-remember/</loc>
-        <lastmod>2013-10-09T19:22:31+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/2013/10/11/ipv6-in-cauc/</loc>
-        <lastmod>2013-10-11T22:07:16+08:00</lastmod>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://cs50Mu.github.io/blog/2013/10/13/understand-octopress/</loc>
+        <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2013-10-11T22:07:16+08:00</lastmod>
+        <lastmod>2013-10-15T20:10:00+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/search.html</loc>
@@ -74,6 +78,6 @@
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2013-10-11T22:07:16+08:00</lastmod>
+        <lastmod>2013-10-15T20:10:00+08:00</lastmod>
     </url>
 </urlset>
