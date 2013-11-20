@@ -65,8 +65,16 @@
         <lastmod>2013-10-15T20:45:54+08:00</lastmod>
     </url>
     <url>
+        <loc>http://cs50Mu.github.io/blog/2013/10/29/3-amazing-days-at-mangoo-hotel/</loc>
+        <lastmod>2013-10-29T21:40:14+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://cs50Mu.github.io/blog/2013/11/20/bad-days/</loc>
+        <lastmod>2013-11-20T21:24:19+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2013-10-15T20:10:00+08:00</lastmod>
+        <lastmod>2013-11-20T21:24:19+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/search.html</loc>
@@ -78,6 +86,6 @@
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2013-10-15T20:10:00+08:00</lastmod>
+        <lastmod>2013-11-20T21:24:19+08:00</lastmod>
     </url>
 </urlset>
