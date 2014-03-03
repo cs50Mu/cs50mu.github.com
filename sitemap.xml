@@ -77,8 +77,18 @@
         <lastmod>2013-12-01T22:29:39+08:00</lastmod>
     </url>
     <url>
+        <loc>http://cs50Mu.github.io/blog/2013/12/31/last-day-of-2013/</loc>
+        <lastmod>2013-12-31T21:46:09+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://cs50Mu.github.io/blog/2014/03/03/get-your-visit-internet-frequency-by-python/
+        </loc>
+        <lastmod>2014-03-03T21:09:18+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2013-12-01T22:29:39+08:00</lastmod>
+        <lastmod>2014-03-03T21:09:18+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/search.html</loc>
@@ -90,6 +100,6 @@
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2013-12-01T22:29:39+08:00</lastmod>
+        <lastmod>2014-03-03T21:09:18+08:00</lastmod>
     </url>
 </urlset>
