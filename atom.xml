@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2014-03-03T21:10:58+08:00</updated>
+  <updated>2014-03-08T16:50:05+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -863,6 +863,10 @@ def mergesort(L):
 <li>断言。断言不会匹配任何文本，而是对断言所在的文本施加某些规定和约束，如果不使用断言的话可能会匹配到一些我们不需要的文本，使用断言可以提高正则表达式的清晰度。比如用正则表达式<code>jet</code>来匹配文本&#8221;the jet and jetski are noisy&#8221;会出现两次匹配，即jet和jetski中的jet，这可能不是我们想要的结果，但是使用正则表达式<code>\bjet\b</code>将只匹配一次，即单词jet。</li>
 </ul>
 
+
+<p>UPDATE:</p>
+
+<p>今天(2014.03.08)改了下自动发天气预报的脚本，终于知道自己之前用正则各种不顺手的原因了！！尼玛不是人家电脑不听话啊！是你自己没有搞懂好不好！！之前只知道用<code>.+?</code>来代表任意多个字符，可你仔细看看<code>.</code>是能代表任意字符吗？！人家不是说了<strong>换行符除外</strong>嘛？！然后加上re.S的编译标签后就可以了有木有！！还有就是使用多个括号捕获时，findall函数是以元组的形式返回捕获结果的。</p>
 ]]></content>
   </entry>
   
