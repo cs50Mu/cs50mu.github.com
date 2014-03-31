@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Mar 3rd, 2014 Tags: python, 编程 又是好久没更新。 知乎是个好网站。那么多大牛分享自己的经验教训～涉及范围包罗万象，无所不有。对我而言，很重要的一点是它拓展了我的眼界，让我知道，哦，原来还可以这么想，事情还可以这么做， &hellip;">
+	<meta name="description" content="Published on: Mar 30th, 2014 Tags: 冒泡排序 应该是最简单的吧，但是效率很低。对于给定的n个无序数列，不断的比较相邻的两个数的大小，若满足条件，则互换两个数的位置，这样经过一次循环后，最大的（或者最小的）数就冒出来了，经过n次循环，顺序就排好了。具体伪代码如下 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -94,6 +94,120 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2014/03/30/two-sort-algorithms/">
+		
+			冒泡排序和插入排序</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-30T20:07:00+08:00" pubdate data-updated="true">Mar 30<span>th</span>, 2014</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<h2>冒泡排序</h2>
+
+<p>应该是最简单的吧，但是效率很低。对于给定的n个无序数列，不断的比较相邻的两个数的大小，若满足条件，则互换两个数的位置，这样经过一次循环后，最大的（或者最小的）数就冒出来了，经过n次循环，顺序就排好了。具体伪代码如下：</p>
+
+<pre><code>    for(i=0; i &lt; n; i++) {
+            for(j = 0; j &lt; n - i - 1; j++) {
+                    if(target[j] &gt; target[j+1]) {
+                            temp = target[j+1];
+                            target[j+1] = target[j];
+                            target[j] = temp;
+                    }   
+            }   
+    }   
+</code></pre>
+
+<h2>插入排序</h2>
+
+<p>模仿的是打牌的时候，插牌的方法。对于给定的n个无序数列，从第二个数开始往下循环到第n个数，在处理某个数的时候，依次比较这个数跟它之前的数的大小，直到找到合适的位置后就插入。具体伪代码如下：</p>
+
+<pre><code>    for(i = 1; i &lt; n; i++) {
+            key = target[i];  // 待插的值
+            for(j = i - 1; (j &gt;= 0) &amp;&amp; (target[j] &gt; key); j--) {
+                    target[j+1] = target[j];   // 移位，给要插入的数让位
+            }
+            target[j+1] = key;    // 插进去
+    }
+</code></pre>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2014/03/30/two-sort-algorithms//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2014/03/28/relearning-c/">
+		
+			重新学习C</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-28T20:14:00+08:00" pubdate data-updated="true">Mar 28<span>th</span>, 2014</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>发现写learn python the hard way的大神Zed.A.Shaw的the hard其实是一个系列，除了python还有Ruby、C、SQL、Regex，都是我想学的有木有！这几天在看他的C的教程，虽然只是一个alpha版本，但已经很牛逼了啊，一开始还可以，现在光是消化一小节都要好几天好不好！看了他的教程，感觉自己以前学过的那点东西真的是连屎都不如。。anyway，学到了很多东东，记录下学到的东西。</p>
+
+<ul>
+<li>指针。发现在实际使用中很容易把指针变量和指针所指的内容搞混，要记住，指针变量里存放的只是一个地址而已，所以它的大小（位数）是固定的，应该是4个字节，跟它所指的内容没有一点关系。比如我在练习中遇到的一个问题是，有一个结构体，结构体有几个字符型指针，也就是说这几个指针是指向几个字符串的，然后在给这个结构体申请空间的时候我就晕了。。到底应该申请多少呢？直接malloc(sizeof(struct Address))吗？因为我总纠结着结构体里的字符型指针，想着这几个指针指向的字符数目又没有定，这可怎么办呢？其实是我想多了，把指针和它指向的内容混淆了，要知道，指针就是指针而已，大小固定，4个字节，所以上面那个结构体的大小是固定的，可以直接用sizeof来计算。至于那几个指针指向的字符串嘛，等要用的时候再malloc就可以了，也就是说它们跟上面说的结构体没半毛钱关系！只是因为里面有个指针指向了它们而已。</li>
+<li>内存管理。这个之前真的是没有想过，也没有遇到过。因为总是在用一些脚本语言，根本就没有关注过内存管理的问题，导致现在遇到都不知道该怎么处理了，现在通过一次练习，对内存管理有了一些理解了。基本上，在C中一切内存管理都要自己来，要放东西的时候就要自己malloc申请空间，不需要提前申请，只要在需要使用的时候申请就行了，然后记得申请的空间用完后要自己释放，否则会导致内存泄露！</li>
+<li>动态数据结构从文件的读取和写入。乍一想觉得挺简单，其实还是蛮复杂的好不好。。先说写入，这里说的动态结构是指用指针实现的，就是不是固定的数组，所以具体大小可以到时候malloc随意申请，灵活是灵活，但要写入文件的时候就SB了，不能像固定结构那样直接一个<code>fwrite(&amp;addr, sizeof(struct Addr), 1, fpr)</code>就行了好不好，你要自己找到指针指向的内容，然后一个一个自己写啊！再说读取，首先顺序要一致，怎么写入的就要怎么读取出来，否则肯定是没戏啊，然后读取的时候要先准备好地方啊！也就是说要为读入的数据用malloc提前申请空间啊！还有一个就是一次读入数据大小的问题，这个要好好弄清楚，我在练习的时候就是这个没弄清楚，导致程序一直都有问题，还是那句话，不要把指针和指针指向的内容混淆！！</li>
+<li>gdb。gdb是个神器！！</li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2014/03/28/relearning-c//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -570,130 +684,6 @@ To use animate.css in your website,simply drop the stylesheet into your document
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2013/10/09/a-day-to-remember//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/10/08/change-the-default-theme-for-octopress/">
-		
-			A Brand New Blog</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-08T15:41:00+08:00" pubdate data-updated="true">Oct 8<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/octopress/'>octopress</a>
-
-
-</div>
-    </div>
-		<p>终于忍不住了。</p>
-
-<ul>
-<li><p>添加了disqus评论系统，还是挺简单的，Octopress内建了对disqus的支持，只要去disqus官网注册，然后在Octopress里开启一下就可以用了。具体是在<code>_config.yml</code>中设置。</p></li>
-<li><p>换了新主题fabric，好酷啊～～，竟然还有javascript特效！以前想着换主题应该挺麻烦，现在看来挺简单的，就是输几条命令而已：</p>
-
-<pre><code>  $ cd octopress
-  $ git clone git://github.com/panks/fabric.git .themes/fabric
-  $ rake install['fabric']
-  $ rake generate
-</code></pre></li>
-<li>添加了tag或category功能。其实，这个本来就有的，只是我不知道而已。。在每篇文章开始添加上category参数后它就有标签了～～一篇文章可以添加多个标签哦～</li>
-</ul>
-
-
-<p>于是，现在的博客是这个样子的。。有种屌丝一秒变高帅富的感觉有木有？！
-<img class="center" src="/images/newTheme.png">
-一个小tip，有时候可能会有一些帖子不想发布出去的，那要肿么办呢？  <br/>
-其实也很简单，在文章开头的参数中添加<code>published: false</code>，就可以隐藏文章(但其实已经发布到github了)，要公开文章只需要将参数改为<code>true</code>即可。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/10/08/change-the-default-theme-for-octopress//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/10/08/confused-about-cronie/">
-		
-			Confused About Cronie</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-08T11:49:00+08:00" pubdate data-updated="true">Oct 8<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/cron/'>cron</a>, <a class='category' href='/blog/categories/linux/'>linux</a>
-
-
-</div>
-    </div>
-		<p>昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。  <br/>
-于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？</p>
-
-<p>发现Archlinux论坛上也有人有这样的疑问，思路整理如下：</p>
-
-<p>目前，可以使用<code>crontab -e</code>来添加命令或者把想定时运行的命令放在相应的<code>cron.{hourly,daily,monthly,weekly}</code>文件夹中。两者的区别是，通过<code>crontab -e</code>添加的任务可以指定具体的运行时间，可以精确到分钟，但需要保证机器一直运行，若在指定的时间点计算机没有在线，那么任务就不会运行；而放在那几个文件夹的脚本不可以指定精确的运行时间，但不要求计算机一直在线，计算机一旦在线就会检查相应文件夹下的脚本是否应该执行，若符合执行的条件则执行。那么它是通过什么方法来检查的呢？配置文件<code>/etc/anacrontab</code>的一个字段<code>period in days</code>指定了某个文件夹下的脚本的运行间隔时间，若计算机看到某个脚本距上次执行时间已经有n天或大于n天，那么它就会运行这个脚本。  <br/>
-以下的专业解释来自Man，哈哈</p>
-
-<blockquote><p>Anacron  is used to execute commands periodically, with a frequency specified in days.  Unlike cron(8),it does not assume that the machine is running continuously.  Hence, it can be used  on  machines  that are not running 24 hours a day to control regular jobs as daily, weekly, and monthly jobs.</p>
-
-<p>Anacron  reads  a  list  of jobs from the /etc/anacrontab configuration file (see anacrontab(5)).  This file contains the list of jobs that Anacron controls.  Each job entry specifies a  period  in  days, a delay in minutes, a unique job identifier, and a shell command.</p>
-
-<p>For each job, Anacron checks whether this job has been executed in the last n days, where n is the time period specified for that job.  If a job has not been executed in n days  or  more,  Anacron  runs  the job&rsquo;s shell command, after waiting for the number of minutes specified as the delay parameter.</p>
-
-<p>After  the  command exits, Anacron records the date (excludes the hour) in a special timestamp file for that job, so it knows when to execute that job again.</p></blockquote>
-
-<p>To summerize then,if you want to execute a script at a particular time, you should use <code>crontab -e</code>.If you just want the script to execute regardless of the time, you should drop it in the appropriate folder.</p>
-
-<p>做完上面这些后，我悲催的发现crond其实不适合用于定时运行每日一图的脚本。。最后加在awesome的开机启动，通过<code>theme.wallpaper</code>参数可以来设置墙纸，不过有一个矛盾，只能先设置墙纸然后才能下载每日一图。。暂时没找到很好的可以先下载再设置的方法。所以，目前用不了当天的图，用的是前一天的图。。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/10/08/confused-about-cronie//index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
