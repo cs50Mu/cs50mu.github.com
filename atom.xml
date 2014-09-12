@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2014-03-31T18:39:35+08:00</updated>
+  <updated>2014-09-12T18:10:22+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,298 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Structure and Interpretation of Computer Programs]]></title>
+    <link href="http://cs50Mu.github.io/blog/2014/07/26/sicp/"/>
+    <updated>2014-07-26T22:59:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2014/07/26/sicp</id>
+    <content type="html"><![CDATA[<p>大名鼎鼎的SICP，下面是我在学习Berkeley的CS61A时做的笔记,非常有意思的一门课！</p>
+
+<h2>高阶函数</h2>
+
+<p>理解这玩意儿有时候确实挺费脑筋。。。下面这个trick花了好久才理解。。关键一开始没想明白返回的到底是匿名函数还是匿名函数的执行结果</p>
+
+<pre><code>def cons(a, b):
+    return lambda m: m(a,b) # 此处返回的是一个参数为m的匿名函数！！并且m是一个函数，m接受两个参数a和b
+
+def car(p):
+    return p(lambda x,y:x) # 
+
+car(cons(1,2)) # 结果应该为1
+</code></pre>
+
+<p>以上代码大概类似于下面的代码：</p>
+
+<pre><code>def fuck(func):
+    def wrapper(a,b):
+        return func(a,b)
+    return wrapper
+
+x = fuck(lambda x,y:x)
+x(1,2) # 输出1
+</code></pre>
+
+<h2>递归  破钱</h2>
+
+<p>下面的函数实现的功能是，给定一个数值，比方说100块，和一堆小面额的纸币，找出用这些小面额纸币来表示这100块总共有几种方法。其中link函数是用来制作链表的，first函数返回链表的第一个元素，rest函数返回链表的剩余所有元素。可以看到函数是用递归实现的，依据大概是这样的：100块的表示方法可以分为两类，一类方法中使用链表中的第一个面额，另一类方法中不使用第一个面额。就这么简单。。。神奇的是它竟然是能工作的！</p>
+
+<pre><code>def count_change(amount, denominations):
+    '''
+    Return the number of ways to make change for amount
+    '''
+    if amount &lt; 0 or denominations == empty:
+        return 0
+    elif amount == 0:
+        return 1
+    using_coin = count_change(amount - first(denominations), denominations)
+    not_using_coin = count_change(amount, rest(denominations))
+    return using_coin + not_using_coin
+
+denominations = link(50, link(25, link(10, link(5, link(1, empty)))))
+&gt;&gt;&gt; print_linked_list(denominations)
+&lt; 50 25 10 5 1 &gt;
+&gt;&gt;&gt; count_change(100, denominations)
+292
+</code></pre>
+
+<h2>ADT(Abstract Data type)</h2>
+
+<p>ADT也属于抽象的一种，目的是控制复杂度，把复杂并且与下面要实现的功能无关的细节隐藏起来，只把几个关键的东西暴露给外部，要形成一个ADT一般需要一个constructor，一个selector，一个mutator等，有了这些，外部就可以用它们进一步实现别的功能了，像链表啊，树啊都属于ADT。其中，deep list和tree属于hierarchical data structure</p>
+
+<h2>Implicit Sequences</h2>
+
+<p>a sequence can be represented <strong>without</strong> each element being stored explicitly in the memory of the computer. That is, we can construct an object that provides access to all of the elements of some sequential dataset without computing all of those elements in advance and storing them. Instead, we compute elements on demand. 很巧妙的一种实现方式，不是把元素全部计算出来放在内存里等着去取，而是需要的时候才计算一个出来，这样可以节省大量的内存。这在计算机科学中叫lazy computation(lazy computation describes any program that delays the computation of a value until that value is needed). 但注意，实现这个强大功能的前提是sequential access(相对于random access)，也就是说只能按顺序依次获取，不能想取哪个就取哪个。嗯，iterator就是在这个背景下诞生了。。An iterator is an object that provides <strong>sequential access</strong> to an underlying sequential dataset. iterator就是为了方便处理那些具有内在顺序结构的数据而诞生的。The iterator abstraction has two components: a mechanism for retrieving the next element in some underlying series of elements and a mechanism for signaling that the end of the series has been reached and no further elements remain. In programming languages with built-in object systems, this abstraction typically corresponds to a particular interface that can be implemented by classes.</p>
+
+<ul>
+<li>iterators与iterables</li>
+</ul>
+
+
+<p>原来这两个不是一个东西。iterators需要实现<code>__next__</code>方法，是具体干活的。   <br/>
+An object is iterable if it <strong>returns an iterator</strong> when its <code>__iter__</code> method is invoked. Iterable values represent data collections, and they provide a fixed representation that may produce more than one iterator. iterator和iterable类似于类和实例的关系吧,iterator负责实现模型、架构，iterable负责实例化。For example, an instance of the <code>Letters</code> class below represents a sequence of consecutive letters. Each time its <code>__iter__</code> method is invoked, a new <code>LetterIter</code> instance is constructed, which allows for sequential access to the contents of the sequence.</p>
+
+<pre><code>&gt;&gt;&gt; class LetterIter:
+    """An iterator over letters of the alphabet in ASCII order."""
+    def __init__(self, start='a', end='e'):
+        self.next_letter = start
+        self.end = end
+    def __next__(self):
+        if self.next_letter == self.end:
+        raise StopIteration
+        letter = self.next_letter
+        self.next_letter = chr(ord(letter)+1)
+        return letter
+
+&gt;&gt;&gt; class Letters:
+    def __init__(self, start='a', end='e'):
+        self.start = start
+        self.end = end
+    def __iter__(self):
+        return LetterIter(self.start, self.end)
+
+&gt;&gt;&gt; b_to_k = Letters('b', 'k')
+&gt;&gt;&gt; first_iterator = b_to_k.__iter__()
+&gt;&gt;&gt; next(first_iterator)
+'b'
+&gt;&gt;&gt; next(first_iterator)
+'c'
+&gt;&gt;&gt; second_iterator = iter(b_to_k)
+&gt;&gt;&gt; second_iterator.__next__()
+'b'
+&gt;&gt;&gt; first_iterator.__next__()
+'d'
+&gt;&gt;&gt; first_iterator.__next__()
+'e'
+&gt;&gt;&gt; second_iterator.__next__()
+'c'
+&gt;&gt;&gt; second_iterator.__next__()
+'d'
+</code></pre>
+
+<p>但是！在Python中<code>__next__</code>和<code>__iter__</code>方法是在同一个类中的！To use an iterator in a for loop, the iterator must also have an <code>__iter__</code> method. The <a href="http://docs.python.org/3/library/stdtypes.html#iterator-types">Iterator types</a> section of the Python docs suggest that an iterator have an <code>__iter__</code> method that returns the iterator itself, so that all iterators are iterable. 只要理解了<code>__iter__</code>方法的作用，也很容易理解的啦。</p>
+
+<ul>
+<li>Generators and Yield Statements</li>
+</ul>
+
+
+<p>Generators属于Iterator，a generator is an <strong>iterator</strong> returned by a special class of function called a generator function. Generator functions are distinguished from regular functions in that rather than containing return statements in their body, they use yield statement to return elements of a series.</p>
+
+<p>The Letters and Positives objects above require us to introduce a new field self.current into our object to keep track of progress through the sequence. With simple sequences like those shown above, this can be done easily. With complex sequences, however, it can be quite difficult for the <code>__next__</code> method to save its place in the calculation. Generators allow us to define more complicated iterations by leveraging the features of the Python interpreter.</p>
+
+<p>Generators do not use attributes of an object to track their progress through a series. Instead, they control the execution of the generator function, which runs until the next yield statement is executed each time the generator&rsquo;s <code>__next__</code> method is invoked. The Letters iterator can be implemented much more compactly using a generator function. 虽然实现的功能是一样的，但Generators与iterators的实现机理是不一样的，yield的机理貌似是coroutines，到底是个神马东东，待查。</p>
+
+<pre><code>&gt;&gt;&gt; def letters_generator():
+    current = 'a'
+    while current &lt;= 'd':
+        yield current
+        current = chr(ord(current)+1)
+
+&gt;&gt;&gt; for letter in letters_generator():
+    print(letter)
+a
+b
+c
+d
+</code></pre>
+
+<p>Even though we never explicitly defined <code>__iter__</code> or <code>__next__</code> methods, the yield statement indicates that we are defining a generator function. When called, a generator function doesn&rsquo;t return a particular yielded value, but instead a generator (which is a type of iterator) that itself can return the yielded values. A generator object has <code>__iter__</code> and <code>__next__</code> methods, and each call to <code>__next__</code> continues execution of the generator function from wherever it left off previously until another yield statement is executed.</p>
+
+<p>The first time <code>__next__</code> is called, the program executes statements from the body of the <code>letters_generator</code> function until it encounters the yield statement. Then, it pauses and returns the value of current. yield statements do not destroy the newly created environment, they preserve it for later. When <code>__next__</code> is called again, execution resumes where it left off. The values of current and of any other bound names in the scope of <code>letters_generator</code> are preserved across subsequent calls to <code>__next__</code>.</p>
+
+<p>这样，可以用yield语句来简化iterables的写法</p>
+
+<pre><code>&gt;&gt;&gt; class LettersWithYield:
+    def __init__(self, start='a', end='e'):
+        self.start = start
+        self.end = end
+    def __iter__(self):
+        next_letter = self.start
+        while next_letter &lt; self.end:
+        yield next_letter
+        next_letter = chr(ord(next_letter)+1)
+</code></pre>
+
+<p>以前没有Generators的时候，还需要定义一个<code>__next__</code>方法来生成iterator，然后用<code>__iter__</code>方法来返回self，这下因为yield本身返回的就是一个Generator(也属于Iterator)，所以无需<code>__next__</code>方法来生成iterator。</p>
+
+<h2>Mutation in for loops</h2>
+
+<p>如果在for循环中对对象做了修改（增加或删除），会出现无法预测的结果</p>
+
+<pre><code># Demo: Mutation in For Loops
+# lst = list(range(10, 20))
+# for item in lst:
+#     print(item)
+#     lst.remove(item)
+# lst
+# 下面是解决办法, 不过原理未搞懂，待查
+class BetterList(list):
+    def __iter__(self):
+    return list.__iter__(self[:])
+</code></pre>
+
+<h2>nonlocal与list</h2>
+
+<p>看下面两段代码</p>
+
+<pre><code>def make_accumulator():
+    """Return an accumulator function that takes a single numeric argument and
+    accumulates that argument into total, then returns total.
+    """
+    total = []
+    def accumulator(amount):
+    total.append(amount)
+    return sum(total)
+    return accumulator
+
+def make_accumulator_nonlocal():
+    """Return an accumulator function that takes a single numeric argument and
+    accumulates that argument into total, then returns total.
+    """
+    total = 0
+    def accumulator(amount):
+    nonlocal total
+    total += amount
+    return total
+    return accumulator
+</code></pre>
+
+<p>为何单个变量(total)在&#8221;全局&#8221;访问的时候需要nonlocal参数，而列表就不用了呢？</p>
+
+<h2>format method of strings</h2>
+
+<pre><code>&gt;&gt;&gt; 'I {0}, you {0}, we all {0} for {1}!'.format('scream', 'ice cream')
+'I scream, you scream, we all scream for ice cream!'
+</code></pre>
+
+<h2>Generic Functions</h2>
+
+<p>Generic functions are methods or functions that apply to arguments of different types. 我理解就是不管对象类型是不是一样，都可以用这个通用函数来做运算。Generic functions主要有下面三种实现方式：
+&ndash; Interfaces
+&ndash; Type dispatching
+&ndash; Coercion</p>
+
+<h2>Memoization</h2>
+
+<p>Keep track of all the calls we have ever made to fib and their answers. Then when we made a repeated recursive call, we immediately return the answer.</p>
+
+<h2>Huffman Encoding</h2>
+
+<p>一种可变编码方式，可针对词频进行优化编码，出现次数多的字母用相对小的位数来编码，出现次数多的字母用相对多的位数来编码，这样相对于固定位编码方式可节省存储空间。  <br/>
+使用方法：</p>
+
+<ul>
+<li>统计字母出现频率，并据此创建霍夫曼二叉树。创建的方法就是对给定的字母、频率，不停的merge掉频率最小的两个，并根据这两个生成一个新的HuffmanTree，它的频率为那两个频率最小的频率之和，以此直至只剩下两个HuffmanTree为止.</li>
+<li>编码</li>
+<li>解码
+编码和解码部分可用递归优雅的实现
+
+<h2>Scheme</h2></li>
+<li>区分symbol和string. When you type things in the interpreter, Scheme will evaluate it. The rule for evaluating a symbol is to get the value bound to that symbol. This is one difference between strings and symbols&mdash;symbols don&rsquo;t evaluate to themselves(which strings do). However, as you saw above, when you type in &lsquo;a, you get a. This is because when you use single quote, you&rsquo;re telling Scheme <strong>not to follow</strong> the normal rules of the evaluation and just have the symbol return as itself.</li>
+<li>Special Forms. 类似于其它语言中的关键字，比如define if and or等等</li>
+<li>Lambdas. 语法： <code>(lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code></li>
+<li>Functions. 语法：<code>(define (&lt;FUNCTIONNAME&gt; &lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code>. Python will automatically transform it to <code>(define &lt;FUNCTIONNAME&gt; (lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code> for you.所以在Scheme中，lambda更基础.</li>
+<li>关键字let. 语法：
+  (let ( (<SYMBOL1> <EXPR1>)
+      &hellip;
+      (<SYMBOLN> <EXPRN>) )
+      <BODY> )
+它等价于：<code>( (lambda (&lt;SYMBOL1&gt; ... &lt;SYMBOLN&gt;) &lt;BODY&gt;) &lt;EXPR1&gt; ... &lt;EXPRN&gt;)</code></li>
+<li>Pairs. 创建：<code>(define a (cons 1 2))</code> 获取： <code>(car a)</code> <code>(cdr a)</code></li>
+<li>List. A List is a specific kind of Pair that is either nil(an empty list) or a Pair whose cdr is another List. 比如，(cons 1 (cons 2 nil))，它可以简写成&#8217;(1 2)，检查List是否为空可用null?语句
+
+<h2>Tail Recursion 尾递归</h2>
+
+<p>是对递归的一种优化，我们都知道，一般线性递归在新的调用之前需要在堆栈中保存当前调用的信息，这样随着函数调用的增多，对内存的占用会越来越大，而尾递归能够实现这一次的调用使用的堆栈空间直接覆盖上次用过的，因此虽然函数调用在不断进行，但对内存的占用却是不变的！（linuxfish注：看了一堆介绍，我肿么觉得尾递归有点过程语言中循环的感觉，是不是因为函数式编程中没有循环，才用尾递归的？）</p></li>
+</ul>
+
+
+<p>注意，要区分尾递归语法和尾递归优化，也就是说，你可以把递归写成尾递归的形式，但底层（解释器、编译器）是否给你优化就不一定了。比如，Python可以写成尾递归的形式，但是没用，照样会stackoverflow，因为解释器并不支持。</p>
+
+<h2>Streams</h2>
+
+<p>这应该是Python中generator的鼻祖了吧。Streams are a clever idea that allows one to use sequence manipulations without incurring the costs of manipulating sequences as list. With streams we can achieve the best of both worlds: We can formulate programs elegantly as sequences manipulations, while attaining the efficiency of <strong>incremental computation</strong>. The basic idea is to arrange to construct a stream only partially, and to pass the partial construction to the program that consumes the stream. If the consumer attempts to access a part of the stream that has not yet been constructed, the stream will automatically construct just enough more of itself to produce the required part, thus preserving the illusion that the entire stream exists. In other words. In other words, although we will write programs as if we were processing complete sequences, we design our stream implemention to automatically and transparently interleave the construction of the stream with its use.感觉这玩意儿纯粹是Schemer们妄图所有问题都用list pair来解决，发现不行后又整出来的一个东东。这也是所谓的函数式语言的懒惰特性，所谓懒就是不到万不得已不动弹。。而不是傻乎乎的一下子就把整个list都计算出来。</p>
+
+<h2>Declarative Programming</h2>
+
+<p>比如SQL语言</p>
+
+<p>data values are often stored in large repositories called databases. A database consists of a data store containing structured data values and an interface for retrieving subsets of the data based on their characteristics. Each value stored in a database is called a record. Records are typically retrieved via a query, which is an expression in a query programming language. By far the most ubiquitous query language in use is called Structure Query Language or SQL.</p>
+
+<p>SQL is an example of a declarative programming language. Expressions do not <strong>describe computations directly</strong>, but instead state the form of the <strong>result</strong> of some computation. It is the role of the <strong>query interpreter</strong> of the database system to design and perform a computational process to produce such a result.</p>
+
+<p>This interaction differs substantially from the procedural programming paradigm of Python or Scheme. In Python, <strong>computational processes are described directly by the programmer.</strong> A declarative language specifies the form of the result, but abstracts away procedural details.</p>
+
+<h2>Concurrency 并行</h2>
+
+<ul>
+<li>并行是一个现实问题，生活中经常会遇到，又是一个提升效率的好办法，并行办事比串行等待效率要高很多！</li>
+<li>由于线程并行所导致的问题可以通过引入锁的机制来解决，不过要注意防止死锁现象。</li>
+<li>还可以通过Message Passing来解决</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[捣鼓VPS翻墙]]></title>
+    <link href="http://cs50Mu.github.io/blog/2014/07/14/my-first-vps/"/>
+    <updated>2014-07-14T22:19:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2014/07/14/my-first-vps</id>
+    <content type="html"><![CDATA[<p>在学校论坛上看到有人介绍在vps上搭建shadowsocks服务器来翻墙，看到他推荐的vps很便宜，一年才20多，于是立马也想买一个了，其实以前就想折腾vps的，无奈找到的vps价格都太高，一个月要几百块神马的，像我这么小气的人肿么可能舍得。。不过，这个实在是太便宜了啊，虽然配置是最低的了，72M内存，2G硬盘，但一个月有100G的流量，对于翻墙来说够用了，果断注册下单购买，只支持PayPal支付，于是又注册PayPal，在这上面折腾了很久，一开始注册成中国版的了，结果提示无法跨境支付，放狗搜索后发现，需要注册国际版的，以为还要审核神马的，结果直接绑定银行卡后就可以支付了，很方便啊！</p>
+
+<p>可是才用一天就被墙了！！我目前使用的是长城宽带的服务，ssh都无法登陆了，但后来发现使用学校自己的外网还是可以用的，学校的外网应该是用的联通的服务，后来我到V2EX上问了下发现有人用长城宽带的服务也有类似的问题，该死的长城宽带！</p>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://github.com/madeye/shadowsocks-libev">shadowsocks-libev</a></li>
+<li><a href="http://www.lucong.com.cn/lulu/centos-debian-shadowsocks-libev.html">CentOS、Debian下搭建shadowsocks-libev服务端</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[冒泡排序和插入排序]]></title>
@@ -810,91 +1102,6 @@ def mergesort(L):
 
 <p>比如列表原来为[8,7,6,5,4]，那么它的变化为<code>[[8],[7],[6],[5],[4]]--&gt;[[8],[7],[6],[5],[4],[7,8]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6],[4,7,8]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6],[4,7,8],[4,5,6,7,8]]</code> <br/>
 结果列表的最后一个内嵌列表就是已排好序的序列了。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[操蛋的GFW]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/06/30/fuck-gfw/"/>
-    <updated>2013-06-30T17:33:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/06/30/fuck-gfw</id>
-    <content type="html"><![CDATA[<p>Google Reader要被Google关掉了，网上已经出了一堆替代品了，前段时间就试了试，可每次都没导入成功，每次都卡在google认证上了，能登录但登录后无法选择“接受”，换用GoAgent后依然不行，折腾了很久后还是不行，遂放弃。</p>
-
-<p>今天不是最后一天了嘛！再不导出就没机会了。。于是，跑到segmentfault上问了下，有人还是怀疑墙的问题，我自己也觉得除了这个应该也不会有别的问题了，可自己暂时也没别的翻墙方式了啊，猛然又想起自己的独立博客空间貌似有ssh帐号，于是一番折腾后，终于用ssh翻墙成功，于是，问题解决了！</p>
-
-<p>总结：Fuck you,GFW!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[在WR703N上刷openwrt]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/06/21/flash-openwrt-in-wr703n/"/>
-    <updated>2013-06-21T21:16:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/06/21/flash-openwrt-in-wr703n</id>
-    <content type="html"><![CDATA[<p>买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错，好多用它来刷开源固件的，看得心痒痒啊，特别是这篇：<a href="http://zihua.li/2012/03/about-tl-wr703n/">入手神器TL-WR703N一日谈</a>，害我直接又多买了个8G U盘！</p>
-
-<p>刷机教程看了很多篇，不过最后主要是参照这篇来的：<a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a>，写得很不错，我基本是按着他的步骤来的，一开始有一步没照着他的来，结果最后从USB启动后连接不上无线了。。。然后，晚上睡觉的时候突然想到会不会是因为没有做这一步导致的呢？于是早上起来后重新弄，因为无线和有线都连接不上了，所以一开始又折腾了好久，还好openwrt有安全模式，进入方式在上面的帖子里也有介绍，他说的这个方法是正确的，我一开始用的是openwrt文档里说的方法，说开机后要先等个2秒钟什么的，然后按住reset键，等指示灯快速闪烁后就ok了。可是我试了下根本不管用，还是那个帖子里说的靠谱些，正确的做法是：<strong>开机后立即持续的按reset键，不要按住就不放了，要不停的按住松开，间隔时间要短。</strong></p>
-
-<p>然后就是配置U盘扩展了，这真是一个绝佳的workaround，把系统装在U盘里，这真是太妙了啊！因为路由器的内存和flash都很低，可能刚刚够装开源固件的（这算好的，一些路由器没法装就是因为flash太小，装不下！），但要想玩点别的，比如装个vpn支持，装个python啥的就别想了。但一旦把系统装在U盘里就没有空间限制了，可以随便折腾。安装过程帖子里写的很详细了，有几点不明白：</p>
-
-<ul>
-<li><code>mount -o bind / /tmp/root</code>的含义，我知道是把根目录绑定到/tmp/root下，但我想深入了解下，为什么需要先绑定再复制？为什么不直接复制呢？ <br/>
-解答：bind参数的意思是将已挂载的文件系统挂载到目录树的另一个位置，所以我猜这么做的原因是若直接<code>cp /* /mnt/usb -a</code>会引起歧义，因为<code>/*</code>也包括<code>/mnt/usb</code></li>
-<li><p><code>/etc/config/fstab</code>中的配置如何理解？为何需要1G的交换空间？有必要分这么多吗？ <br/>
-解答：<a href="http://wiki.openwrt.org/doc/techref/flash.layout">The OpenWrt Flash Layout</a>，这篇wiki详细讲了openwrt对存储结构的定义，特别是讲到了<code>/</code> <code>/rom</code> <code>/overlay</code>三个文件夹的作用。 <br/>
-根据这篇wiki<a href="http://wiki.openwrt.org/doc/uci/fstab">Fstab Configuration</a>，swap没必要设置这么大，内存512M以下设置为内存的2倍就可以了，所以重新分了区，把原来的1G swap分区删掉合并到原来的数据分区里，建了个64M的swap文件：</p>
-
-<pre><code>  $ dd if=/dev/zero of=/swapfile bs=1M count=64
-  $ mkswap /swapfile
-  $ swapon /swapfile
-</code></pre>
-
-<p>但是这样需要手动激活swap空间，想了下，在<code>/etc/rc.local</code>里添加<code>swapon /swapfile</code>解决！</p></li>
-<li><p>我没有照做的一步是设置/etc/config/network时，没有更改lan的ip地址为192.168.20.1（默认是192.168.1.1），虽然改了后重新配置后问题就解决了，但我还是不理解为什么。</p></li>
-<li><p>最后一个问题是pptp client的问题，安装很容易，按照官方文档很轻松设置完成后，ssh到路由器上ping外网已经可以ping通了，问题是在我的笔记本上ping外网却不行，总是提示network unreachable。。根据官方文档设置最后需要指定一下路由，之前都没有太关注过路由的概念，所以现在还是很迷糊。。不知道该怎么设置路由，按说路由器上能访问外网，那不用做什么设置客户端就应该能访问外网啊！折腾了好久也没搞明白，最后按照网上搜到的一个方法莫名其妙的搞定了。。不过，依然不太明白原理。具体做法如下，在<code>/etc/config/network</code>里添加：</p>
-
-<pre><code>  config 'zone'
-      option 'name'      'wan'
-      option 'network'   'wan vpn'
-      option 'input'     'REJECT'
-      option 'forward'   'REJECT'
-      option 'output'    'ACCEPT'
-      option 'masq'      '1' 
-</code></pre></li>
-</ul>
-
-
-<p>不过，按上面设置后还是不起作用的，又到web界面的<code>network--&gt;firewall</code>里设置了下才ok的，就改了下covered network选项，原来就只有wan选上了，我看到上面的配置文件里network选项里有两个（wan和vpn），所以我把vpn也勾选上了，然后重启firewall后就ok了。。。</p>
-
-<h4>Crontab定时任务</h4>
-
-<p><code>crontab -l</code> 显示定时任务 <br/>
-<code>crontab -e</code> 编辑定时任务 <br/>
-<code>crontab -r</code> 删除定时任务</p>
-
-<h5>格式说明：</h5>
-
-<p><code>* * * * * /command path</code>  前5个字段分别表示分钟（0-59），小时（1-23），日期（1-31），月份（1-12），星期（0-6，0表示周日）</p>
-
-<h5>特殊符号：</h5>
-
-<p><code>*</code>表示任意时刻 <br/>
-<code>,</code>表示分割 <br/>
-<code>-</code>表示一个时间段 <br/>
-<code>/n</code>表示每n单位执行一次 <br/>
-如果不想让定时任务的执行信息打印到屏幕上的话，可以这样<code>0 2 * * * /u01/test.sh &gt;/dev/null 2&gt;&amp;1 &amp;</code>，这句话的意思就是在后台执行这条命令，并将错误输出2重定向到标准输出1，然后将标准输出1全部放到/dev/null 文件，也就是清空。</p>
-
-<h5><code>2&gt;&amp;1</code>写在后面的原因</h5>
-
-<p>首先是<code>command &gt; file</code>将标准输出重定向到file中，<code>2&gt;&amp;1</code>是标准错误拷贝了标准输出，也就是同样被重定向到file中，最终结果就是标准输出和错误都被重定向到file中。 <br/>
-如果改成： <code>command 2&gt;&amp;1 &gt;file</code>，<code>2&gt;&amp;1</code>标准错误拷贝了标准输出的行为，但此时标准输出还是在终端。<code>&gt;file</code>后输出才被重定向到file，但标准错误仍然保持在终端。</p>
-
-<h3>参考</h3>
-
-<p><a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a> <br/>
-<a href="http://dev.bjtu.edu.cn/ideal/2013/04/14/use-openwrt-as-bt-downloader/">使用tp-link tl-wr703n和openwrt作为bt下载机</a>  <br/>
-<a href="http://www.openwrt.org.cn/bbs/forum.php?mod=viewthread&amp;tid=1480">openwrt下pptp-vpn client的使用！！</a> <br/>
-<a href="http://blog.csdn.net/tianlesoftware/article/details/5315039">Linux Crontab 定时任务 命令详解 </a></p>
 ]]></content>
   </entry>
   
