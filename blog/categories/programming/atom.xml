@@ -4,7 +4,7 @@
   <title><![CDATA[Category: programming | The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/blog/categories/programming/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2014-09-12T18:10:22+08:00</updated>
+  <updated>2014-09-12T18:14:08+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -251,13 +251,13 @@ def make_accumulator_nonlocal():
       <BODY> )
 它等价于：<code>( (lambda (&lt;SYMBOL1&gt; ... &lt;SYMBOLN&gt;) &lt;BODY&gt;) &lt;EXPR1&gt; ... &lt;EXPRN&gt;)</code></li>
 <li>Pairs. 创建：<code>(define a (cons 1 2))</code> 获取： <code>(car a)</code> <code>(cdr a)</code></li>
-<li>List. A List is a specific kind of Pair that is either nil(an empty list) or a Pair whose cdr is another List. 比如，(cons 1 (cons 2 nil))，它可以简写成'(1 2)，检查List是否为空可用null?语句
+<li>List. A List is a specific kind of Pair that is either nil(an empty list) or a Pair whose cdr is another List. 比如，(cons 1 (cons 2 nil))，它可以简写成'(1 2)，检查List是否为空可用null?语句</li>
+</ul>
+
 
 <h2>Tail Recursion 尾递归</h2>
 
-<p>是对递归的一种优化，我们都知道，一般线性递归在新的调用之前需要在堆栈中保存当前调用的信息，这样随着函数调用的增多，对内存的占用会越来越大，而尾递归能够实现这一次的调用使用的堆栈空间直接覆盖上次用过的，因此虽然函数调用在不断进行，但对内存的占用却是不变的！（linuxfish注：看了一堆介绍，我肿么觉得尾递归有点过程语言中循环的感觉，是不是因为函数式编程中没有循环，才用尾递归的？）</p></li>
-</ul>
-
+<p>是对递归的一种优化，我们都知道，一般线性递归在新的调用之前需要在堆栈中保存当前调用的信息，这样随着函数调用的增多，对内存的占用会越来越大，而尾递归能够实现这一次的调用使用的堆栈空间直接覆盖上次用过的，因此虽然函数调用在不断进行，但对内存的占用却是不变的！（linuxfish注：看了一堆介绍，我肿么觉得尾递归有点过程语言中循环的感觉，是不是因为函数式编程中没有循环，才用尾递归的？）</p>
 
 <p>注意，要区分尾递归语法和尾递归优化，也就是说，你可以把递归写成尾递归的形式，但底层（解释器、编译器）是否给你优化就不一定了。比如，Python可以写成尾递归的形式，但是没用，照样会stackoverflow，因为解释器并不支持。</p>
 
