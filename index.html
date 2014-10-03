@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Jul 26th, 2014 Tags: programming, python 大名鼎鼎的SICP，下面是我在学习Berkeley的CS61A时做的笔记,非常有意思的一门课！ 高阶函数 理解这玩意儿有时候确实挺费脑筋。。。下面这个trick花了好久才理解。。 &hellip;">
+	<meta name="description" content="Published on: Sep 18th, 2014 Tags: 算法 昨天去知道创宇的面试失败了，很感谢他们能给我这个机会。通过这次面试，我总算迈出了一步，更加明确了自己应该努力的方向。这次面试反映出的一个很严重的问题就是，手太生，学了这么长时间Python，竟然连一些常用的用法， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -94,6 +94,131 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration/">
+		
+			Binary Search and Spreadsheet Numeration</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-09-18T18:54:00+08:00" pubdate data-updated="true">Sep 18<span>th</span>, 2014</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/suan-fa/'>算法</a>
+
+
+</div>
+    </div>
+		<p>昨天去知道创宇的面试失败了，很感谢他们能给我这个机会。通过这次面试，我总算迈出了一步，更加明确了自己应该努力的方向。这次面试反映出的一个很严重的问题就是，手太生，学了这么长时间Python，竟然连一些常用的用法，命令都得现查文档。自己反思一下，没有自己动手写多少代码，这个是问题的关键。</p>
+
+<p>面试我的雨哥人非常nice，面对我这么菜的表现没有一点不耐烦，他说的一句话让我印象深刻，“既然是有兴趣，平时就多花点时间，对得起兴趣这两个字”。我会的。</p>
+
+<h2>二分法查找</h2>
+
+<p>我想这个应该是最容易理解的算法了吧，我差点就在面试的时候完成了，well,almost&hellip;</p>
+
+<p>思路很简单，因为给出的列表已经是排好顺序的了，因此直接找到中间的一个记为mid，若是要找的元素，任务完成。若mid比要找的元素大，好的，那么要找的元素肯定在start跟mid之间了，若mid比要找的元素小，那么要找的元素肯定在mid和end之间了。</p>
+
+<pre><code>def binarySearch(lst, element, start, end):
+    mid = (start + end)/2 
+    if element == lst[mid]:
+    print 'Found, %d' % mid 
+    elif mid == start:
+    if element == lst[mid+1]:  # 主要处理两个相邻的数的情况，这种情形下mid必然等于start
+        print 'Found, %d' % (mid+1) # 因此如果end（也就是mid+1）不等于element的话，则没找到
+    else:
+        print 'Not found'
+    elif element &gt; lst[mid]:
+    return binarySearch(lst, element, mid, end)
+    elif element &lt; lst[mid]:
+    return binarySearch(lst, element, start, mid)
+
+def binarySearch2(lst, element, start, end):
+    mid = (start + end)/2
+    if element == lst[mid]:
+    return 'Found, %d' % mid 
+    elif start &gt; end:
+    return 'Not found'
+    elif element &lt; lst[mid]:
+    return binarySearch2(lst, element, start, mid-1)
+    elif element &gt; lst[mid]:
+    return binarySearch2(lst, element, mid+1, end)
+
+def binarySearch3(lst, element):
+    start = 0 
+    end = len(lst) - 1
+    while (start &lt;= end):
+    mid = (start + end)/2
+    if lst[mid] == element:
+        return 'Found', mid
+    elif lst[mid] &gt; element:
+        end = mid - 1
+    elif lst[mid] &lt; element:
+        start = mid + 1
+    return 'Not found'
+</code></pre>
+
+<p>上面的方法一是我自己瞎想的ugly思路，方法三是我在一站式C编程上看到的，方法二是我根据方法三的思路用递归改写的</p>
+
+<h2>spreadsheet numeration</h2>
+
+<p>这个题目其实我之前在CodeForces上做过的，可惜没有理解它的真谛，虽然当时误打误撞做出来了，还是没有效果，现在遇到还是不会做，面试中雨哥一句话点醒我，“进制转换”，是啊，这个问题实质上就是十进制转换26进制的问题。那进制转换无非就是要做除法、取余。但是也不是这么简单，有一个比较tricky的问题，就是在转换26的倍数的时候，需要做一些特殊处理才行。</p>
+
+<pre><code>def numTochar(num):
+    result = ''
+    ori = num 
+    while num:
+    mod = num % 26
+    if mod == 0:
+        mod = 26
+        num = num/26 - 1 # special cases for 'Z' 
+    else:
+        num /= 26
+    result = chr(mod + ord('A') - 1) + result
+    return result,ori
+
+def numTochar2(num):
+    result = ''
+    ori = num 
+    while num:
+    mod = num % 26
+    if mod == 0:
+        mod = 26
+    num -= 1       # a more elegant solution
+    num /= 26
+    result = chr(mod + ord('A') - 1) + result
+    return result,ori
+</code></pre>
+
+<p>方法一是我自己捣鼓的，方法二是我在CodeForces上看到了，效果应该是一样的，都是为了在转换26的倍数的时候能够得出正确的结果，做出的一点特殊处理，不过显然后者更加优雅，每个数在除26之前先减1,这样既对于非26倍数的数没有影响，又能巧妙的处理26的倍数时的特殊情况。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -437,6 +562,21 @@ def make_accumulator_nonlocal():
 		<p>在学校论坛上看到有人介绍在vps上搭建shadowsocks服务器来翻墙，看到他推荐的vps很便宜，一年才20多，于是立马也想买一个了，其实以前就想折腾vps的，无奈找到的vps价格都太高，一个月要几百块神马的，像我这么小气的人肿么可能舍得。。不过，这个实在是太便宜了啊，虽然配置是最低的了，72M内存，2G硬盘，但一个月有100G的流量，对于翻墙来说够用了，果断注册下单购买，只支持PayPal支付，于是又注册PayPal，在这上面折腾了很久，一开始注册成中国版的了，结果提示无法跨境支付，放狗搜索后发现，需要注册国际版的，以为还要审核神马的，结果直接绑定银行卡后就可以支付了，很方便啊！</p>
 
 <p>可是才用一天就被墙了！！我目前使用的是长城宽带的服务，ssh都无法登陆了，但后来发现使用学校自己的外网还是可以用的，学校的外网应该是用的联通的服务，后来我到V2EX上问了下发现有人用长城宽带的服务也有类似的问题，该死的长城宽带！</p>
+
+<h2>更新（20141002）</h2>
+
+<p>不久前听人说Bandwagon出加州机房了，一直懒得弄，今天花时间看了下，果然有加州机房了，果断迁移过去，给换了个新ip，然后shadowsocks不能用了，一开始以为是shadowsocks服务器端没开，后来发现是服务器端的设置里ip也需要更新下才行。</p>
+
+<p>正好记录下shadowsocks服务器端的配置，省得下次再忘。</p>
+
+<ul>
+<li>shadowsocks在服务器端是以daemon形式运行的。daemon脚本在<code>/etc/init.d/shadowsocks</code>，配置文件在<code>/etc/shadowsocks/config.json</code></li>
+<li>要启动/关闭/重启shadowsocks，只需在命令行执行<code>/etc/init.d/shadowsocks start/stop/restart</code>，它默认开始是自启动的。</li>
+<li>刚刚才知道，原来shadowsocks是socks代理，因此可以无压力访问https网站，再也不会遇到GoAgent一样的证书问题了～～哈哈，真好</li>
+</ul>
+
+
+<p>对了，火狐代理插件换成foxyproxy了，autoproxy已经好久不更新，基本无法使用了，之前一直迟疑不想换是因为听说foxyproxy配置比较麻烦，今天试了试才发现对于经常折腾的人来说根本就不是事～～ foxyproxy也支持订阅gfwlist列表，于是生活又美好起来了～～</p>
 
 <h2>参考</h2>
 
@@ -862,75 +1002,6 @@ for (place,freq) in sortedDict[:50]:
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2013/10/29/3-amazing-days-at-mangoo-hotel//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/10/13/understand-octopress/">
-		
-			Understand Octopress</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-10-13T17:42:00+08:00" pubdate data-updated="true">Oct 13<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/jekyll/'>jekyll</a>, <a class='category' href='/blog/categories/octopress/'>octopress</a>
-
-
-</div>
-    </div>
-		<p>好奇害死猫。</p>
-
-<p>一开始是想着给现在的博客主题添加一个sidebar，再后来就想着搞清楚Octopress的原理，仔细一研究，原来里面用到了好多好玩的新技术啊（对我而言的新技术，我对网页的认识还停留在html css php等），下面就盘点下我从Octopress/Jekyll里了解到的“新”技术。</p>
-
-<ul>
-<li>Octopress是Jekyll的一个wrapper程序，Jekyll transform your plain text into static websites and blogs. Jekyll是一个静态博客编译器，负责把你写的代码编译成一个完整的博客网站。这样生成的网站属于静态网站，它是想对于wordpress这样的带数据库的动态网站而言的。很显然，静态网站的一大优点就是响应速度比动态网站相对要快，因为所有页面一旦生成就不再改变了嘛，不需要跟跟数据库交互；缺点就是每次更新都需要重新编译。</li>
-<li><p>Sass &amp;&amp; Compass。这年头写CSS是用Sass和Compass了，我已经OUT了太久了。CSS不是一种编程语言，没有变量，没有条件语句，只是一行行的描述，写起来很费事，于是程序员童鞋忍不住了，Sass诞生了！Sass是一种CSS的开发工具，提供了很多便利的写法，可大大节省设计者的时间，使得CSS的开发变得简单。Compass是Sass的工具库(toolkit)，Sass本身只是一个编译器，Compass在它的基础上，封装了一系列有用的模板，使得CSS的开发更加便利！它们之间的关系，类似Javascript和jQuery、python和Django的关系。  <br/>
-<strong>说到这里我可以自我鄙视下嘛？人家其实连CSS都不会。。</strong> 唉，各种标签、类一会儿就被转晕了。。</p></li>
-<li><p>YAML。递归的名字是YAML Ain&rsquo;t Markup Language，官方给出的定义：YAML is a human friendly data serialization
-standard for all programming languages.也就是说它是一种数据表示的标准，类似于xml，实际上是将来可能会取代xml的数据标准，YAML试图用一种比XML更敏捷的方式，来完成XML所完成的任务。我的感觉是，YAML确实比xml和jason更容易阅读，看起来结构比较清楚，容易理解一点。</p></li>
-<li>Liquid。Ruby library for rendering safe templates which cannot affect the security of the server they are rendered on.所谓的templating language，模板语言。可以嵌入在web页面中来形成模板页面，后期根据不同的页面参数会编译成不同的页面，甚至还支持使用if for等类编程语句，非常灵活。Jekyll在它的模板文件中大量使用了liquid语言。</li>
-<li>FontAwesome。The iconic font designed for Bootstrap.Font Awesome gives you scalable vector icons that can instantly be customized — size, color, drop shadow, and anything that can be done with the power of CSS.Font Awesome是一种出色的免费iconic font，别让字面意思误导了，这货其实不是字体，是网站上用的一些小图标，可能你都没有注意到，但也确实会给网站增色不少。看到一篇介绍iconic font的文章，<a href="http://lepture.com/work/iconic-fonts">Iconic Fonts 簡介</a>，讲的非常不错！我目前用的主题fabric的header里用的字体就是来自google font的Slackey。</li>
-<li>Animate.css。animate.css is a bunch of cool, fun, and cross-browser animations for you to use in your projects. Great for emphasis, home pages, sliders, and general just-add-water-awesomeness.用纯CSS实现的动画效果集合，非常酷！ <br/>
-How to use it?  <br/>
-To use animate.css in your website,simply drop the stylesheet into your document&rsquo;s <code>&lt;head&gt;</code>, and add the class <code>animated</code> to an element, along with any of the animation names.That&rsquo;s it! You&rsquo;ve got a CSS animated element.Super!
-关于怎么用CSS3实现动画效果，看<a href="http://www.w3schools.com/css3/css3_animations.asp">这里</a></li>
-<li>google web font。顾名思义，是Google提供的网上免费字体。使用方法之一是，首先在<code>&lt;header&gt;</code>里添加对网上字体的引用，比如<code>&lt;link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Tangerine"&gt;</code>，然后就可以在CSS里指定了。</li>
-<li><p>fancybox。FancyBox is a tool for displaying images, html content and multi-media in a Mac-style &ldquo;lightbox&rdquo; that floats overtop of web page. It was built using the jQuery library.</p></li>
-<li><p>两个html5新标签。通过这番折腾知道了两个新标签<code>&lt;header&gt;</code>和<code>&lt;article&gt;</code></p></li>
-<li>Octopress/Jekyll的layouts</li>
-</ul>
-
-
-<p>其实很容易理解的东西，不知为什么搞了很久才弄明白，layouts文件夹里放的是博客的模板文件，顾名思义就是一个框架，相当于人的骨骼，把具体的博客内容填进去后就成了最终的博客。通常为了不同的用途，会有多个模板文件，为了简化代码，这几个模板文件之间通常有继承关系。比如，default.html里放的是所有页面都会有的东西，比如页面开始的引用、head、footer等，post.html在default.html的基础上再做进一步的修改，思想有点类似类的继承，不过在这里只能在原有的基础上继续添加，不能覆盖原来的“方法”。</p>
-
-<p>另外，在某个模板中还可以include进别的模板，比如在default.html中include进foot.html，这样做有利于管理代码，否则所有的代码都在一个文件里，看着混乱，也不容易管理。所有include的模板都在<code>source/_include</code>文件夹里。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/10/13/understand-octopress//index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
