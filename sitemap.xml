@@ -109,8 +109,20 @@
         <lastmod>2014-09-19T09:44:43+08:00</lastmod>
     </url>
     <url>
+        <loc>http://cs50Mu.github.io/blog/2014/10/05/socks-proxy-and-http-proxy/</loc>
+        <lastmod>2014-10-05T12:07:01+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://cs50Mu.github.io/blog/2014/10/06/preparing-for-the-job/</loc>
+        <lastmod>2014-10-07T11:49:55+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://cs50Mu.github.io/blog/2014/10/07/io-in-python/</loc>
+        <lastmod>2014-10-07T11:43:35+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2014-10-03T10:03:11+08:00</lastmod>
+        <lastmod>2014-10-07T11:49:55+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/search.html</loc>
@@ -122,6 +134,6 @@
     </url>
     <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2014-10-03T10:03:11+08:00</lastmod>
+        <lastmod>2014-10-07T11:49:55+08:00</lastmod>
     </url>
 </urlset>
