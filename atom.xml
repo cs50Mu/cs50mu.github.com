@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2014-10-07T11:51:13+08:00</updated>
+  <updated>2015-02-12T15:20:38+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,294 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Python的logging模块总结]]></title>
+    <link href="http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python/"/>
+    <updated>2015-02-02T10:58:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python</id>
+    <content type="html"><![CDATA[<p>里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、文件甚至远程主机上，还支持日志轮转，比如<code>RotatingFileHandler</code>支持按文件轮转，<code>TimedRotatingFileHandler</code>支持按时间轮转，formatter类，顾名思义，负责log信息的格式的设定。</p>
+
+<p>使用logging模块的基本流程为：先通过<code>logging.getlogger('loggername')</code>获取一个logger对象，然后根据需求为这个logger对象添加相应的handler和formatter，这样就算基本配置完了，这样就可以在你的程序里使用<code>logging.debug('debug info')</code>等类似语句来输出log信息了。</p>
+
+<p>在实际开发中一般是通过文件来进行配置的，配置信息全写在一个配置文件中，然后在脚本里读取配置信息，一个简单的示例：</p>
+
+<pre><code>import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+
+# create logger
+logger = logging.getLogger('simpleLogger')
+
+# use it
+logger.debug('debug info')
+logger.info('info message')
+logger.warn('warning info')
+logger.critical(''critical info')
+</code></pre>
+
+<p>配置文件如下，需要遵守一定的格式，具体要求见参考链接</p>
+
+<pre><code>[loggers]
+keys=root, simpleLogger
+
+[handlers]
+keys=consoleHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+...
+...
+[formatter_simpleFormatter]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=
+</code></pre>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://docs.python.org/2/howto/logging.html">Logging HOWTO</a></li>
+<li><a href="https://docs.python.org/2/library/logging.config.html#logging-config-api">Logging configuration</a>  这里详细讲了配置文件到底该怎么写</li>
+<li><a href="http://kenby.iteye.com/blog/1162698">使用python的logging模块</a></li>
+<li><a href="http://www.cnblogs.com/captain_jack/archive/2011/01/21/1941453.html">Python模块学习——logging</a></li>
+<li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[trivial problems]]></title>
+    <link href="http://cs50Mu.github.io/blog/2015/01/20/trivial-problems/"/>
+    <updated>2015-01-20T18:40:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2015/01/20/trivial-problems</id>
+    <content type="html"><![CDATA[<p>今天很高兴，因为解决了几个困扰很久的问题。</p>
+
+<h2>OpenVPN</h2>
+
+<p>为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大。</p>
+
+<p>不过，今天仔细一看，原来并不麻烦，只要把管理员提供的证书文件等放到相应文件夹上就搞定了！</p>
+
+<blockquote><p>将这几个文件放到/etc/openvpn目录下   xxx.ovpn ca.crt  xxx.crt  xxx.key  其中xxx.pvpn是配置文件
+然后就可以启动了！ sudo openvpn /etc/openvpn/xxx.ovpn   会提示输入密码，输入管理员提供的密码即可</p></blockquote>
+
+<h2>urxvt SSH远程登陆的问题</h2>
+
+<p>之前在Arch上用urxvt一直比较happy，不过公司里开发都是SSH远程登陆到linux主机上进行的，那么问题来了，明明在本地显示很正常的vim，SSH到了公司上的Linux主机上，显示就成了一堆渣。。明明vim的配置文件都是一样的啊。。  后来慢慢发现不是vim的问题，是终端的问题！！因为我换用lilyterm后就显示正常了！！然后，终于在今天让我google到解决方案了～</p>
+
+<blockquote><ol>
+<li><p>Run the following command on the external host to make a terminfo directory
+under the logged in user&rsquo;s home folder.</p>
+
+<pre><code>mkdir -p ~/.terminfo/r/
+</code></pre></li>
+<li><p>Copy the appropriate terminal profile from your local machine to the newly
+created folder on the remote host.</p>
+
+<pre><code>scp /usr/share/terminfo/r/rxvt-unicode-256color user@helloworld.com:.terminfo/r/
+</code></pre></li>
+<li><p>Restart the SSH connection. It should work now.</p></li>
+</ol>
+</blockquote>
+
+<h2>vim中使用tab自动补全</h2>
+
+<p>对于程序员来说，这世界上如果没有自动补全的话，简直不能想象。。之前习惯了使用TAB自动补全，现在在公司的远程Linux上却怎么也搞不出TAB自动补全的效果。。配置文件和插件都装一样的也不行。。。真是见鬼了。。 今天发现应该是之前装了supertab，然后不知道怎么又自己给删了，但是效果还在。。在远程Linux上装了supertab后，嗯，就是这个感觉～～</p>
+
+<p>本事件的教训就是，无论做什么一定要做好记录。。</p>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="http://www.cs.helsinki.fi/u/andrews/misc/full_urxvt_support_on_ssh_terminals.txt" title="">FULL URXVT TERMINAL SUPPORT FOR REMOTE (SSH) CONNECTIONS</a></li>
+<li><a href="" title="https://stavrovski.net/blog/installing-and-setting-up-openvpn-in-archlinux">Installing and setting up OpenVPN in ArchLinux</a></li>
+<li><a href="" title="https://wiki.archlinux.org/index.php/Airvpn">Configuring OpenVPN to connect as a client to an AirVPN server</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[problems about python and mysql]]></title>
+    <link href="http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql/"/>
+    <updated>2015-01-19T15:47:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql</id>
+    <content type="html"><![CDATA[<p>记录一下这几天项目上遇到的问题</p>
+
+<h2>Python 2.7的编码问题</h2>
+
+<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
+
+<pre><code>import sys
+print sys.getdefaultencoding()  # 获取系统默认编码
+reload(sys)
+sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
+</code></pre>
+
+<h2>MySQL 乱码解决</h2>
+
+<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
+创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
+
+<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
+
+<h2>git</h2>
+
+<ul>
+<li>基于某个分支新建分支
+  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
+  git checkout muchunyu  # 切换到这个分支
+或者可以直接：   <br/>
+  git checkout -b muchunyu origin/dev</li>
+<li>只clone某个分支到本地
+  git clone -b <branch> &lt;remote_repo></li>
+</ul>
+
+
+<h2>常用数据库操作</h2>
+
+<pre><code>create database xxx; #创建数据库
+use xxx;   # 转到某个数据库
+create table xxx (....); # 创建表
+show tables;  # 显示数据库中的表
+describe xxxx; # 显示表结构
+drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
+truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
+</code></pre>
+
+<h2>参考</h2>
+
+<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
+<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
+<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Practical Vim 读书笔记]]></title>
+    <link href="http://cs50Mu.github.io/blog/2015/01/12/note-from-practical-vim/"/>
+    <updated>2015-01-12T11:31:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2015/01/12/note-from-practical-vim</id>
+    <content type="html"><![CDATA[<ul>
+<li>The Vim Way</li>
+<li><code>.</code>命令可以重复做上一次的改变(repeat last change)。这里关键是要理解这个改变的意思，就我现在的理解，这个改变是不包括光标位置的移动的，只是指对文本内容的改变，比如删除 增加等等。理解这一点很重要。</li>
+<li><code>;</code> 分号，配合f使用，移动到下一个匹配的地方，反方向移动为<code>,</code></li>
+<li><code>*</code> 移动到下一个与当前光标处文本匹配的地方，并高亮显示所有匹配文本</li>
+<li>Normal Mode</li>
+<li><code>aw</code>  &ldquo;a word&rdquo; <code>daw</code>可删除整个单词，不管光标在哪里</li>
+<li><code>&lt;C - a&gt;</code>和<code>&lt;C - x&gt;</code> commands perform addition and subtraction on numbers.</li>
+<li><code>g~</code> swap case 改变大小写  <br/>
+<code>gu</code> make lowercase  <br/>
+<code>gU</code> make uppercase</li>
+<li><code>=</code> autoindent  自动缩进</li>
+<li>Insert Mode
+Most of Vim&rsquo;s commands are triggered from other modes, but some functionality is within easy reach from Insert mode.</li>
+<li><code>&lt;C - h&gt;</code> Delete back one character</li>
+<li><code>&lt;C - w&gt;</code> Delete back one word</li>
+<li><code>&lt;C - u&gt;</code> Delete back to start of line</li>
+</ul>
+
+
+<p>以上这几条在bash中也是可以的 <br/>
+4. <code>&lt;C - O&gt;</code>  execute one command, return to Insert mode. 所谓的Insert Normal Mode，在insert模式下进入此模式后可以执行一次normal模式下才能执行的命令后立即返回insert模式，可以配合zz（使光标处在屏幕中间）使用。如在编辑过程中光标处在最上端或者最下端了，此时想要看一看上下文，可以使用<code>&lt;C - O&gt;zz</code>，然后又立即可以继续编辑。
+5. <code>&lt;C - r&gt;{register}</code> Paste from a Register Without Leaving Insert Mode. For example, <code>&lt;C - r&gt;0</code>  不适合大段文本，因为这种情况下文本是一个字符一个字符粘贴过来的。
+6. <code>&lt;C - r&gt;=</code>  expression register. 可以用于在寄存器中evaluate表达式，然后把结果返回到当前光标处。
+7. <code>&lt;C - v&gt;{code}</code> Insert unusual characters by character code. For example, <code>&lt;C -v&gt;065</code>   <br/>
+<code>&lt;C - v&gt;{123}</code> Insert character by decimal code  <br/>
+<code>&lt;C - v&gt;u{1234}</code> Insert character by hexadecimal code  <br/>
+&ndash; Visual Mode
+1. <code>v</code> &ndash;  character-wise Visual mode   <code>V</code> &ndash; line-wise Visual mode  <code>&lt;C - v&gt;</code> &ndash; block-wise Visual mode  <code>gv</code> &ndash; reselect the last visual selection  <code>o</code> &ndash; go to the other end of highlighted text</p>
+
+<ul>
+<li>Command-Line Mode</li>
+<li><code>.</code> 代表当前行 <code>%</code> 代表所有行</li>
+<li><code>:/&lt;html&gt;/,/&lt;\/html&gt;/p</code>  Specify a range of lines by patterns</li>
+<li><code>:/&lt;html&gt;/+1,/&lt;\/html&gt;/-1p</code>Modify an Address using an offset</li>
+<li><code>[range]copy {address}</code>  Duplicate lines  也可以用<code>:t</code>  移动行用<code>:m</code></li>
+<li><code>@:</code>  Repeating the last Ex command</li>
+<li><code>:%normal A;</code>  Run Normal Mode Commands across a range  在命令行模式下运行normal模式下的命令</li>
+<li><code>&lt;C - d&gt;</code>  ask Vim to reveal a list of possible completions  自动补全</li>
+<li><code>&lt;C -r&gt;&lt;C - w&gt;</code>  Insert the current word at the command prompt</li>
+<li><code>:%s//&lt;C-r&gt;&lt;C-w&gt;/g</code>  Leaving the search field of the substitute command blank instructs Vim to reuse the most recent search pattern  重用上次的search pattern</li>
+<li>words与WORDS的区别:   <br/>
+As users, we can think of them in simpler terms: WORDS are bigger than words.  WORDS用W B E gE来操作，且移动的跨度比words大</li>
+<li><code>q:</code> 进入Command-Line Window</li>
+<li><code>:shell</code>   The <code>:!{cmd}</code> syntax is great for firing one-off commands, but what if we want to run several commands in the shell? In that case, we can use this command to start an interactive shell session.  可以用exit退出，回到vim</li>
+<li><code>&lt;C - z&gt;</code>  Putting Vim in the background  用<code>fg</code>返回</li>
+<li><code>:read !{cmd}</code> 把cmd运行结果读入当前buffer     <code>:write !{cmd}</code>  Use the contents of the buffer as standard input for the specified {cmd}.</li>
+<li>Filtering the contents of a buffer through an external command   <br/>
+The <code>:!{cmd}</code>command takes on a different meaning when it&rsquo;s given a range. The lines specified by <code>[range]</code> are passed as standard input for the <code>{cmd}</code>, and then the output from <code>{cmd}</code> overwrites the original contents of <code>[range]</code>.</li>
+<li>Manage Multiple Files</li>
+<li><code>:args</code>  argument list, represents the list of files that was passed as an argument when we ran the vim command.</li>
+<li><code>&lt;C - w&gt;s</code> divide the window horizontally   <code>&lt;C - w&gt;v</code> divide the window vertically. Each time we use these commands, the two resulting split windows will contain the same buffer as the original window that was divided.</li>
+</ul>
+
+
+<p>或者<code>:sp {filename}</code> 水平分割打开文件   <code>:vsp {filename}</code> 垂直分割打开文件</p>
+
+<p><code>&lt;C - w&gt;w</code> cycle between open windows   <br/>
+<code>:cl[ose]</code> or <code>&lt;C - w&gt;c</code>  close the active window   <br/>
+<code>:on[ly]</code> or <code>&lt;C - w&gt;o</code>  keep only the active window, closing all others
+3. <code>:tabe[dit] {filename}</code>  open {filename} in a new tab</p>
+
+<p><code>:tabc[lose]</code> close the current tab page and all of its windows.   <code>:tabo[nly]</code>   keep the active tab page, closing all others</p>
+
+<p><code>tabn[ext]</code>  or gt  Switch to the next tab page
+&ndash; Open Files and Save Them to Disk
+1. <code>:edit %:h&lt;Tab&gt;</code>  Open a File Relative to the active file directory.  The <code>%</code> symbol is a shorthand for the filepath of the active buffer. The <code>:h</code> modifier removes the filename while preserving the rest of the path
+2. <code>:e[dit] .</code> or <code>:E[xplore]</code> Open file explorer for the current working directory or the directory of the active buffer
+&ndash; Navigate Inside Files with Motions
+1. Real lines and Display lines     <br/>
+<code>gj</code> <code>gk</code>  go down/up one display line.    <br/>
+<code>g0</code> to first character of the display line    <br/>
+也就是所有在display line上的操作都是以g开头的
+2. <code>f{char}</code> <code>;</code> <code>,</code>  行内查找字符  重复  反向     <br/>
+小技巧： When using the character search commands, it&rsquo;s better to choose target characters with  a low frequency of occurrences. 尽量选出现频率低的
+3. <code>vi'</code> <code>va'</code>  区别是：第一个是inside，第二个是all. <code>cit</code> stands for &ldquo;change inside the tag&rdquo;
+4. <code>iw</code>与<code>aw</code>的区别  <code>iw</code> stands for &ldquo;current word&rdquo;, while <code>aw</code> stands for &ldquo;current word plus one space&rdquo;. 因此，<code>aw</code>对象适合用于删除（d）操作，而<code>iw</code>适合用于修改（c）操作。
+5. <code>m{a-zA-Z}</code> marks the current cursor location with the designated letter. Lowercase marks are local to each individual buffer, whereal uppercase marks are globally accessible. <code>'{mark}</code> moves to the line where a mark was set, positioning the cursor on the first non-whitespace character.<code>`{mark}</code>moves the cursor to the exact position where a mark was set.</p>
+
+<p>The <code>mm</code> and <code>'m</code> commands makes a handy pair. Respectively, they set the mark m and jump to it.
+6. Surround.vim 插件，非常酷～ 一开始装了不起作用，后来发现是跟.vimrc配置中关于fcitx的设置有冲突，只能暂时不用fcitx的配置了。    <br/>
+&ndash; Navigate Between Files with Jumps
+1. motions and jumps.  motions move around within a file, whereas jumps can move between files. jumps可以在文件之间跳转～
+2. <code>&lt;C - i&gt;</code>  jump back      <code>&lt;C - o&gt;</code> jump forth
+3. <code>(/)</code> <code>{/}</code>  jump to start of previous/next sentence/paragraph
+4. <code>H/M/L</code>  jump to top/middle/bottom of screen
+&ndash; Copy and Paste
+1. vim中使用<code>dd</code>或<code>yy</code>命令时，被复制或剪切的内容默认是放在未命名寄存器中的（unnamed register），若要指定特定的寄存器，需要<code>"{register}</code>，比如要复制内容到a寄存器，需要<code>"ayiw</code>，然后粘贴内容需要<code>"ap</code><br/>
+2. 当我们使用复制命令时（<code>y{motion}</code>），特定的文本不仅被复制到未命名寄存器中，它同时也被复制到了复制寄存器（yank register），这个寄存器可以用<code>"0</code>来引用。
+3. 黑洞寄存器（The Black Hole Register）。 在删除一些内容时，如果确定以后不会再使用它，那么为防止它污染当前的unamed register，可以用<code>"_</code>将它放入黑洞寄存器。 If we run the command <code>"_d{motion}</code>, then Vim deletes the specified text without saving a copy of it.
+4. 系统寄存器和选择寄存器。 用于Vim外的程序与Vim共享内存。<code>"+</code>可以访问到系统中复制、剪切到剪切板的内容，而<code>"*</code>是专门针对Linux平台上的X11系统的，在X11系统中，内容只要被选中即被放在了系统剪切板中了，此时在Vim中可用<code>"*</code>寄存器访问。
+5. 避免系统剪切板的内容剪切到Vim中出现太多缩进的情况。  这个问题的出现是由于autoindent特性的开启，如果此时需要在Insert模式下插入系统剪切板的内容，一个方法是先开启paste模式（<code>:set paste</code>），然后这时用鼠标中键粘贴就不会有问题了，不过记得用完要关掉paste模式（<code>:set paste!</code>）。更简单的方法是：直接在命令行模式下使用<code>"+p</code>或者<code>"*p</code>，不用管什么模式了。
+&ndash; Macros
+1. Series or Parallel 顺序还是并行</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[interview questions]]></title>
+    <link href="http://cs50Mu.github.io/blog/2014/10/09/interview-questions/"/>
+    <updated>2014-10-09T20:23:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2014/10/09/interview-questions</id>
+    <content type="html"><![CDATA[<h3>如何将a、b值进行交换，并且不使用任何中间变量？</h3>
+
+<p>用异或。。</p>
+
+<pre><code>a = a^b
+b = a^b
+a = a^b
+</code></pre>
+
+<h3></h3>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[理解Python中的stdin stdout stderr]]></title>
@@ -857,287 +1145,6 @@ To use animate.css in your website,simply drop the stylesheet into your document
 <p>所以，结论就是：如果你的学校不属于教育网，趁早不要折腾ipv6了，没用！</p>
 
 <p>PS: 还有学校的网络不属于教育网？！ 再次吐槽下CAUC坑爹的网络，友情提示下想要报考这个学校的童鞋们，千万不要来这里，这个学校的网络连渣都不如。。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[a day to remember]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/10/09/a-day-to-remember/"/>
-    <updated>2013-10-09T18:58:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/10/09/a-day-to-remember</id>
-    <content type="html"><![CDATA[<p>I will never forget that day, Oct 2nd 2013.</p>
-
-<p>Many years later, I&rsquo;ll still remember the day vividly. Lovely weather, cute girl, crowded subway, night walk in Beijing Hutong.. all combined into a wonderful scenery. I&rsquo;m pretty sure that what happened at that night gonna change my life track a little bit.</p>
-
-<p>It&rsquo;s like one moment you feel like you&rsquo;re disgarded by the whole world, and the next moment the whole world is with you!</p>
-
-<p>YES,love is so wonderful.^_^</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[A brand new blog]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/10/08/change-the-default-theme-for-octopress/"/>
-    <updated>2013-10-08T15:41:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/10/08/change-the-default-theme-for-octopress</id>
-    <content type="html"><![CDATA[<p>终于忍不住了。</p>
-
-<ul>
-<li><p>添加了disqus评论系统，还是挺简单的，Octopress内建了对disqus的支持，只要去disqus官网注册，然后在Octopress里开启一下就可以用了。具体是在<code>_config.yml</code>中设置。</p></li>
-<li><p>换了新主题fabric，好酷啊～～，竟然还有javascript特效！以前想着换主题应该挺麻烦，现在看来挺简单的，就是输几条命令而已：</p>
-
-<pre><code>  $ cd octopress
-  $ git clone git://github.com/panks/fabric.git .themes/fabric
-  $ rake install['fabric']
-  $ rake generate
-</code></pre></li>
-<li>添加了tag或category功能。其实，这个本来就有的，只是我不知道而已。。在每篇文章开始添加上category参数后它就有标签了～～一篇文章可以添加多个标签哦～</li>
-</ul>
-
-
-<p>于是，现在的博客是这个样子的。。有种屌丝一秒变高帅富的感觉有木有？！
-<img class="center" src="http://cs50Mu.github.io/images/newTheme.png">
-一个小tip，有时候可能会有一些帖子不想发布出去的，那要肿么办呢？  <br/>
-其实也很简单，在文章开头的参数中添加<code>published: false</code>，就可以隐藏文章(但其实已经发布到github了)，要公开文章只需要将参数改为<code>true</code>即可。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[confused about cronie]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/10/08/confused-about-cronie/"/>
-    <updated>2013-10-08T11:49:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/10/08/confused-about-cronie</id>
-    <content type="html"><![CDATA[<p>昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。  <br/>
-于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？</p>
-
-<p>发现Archlinux论坛上也有人有这样的疑问，思路整理如下：</p>
-
-<p>目前，可以使用<code>crontab -e</code>来添加命令或者把想定时运行的命令放在相应的<code>cron.{hourly,daily,monthly,weekly}</code>文件夹中。两者的区别是，通过<code>crontab -e</code>添加的任务可以指定具体的运行时间，可以精确到分钟，但需要保证机器一直运行，若在指定的时间点计算机没有在线，那么任务就不会运行；而放在那几个文件夹的脚本不可以指定精确的运行时间，但不要求计算机一直在线，计算机一旦在线就会检查相应文件夹下的脚本是否应该执行，若符合执行的条件则执行。那么它是通过什么方法来检查的呢？配置文件<code>/etc/anacrontab</code>的一个字段<code>period in days</code>指定了某个文件夹下的脚本的运行间隔时间，若计算机看到某个脚本距上次执行时间已经有n天或大于n天，那么它就会运行这个脚本。  <br/>
-以下的专业解释来自Man，哈哈</p>
-
-<blockquote><p>Anacron  is used to execute commands periodically, with a frequency specified in days.  Unlike cron(8),it does not assume that the machine is running continuously.  Hence, it can be used  on  machines  that are not running 24 hours a day to control regular jobs as daily, weekly, and monthly jobs.</p>
-
-<p>Anacron  reads  a  list  of jobs from the /etc/anacrontab configuration file (see anacrontab(5)).  This file contains the list of jobs that Anacron controls.  Each job entry specifies a  period  in  days, a delay in minutes, a unique job identifier, and a shell command.</p>
-
-<p>For each job, Anacron checks whether this job has been executed in the last n days, where n is the time period specified for that job.  If a job has not been executed in n days  or  more,  Anacron  runs  the job&rsquo;s shell command, after waiting for the number of minutes specified as the delay parameter.</p>
-
-<p>After  the  command exits, Anacron records the date (excludes the hour) in a special timestamp file for that job, so it knows when to execute that job again.</p></blockquote>
-
-<p>To summerize then,if you want to execute a script at a particular time, you should use <code>crontab -e</code>.If you just want the script to execute regardless of the time, you should drop it in the appropriate folder.</p>
-
-<p>做完上面这些后，我悲催的发现crond其实不适合用于定时运行每日一图的脚本。。最后加在awesome的开机启动，通过<code>theme.wallpaper</code>参数可以来设置墙纸，不过有一个矛盾，只能先设置墙纸然后才能下载每日一图。。暂时没找到很好的可以先下载再设置的方法。所以，目前用不了当天的图，用的是前一天的图。。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[python复习]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/09/30/some-python-practices/"/>
-    <updated>2013-09-30T21:47:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/09/30/some-python-practices</id>
-    <content type="html"><![CDATA[<p>发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫<strong>The Practice of Computing Using Python</strong>，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！</p>
-
-<p>书中在程序开发进阶一章中讲到了一点机器学习(machine learning)的东西，例子是一个预测乳腺癌的程序，基本的过程是这样的：首先，有一个数据样本，样本的参数是肿瘤的属性描述和是否为良性和恶性肿瘤的诊断结果，程序读入数据样本来构造分类器，构造的方法是，分别求出良性和恶性肿瘤的属性的平均值，然后再求这两个平均值的平均值，最后用这个分类器去预测一个肿瘤是良性还是恶性的。预测的方法是投票，若某个属性倾向于良性属性，则良性记一票，反之，恶性记一票，统计所有的属性，票数多者取胜。</p>
-
-<p>课后有一个类似的练习是预测成人的收入，用的还是UCI的机器学习资源库的数据集，不过不同的是这个数据样本里还有一些离散的属性，也就是不是一个具体的数值，是几个选项参数，比如，性别属性，当然只有男女了，国籍属性，当然就是那几个国家了，题目里没有说该怎么处理这类属性（或者说了我没有看懂），我想了个方法，根据收入大于5万和小于5万的分成两类，就某一类来说，对于某个离散属性，统计样本中该属性的分布情况，比如，国籍属性，就统计大于5万的人中美国的有多少个，加拿大的有多少个，英国的有多少个等等，然后找最大的作为这个属性的代表，也就是说在以后预测的时候，如果这个人这个属性的值是这个最大的值（或者说最流行的）的话就投一票。可惜实现起来有些问题，后来在写程序的过程中发现，有几个属性在两类中最大的那个都是一样的。。那这样就没什么意义了啊。。于是又想了一招，把那些离散属性的分布情况按从大到小排序，然后挨个比较，相同的话就继续往下找，直到找到最大的且不同的为止，恩，其它的非离散的参数跟例子是一样的处理，结果。。很不理想，预测的结果有20%的错误。。</p>
-
-<p>以下是在看书过程中做的笔记</p>
-
-<p>看到一篇讲编码的文章，来自<a href="http://ipie.blogbus.com/logs/19379694.html">这里</a>，看了后总算不那么迷糊了。</p>
-
-<p>首先要搞清楚，字符串在Python内部的表示是unicode编码，因此，在做编码转换时，通常需要以unicode作为中间编码，即先将其他编码的字符串解码（decode）成unicode，再从unicode编码（encode）成另一种编码。</p>
-
-<p>decode的作用是将其他编码的字符串转换成unicode编码，如str1.decode(&lsquo;gb2312&rsquo;)，表示将gb2312编码的字符串转换成unicode编码。</p>
-
-<p>encode的作用是将unicode编码转换成其他编码的字符串，如str2.encode(&lsquo;gb2312&rsquo;)，表示将unicode编码的字符串转换成gb2312编码。</p>
-
-<p>在某些IDE中，字符串的输出总是出现乱码，甚至错误，其实是由于IDE的结果输出控制台自身不能显示字符串的编码，而不是程序本身的问题。如在UliPad中运行如下代码：</p>
-
-<pre><code>s=u"中文"
-print s
-</code></pre>
-
-<p>会提示：UnicodeEncodeError: &lsquo;ascii&rsquo; codec can&rsquo;t encode characters in position 0-1: ordinal not in range(128)。这是因为UliPad在英文WindowsXP上的控制台信息输出窗口是按照ascii编码输出的（英文系统的默认编码是ascii），而上面代码中的字符串是Unicode编码的，所以输出时产生了错误。</p>
-
-<p>将最后一句改为：<code>print s.encode('gb2312')</code></p>
-
-<p>则能正确输出“中文”两个字。</p>
-
-<p>若最后一句改为：<code>print s.encode('utf8')</code></p>
-
-<p>则输出：<code>\xe4\xb8\xad\xe6\x96\x87</code>，这是控制台信息输出窗口按照ascii编码输出utf8编码的字符串的结果。</p>
-
-<p>另外，代码中字符串的默认编码与代码文件本身的编码一致，如：</p>
-
-<pre><code>s='中文'
-</code></pre>
-
-<p>如果是在utf8的文件中，该字符串就是utf8编码，如果是在gb2312的文件中，则其编码为gb2312。 这种情况下，要进行编码转换，都需要先用decode方法将其转换成unicode编码，再使用encode方法将其转换成其他编码。通常，在没有指定特定的编码方式时，都是使用的系统默认编码创建的代码文件，在这篇文章中可以看到如何获得系统的默认编码。</p>
-
-<p>如果字符串是这样定义：</p>
-
-<pre><code>s=u'中文'
-</code></pre>
-
-<p>则该字符串的编码就被指定为unicode了，即python的内部编码，而与代码文件本身的编码无关。因此，对于这种情况做编码转换，只需要直接使用encode方法将其转换成指定编码即可。</p>
-
-<p>如果一个字符串已经是unicode了，再进行解码则将出错，因此通常要对其编码方式是否为unicode进行判断：</p>
-
-<pre><code>isinstance(s, unicode)  #用来判断是否为unicode
-</code></pre>
-
-<p><strong>以下是才是读书笔记哦亲～～</strong></p>
-
-<p><em>关于复制</em>   <br/>
-python中分为深copy和浅copy。只复制引用，而不复制对象本身的情况，称为浅copy。复制对象内容，称为深copy。对于单个列表，深copy可以用[:]分片复制来实现；而对于
-列表的列表等复杂列表结构需要用copy模块的deepcopy函数实现。</p>
-
-<p><em>关于split()函数</em>  <br/>
-它在分割字符串的时候会自动把结尾的换行(\n)删除掉</p>
-
-<p><em>关于参数传递  可变对象</em>  <br/>
-由于传递的只是对象的引用，所以若对象为可变对象，则若在函数中对可变对象进行了修改，变化会反应在主调函数的实参对象上，这很容易造成莫名其妙的结果，切记！
-相应的，对于设置默认值参数也有一个类似的问题，如果默认参数设置为可变对象的话，默认参数会随着函数的调用不断变化。。引发看似很诡异的问题，所以一定不要用可变对象做默认参数！</p>
-
-<p><em>关于字典的copy</em>   <br/>
-newDict=myDict.copy()  注意，这依然是浅copy，会影响到字典中的可变对象。
-字典排序：先用列表解析转化为列表[(val,key) for key,val in d.items()]，然后再用列表的sort方法即可。
-键值交换：</p>
-
-<pre><code>  for (k,v) in d.items():
-        d2[v]=k
-</code></pre>
-
-<p><em>关于作用域</em>  <br/>
-作用域搜寻遵照LEGB规则(local/eclosing(指封闭在函数中的函数)/global/built-in)</p>
-
-<p><em>关于文件</em></p>
-
-<ul>
-<li>跳过第一行
-
-<ol>
-<li> 先使用readline()，再用for循环</li>
-<li> 用next(f)跳过</li>
-</ol>
-</li>
-<li>换行符：针对不同平台的不同标准，使用U修饰符可以由python统一解决，无需你操心。fd=open(&lsquo;file.txt&rsquo;,&lsquo;rU&rsquo;)文件内的移动：seek，fd.tell()报告当前位置，最常用的是fd.seek(0)，回到文件开头</li>
-</ul>
-
-
-<p><em>列表</em>   <br/>
-[0]*9=[0,0,0,0,0,0,0,0,0]</p>
-
-<p><em>关于类</em>   <br/>
-属性的名字前面有两条下划线时表示这是一个私有属性，不推荐在类外部更改私有属性。如果在类之外使用该属性，python会将属性名字改变，使得访问出错，比如会将<code>_attribute</code>改为<code>_className__attribute</code></p>
-
-<p><em>关于运算符重载</em>   <br/>
-python首先会用自检来检查参数的类型，再确定操作方式，若没有合适的操作，则会报错。  <br/>
-修复int+Rational的错误，Rational是新建的一个类，那么1+Rational(1,2)会报错，但又不可能修改int类为它添加针对Rational类的<code>__add__()</code>方法，那肿么办呢？答案是<code>__radd__()</code>方法，在Rational类中新加一个<code>__radd__()</code>方法，那么，python在计算1+Rational(1,2)时的步骤是这样的：首先尝试为int类型找到合适的带Rational参数的方法，可惜没找到，那么python开始在第二个操作类即Rational类查找<code>__radd__()</code>方法，如果找到的话，那么python将自动将表达式反转并调用<code>__add__()</code>方法，在这个例子中表达是变为<code>Rational(1,2).__radd__(1)</code>，这样在Rational类中再定义<code>__radd__()</code>方法直接返回<code>__add__()</code>的结果即可，因为加法是可交换的。</p>
-
-<p><em>捕获开发者犯的错误</em>   <br/>
-try-except是用来捕获用户犯的错误，而assert是用来捕获用户犯的错误，assert函数有两个参数，第一个参数是布尔值，如果为真，代码继续；如果为假，则引发assertionError。第二个参数是用于显示错误提示信息的。</p>
-
-<p><em>测试模块</em>   <br/>
-doctest  unittest</p>
-
-<p><em>递归</em>    <br/>
-1. 递归的思想是通过调用自身的函数来实现的，递归的主要思想还是分治，把一个大问题不断的分解成小的问题，直到最小的问题，而最小的问题是有答案的，最后，再把较小的解决方案重新组合成整体方案。  <br/>
-2. 递归是如何实现的呢？是通过栈(stack)来实现的，栈是一种后进先出的数据结构，计算机通过栈来对函数的调用进行跟踪。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[two more books about macro economics]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/09/11/two-more-books-about-macro-economics/"/>
-    <updated>2013-09-11T12:18:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/09/11/two-more-books-about-macro-economics</id>
-    <content type="html"><![CDATA[<h3>《一转念》 by 兰小欢</h3>
-
-<p>书中大部分内容讲的是用经济学的供求原理来解释生活中一些看似古怪的现象，还有一些作者的随想。以下是摘录：</p>
-
-<p>你要是把喜儿都霸占了，那大春儿可就要参军了</p>
-
-<p>表再谈神马公平了，一切都是供求惹的祸啊！这是我看到文中关于剩女与光棍的分析后不由得发出的感叹，一直以来总是理想主义的固执认为既然要求男女公平，那就一切都要公平，凭什么男生要买房，女生就什么都不用做？唉，供求决定地位、话语权啊！要怪也只能怪自己生不逢时，不说了，都是泪。</p>
-
-<p>为什么专制会培育仇恨？</p>
-
-<ul>
-<li>教育根植偏见</li>
-<li>信息流通不畅</li>
-<li>权力分配极度不均</li>
-</ul>
-
-
-<p>一旦官府认真发起对妖术的清剿，普通人就有了很好的机会来清算宿怨或谋取私利。这是扔在大街上的上了膛的武器，
-每个人——无论恶棍或良善——都可以取而用之。在这个权力对普通民众来说向来稀缺的社会里，以“叫魂”罪名来恶意中伤他人成了普通人的一种突然可得的权力。</p>
-
-<p>业余读书，除了天才诗人的诗歌，没有什么东西值得一个字一个字读的。而若为增长见识，那最重要的是<strong>主动思考而不是被动阅读</strong>，要努力提炼自己的东西，与别人互相比照，否则不如放下书本出门去旅行。</p>
-
-<p>做学问的六个阶段：</p>
-
-<ul>
-<li>第一阶段是“信”，真心的信，诚心诚意地信，切忌一上来就“疑”，一上来就“不屑”，一上来就认为教授水平不过如此，不过故作高深。</li>
-<li>第二阶段是“疑”，觉得曾经所学皆不可信，都是胡说八道。这是因为学多了，学久了，学深了，越学越难，每前进一步付出的代价和努力越来越大，往往还不甚了了，此时怀疑，其实多半是一种消极的心理作祟。</li>
-<li>第三阶段是“悟”</li>
-<li>第四阶段是“博”</li>
-<li>第五阶段是“言”</li>
-<li>第六阶段是“无知”</li>
-</ul>
-
-
-<h3>《王二的经济学故事》  by 郭凯</h3>
-
-<p>很好的一本书，看着作者的理智分析真的是一种享受。</p>
-
-<h4>关于分配</h4>
-
-<p>现在的贫富不均越来越大的现象并不全是贪污腐败的原因，美国的贪污腐败相对要少一些，但它的贫富差距依然越来越大。
-只要是市场经济，就必然有人做得好，有人做得坏，因而也就出现了贫富差距。</p>
-
-<p>中国目前的经济环境非常不公平，体现在：利率偏低，结果是老百姓补贴银行和企业；汇率偏低，结果是中国老百姓补贴外国人和出口商。</p>
-
-<p>恍然大悟：从某种意义上说，分配不均是现代市场经济的一个必然产物，因为市场本身就是一个能者多得，适者生存的地方，农耕社会很少出现分配不均是因为，不均的分配会直接导致吃不饱穿不暖，会影响生存问题。</p>
-
-<h4>关于收税</h4>
-
-<p>讨论税负高不高，一个很关键的变量是政府通过收税所提供的服务和公共产品的质量和数量如何。</p>
-
-<p>所得税和增值税：所得税可能会被高收入阶层逃掉，因为他们的收入可以不体现为工资，但增值税几乎不可能被逃掉，因为只要你买东西就要交增值税。这样看来，增值税似乎更公平一点，毕竟高收入人群花费也很大，花费越大，交税也越多。</p>
-
-<p>该不该收月饼税？问题实质是该不该对实物征税。答案是非常该，因为不征的结果是很多高收入阶层利用这个漏洞来逃税，该发奖金的时候不发，发月饼，送旅游服务，反正就是不以钱的形式出现，也就避免了交税，从而导致贫富差距加大。</p>
-
-<h4>关于房地产</h4>
-
-<p>中国的低息政策和缺乏好的投资渠道，使得房产成为很有吸引力的投资品。政府的限购令往往越限越高，不从本质上解决问题，违反市场规律强制的改变价格往往事与愿违。限购令实质上是地域歧视，只会加剧本来就不公平的户籍制度，其实要想限制投资购房的需求，不必非要限购，还有好多方法：加息、提高房贷首付比例、征收物业税、增加土地和住房供应、增加房屋短期买卖的交易费用。</p>
-
-<h4>关于汇率</h4>
-
-<p>中国目前实行的是固定汇率，而欧美实行的是浮动汇率，固定汇率不能随着经济形势的变化灵活变动。</p>
-
-<p>人民币对美元升值就意味着中国的外汇储备减少吗？不见得。用人民币来衡量的话，当然少了，但用美元来衡量的话，根本没有变。因此，考虑到外汇储备肯定是用来买老外的东西的，又不是用来买国内的东西的，所以人民币升值后中国的外汇储备并没有变。用人民币衡量导致的损失，是已经发生过的损失，也就是说我们以前对人民币的价值低估了，这些损失是过去这些年中国补贴外国消费者的一个度量。</p>
-
-<p>老美老吆喝着要人民币升值，对他们有好处吗？答：不见得。人民币升值会引发中国出口产品价格的升高，导致美国消费者必须面对更高的价格，购买了更少的东西。</p>
-
-<h4>关于货币政策</h4>
-
-<p>中国目前还是通过调整货币数量来控制货币政策，而不是通过价格也就是利率来调整，而市场中流通的货币量已经越来越难统计清楚，从而使的这种货币政策失灵。</p>
-
-<p>根据一价定律，中国实行固定汇率会将通货膨胀传染到中国来，因为根据一价定律，一件东西刨去运输成本，应该在两地卖一样的价格，因此，若中国的东西便宜，外国的东西贵，若实行固定汇率，那迟早中国的东西也会贵起来，但若实行浮动汇率的话，人民币可以升值，就可以避免自己国家的东西价格上涨，也就避免了通货膨胀。</p>
-
-<h4>关于经济政策的误解</h4>
-
-<p>贸易顺差大就一定会有顺差吗？中国的贸易顺差总是被解释成因为中国的对外贸易大部分是加工贸易，所以出口就一定会大于进口的，因此就一定会出现顺差。但你也可以买别的啊，重要的是交易到你需要的东西，赚了钱在家不用就是一堆废纸啊！这就跟一个人只会赚钱不会花还整天吹自己很有钱是一个道理嘛
-所以，作者在书中问道：一个只愿意赚别人钱却不愿意让别人赚钱的国家，最终的结果就是辛苦替全世界打工却不要回报，你不买别人的东西，最终要那么多钱又是为什么呢？</p>
-
-<p>民粹主义的危险。民粹主义是一种危险的政策取向，但又是一种对政治家充满了诱惑的政策取向。危险，是因为这些政策用一时、局部或者不可持续的利益来换取民众的支持，最终伤害的却是同样一批人最终和长远的利益。充满诱惑，则是因为这样的政策往往很有市场，让政客总有动力告诉老百姓他们想听的，而悄悄隐藏那些困难的选择。
-在中国收入差距日益拉大的今天，民粹主义者想：既然短期改变不了人群分化的现状，那就采取一些短期的政策让人少抱怨一点。抱怨房价，我就打压房价；有车的抱怨堵车，我就让没车的别买车。这样做更多的是引进新的扭曲，牺牲一部分人沉默的人而让另一部分抱怨的响的人得益。</p>
-
-<p>盗版的误区。如果知识产权得到保护，大家都用正版，那正版的价格很可能会大幅度下降。软件公司把软件价钱定这么高，完全是处于无奈，因为定低了还是没人卖，还不如定高点宰那些愿意出钱的人，毕竟能多赚点就多赚点嘛。这跟我们平常的普遍认识：价钱太高，所以只能用盗版，因果是颠倒的。正版的高价不是盗版的原因，而是盗版的结果。</p>
-
-<h4>关于发展模式</h4>
-
-<p>GDP的增长主要靠消费、投资、出口，而投资是在短期内最容易被影响的，投资就要寻找市场，在更困难的培育和开发国内市场和更简单的低价给国外企业代工之间，企业选择了后者，而我们的政策也用固定的低汇率来支持它们。低利率和低汇率对中国的投资和出口都是好消息，但背后隐藏着对投资和出口的巨大补贴。这些补贴，最终都来自中国的老百姓。老板们都有钱了，老百姓却没有钱。老百姓收入增长缓慢，当然就没有什么购买力了，内需就不强劲，但GDP还要继续增长啊，那就只能继续维持低利率、低汇率，促进出口和投资。
-低利率、低汇率和低排放成本、低能源成本，彻底扭曲了中国的产业结构。这种扭曲的一个集中体现就是，中国的经济极度的资本密集、能源密集、污染密集，却创造不出足够的就业，特别是大学生就业。原因是代工企业需要都是一些简单的工作，不需要什么高科技人才。</p>
 ]]></content>
   </entry>
   

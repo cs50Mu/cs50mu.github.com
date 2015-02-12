@@ -1,0 +1,215 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>problems about python and mysql - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="记录一下这几天项目上遇到的问题 Python 2.7的编码问题 Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。 import sys &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
+
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
+
+</head>
+
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
+  
+  <!-- GitHub -->
+  <li>
+  <a href="https://github.com/cs50mu" class="github" title="Github"></a>
+  </li>
+  
+  
+  <!-- Google Plus -->
+  <li>
+  <a href="http://plus.google.com/linuxfish.exe@gmail.com?rel=author" class="google" title="Google+"></a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li>
+  <a href="http://www.twitter.com/linuxfish" class="twitter" title="Twitter"></a>
+  </li>
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
+
+</header>
+
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Problems About Python and Mysql</h2>
+	<div class="entry-content"><p>记录一下这几天项目上遇到的问题</p>
+
+<h2>Python 2.7的编码问题</h2>
+
+<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
+
+<pre><code>import sys
+print sys.getdefaultencoding()  # 获取系统默认编码
+reload(sys)
+sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
+</code></pre>
+
+<h2>MySQL 乱码解决</h2>
+
+<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
+创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
+
+<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
+
+<h2>git</h2>
+
+<ul>
+<li>基于某个分支新建分支
+  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
+  git checkout muchunyu  # 切换到这个分支
+或者可以直接：   <br/>
+  git checkout -b muchunyu origin/dev</li>
+<li>只clone某个分支到本地
+  git clone -b <branch> &lt;remote_repo></li>
+</ul>
+
+
+<h2>常用数据库操作</h2>
+
+<pre><code>create database xxx; #创建数据库
+use xxx;   # 转到某个数据库
+create table xxx (....); # 创建表
+show tables;  # 显示数据库中的表
+describe xxxx; # 显示表结构
+drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
+truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
+</code></pre>
+
+<h2>参考</h2>
+
+<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
+<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
+<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
+</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/19/problems-about-python-and-mysql/#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+版权声明：自由转载-非商用-非衍生-保持署名 | <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">Creative Commons BY-NC-ND 3.0</a>
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+    </div>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2015
+
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'thehardwayiseasier';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql/';
+        var disqus_url = 'http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
+</body>
+</html>

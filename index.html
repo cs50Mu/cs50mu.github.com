@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Oct 7th, 2014 Tags: 看到一个题目，要求用Python实现linux中的命令tee的功能，tee的功能还是很简单的，就是把接收到的标准输入再输出到重定向和一个文件中。这些用Python来做应该不是什么难事，可是在Python里面怎么接收标准输入呢？ &hellip;">
+	<meta name="description" content="Published on: Feb 2nd, 2015 Tags: Python 里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -94,6 +94,453 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/02/02/logging-module-of-python/">
+		
+			Python的logging模块总结</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-02-02T10:58:00+08:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/python/'>Python</a>
+
+
+</div>
+    </div>
+		<p>里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、文件甚至远程主机上，还支持日志轮转，比如<code>RotatingFileHandler</code>支持按文件轮转，<code>TimedRotatingFileHandler</code>支持按时间轮转，formatter类，顾名思义，负责log信息的格式的设定。</p>
+
+<p>使用logging模块的基本流程为：先通过<code>logging.getlogger('loggername')</code>获取一个logger对象，然后根据需求为这个logger对象添加相应的handler和formatter，这样就算基本配置完了，这样就可以在你的程序里使用<code>logging.debug('debug info')</code>等类似语句来输出log信息了。</p>
+
+<p>在实际开发中一般是通过文件来进行配置的，配置信息全写在一个配置文件中，然后在脚本里读取配置信息，一个简单的示例：</p>
+
+<pre><code>import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+
+# create logger
+logger = logging.getLogger('simpleLogger')
+
+# use it
+logger.debug('debug info')
+logger.info('info message')
+logger.warn('warning info')
+logger.critical(''critical info')
+</code></pre>
+
+<p>配置文件如下，需要遵守一定的格式，具体要求见参考链接</p>
+
+<pre><code>[loggers]
+keys=root, simpleLogger
+
+[handlers]
+keys=consoleHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+...
+...
+[formatter_simpleFormatter]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=
+</code></pre>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://docs.python.org/2/howto/logging.html">Logging HOWTO</a></li>
+<li><a href="https://docs.python.org/2/library/logging.config.html#logging-config-api">Logging configuration</a>  这里详细讲了配置文件到底该怎么写</li>
+<li><a href="http://kenby.iteye.com/blog/1162698">使用python的logging模块</a></li>
+<li><a href="http://www.cnblogs.com/captain_jack/archive/2011/01/21/1941453.html">Python模块学习——logging</a></li>
+<li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/02/02/logging-module-of-python//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/01/20/trivial-problems/">
+		
+			Trivial Problems</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-20T18:40:00+08:00" pubdate data-updated="true">Jan 20<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>今天很高兴，因为解决了几个困扰很久的问题。</p>
+
+<h2>OpenVPN</h2>
+
+<p>为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大。</p>
+
+<p>不过，今天仔细一看，原来并不麻烦，只要把管理员提供的证书文件等放到相应文件夹上就搞定了！</p>
+
+<blockquote><p>将这几个文件放到/etc/openvpn目录下   xxx.ovpn ca.crt  xxx.crt  xxx.key  其中xxx.pvpn是配置文件
+然后就可以启动了！ sudo openvpn /etc/openvpn/xxx.ovpn   会提示输入密码，输入管理员提供的密码即可</p></blockquote>
+
+<h2>urxvt SSH远程登陆的问题</h2>
+
+<p>之前在Arch上用urxvt一直比较happy，不过公司里开发都是SSH远程登陆到linux主机上进行的，那么问题来了，明明在本地显示很正常的vim，SSH到了公司上的Linux主机上，显示就成了一堆渣。。明明vim的配置文件都是一样的啊。。  后来慢慢发现不是vim的问题，是终端的问题！！因为我换用lilyterm后就显示正常了！！然后，终于在今天让我google到解决方案了～</p>
+
+<blockquote><ol>
+<li><p>Run the following command on the external host to make a terminfo directory
+under the logged in user&rsquo;s home folder.</p>
+
+<pre><code>mkdir -p ~/.terminfo/r/
+</code></pre></li>
+<li><p>Copy the appropriate terminal profile from your local machine to the newly
+created folder on the remote host.</p>
+
+<pre><code>scp /usr/share/terminfo/r/rxvt-unicode-256color user@helloworld.com:.terminfo/r/
+</code></pre></li>
+<li><p>Restart the SSH connection. It should work now.</p></li>
+</ol>
+</blockquote>
+
+<h2>vim中使用tab自动补全</h2>
+
+<p>对于程序员来说，这世界上如果没有自动补全的话，简直不能想象。。之前习惯了使用TAB自动补全，现在在公司的远程Linux上却怎么也搞不出TAB自动补全的效果。。配置文件和插件都装一样的也不行。。。真是见鬼了。。 今天发现应该是之前装了supertab，然后不知道怎么又自己给删了，但是效果还在。。在远程Linux上装了supertab后，嗯，就是这个感觉～～</p>
+
+<p>本事件的教训就是，无论做什么一定要做好记录。。</p>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="http://www.cs.helsinki.fi/u/andrews/misc/full_urxvt_support_on_ssh_terminals.txt" title="">FULL URXVT TERMINAL SUPPORT FOR REMOTE (SSH) CONNECTIONS</a></li>
+<li><a href="" title="https://stavrovski.net/blog/installing-and-setting-up-openvpn-in-archlinux">Installing and setting up OpenVPN in ArchLinux</a></li>
+<li><a href="" title="https://wiki.archlinux.org/index.php/Airvpn">Configuring OpenVPN to connect as a client to an AirVPN server</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/20/trivial-problems//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/01/19/problems-about-python-and-mysql/">
+		
+			Problems About Python and Mysql</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-19T15:47:00+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>记录一下这几天项目上遇到的问题</p>
+
+<h2>Python 2.7的编码问题</h2>
+
+<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
+
+<pre><code>import sys
+print sys.getdefaultencoding()  # 获取系统默认编码
+reload(sys)
+sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
+</code></pre>
+
+<h2>MySQL 乱码解决</h2>
+
+<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
+创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
+
+<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
+
+<h2>git</h2>
+
+<ul>
+<li>基于某个分支新建分支
+  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
+  git checkout muchunyu  # 切换到这个分支
+或者可以直接：   <br/>
+  git checkout -b muchunyu origin/dev</li>
+<li>只clone某个分支到本地
+  git clone -b <branch> &lt;remote_repo></li>
+</ul>
+
+
+<h2>常用数据库操作</h2>
+
+<pre><code>create database xxx; #创建数据库
+use xxx;   # 转到某个数据库
+create table xxx (....); # 创建表
+show tables;  # 显示数据库中的表
+describe xxxx; # 显示表结构
+drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
+truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
+</code></pre>
+
+<h2>参考</h2>
+
+<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
+<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
+<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/19/problems-about-python-and-mysql//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/01/12/note-from-practical-vim/">
+		
+			Practical Vim 读书笔记</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-12T11:31:00+08:00" pubdate data-updated="true">Jan 12<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<ul>
+<li>The Vim Way</li>
+<li><code>.</code>命令可以重复做上一次的改变(repeat last change)。这里关键是要理解这个改变的意思，就我现在的理解，这个改变是不包括光标位置的移动的，只是指对文本内容的改变，比如删除 增加等等。理解这一点很重要。</li>
+<li><code>;</code> 分号，配合f使用，移动到下一个匹配的地方，反方向移动为<code>,</code></li>
+<li><code>*</code> 移动到下一个与当前光标处文本匹配的地方，并高亮显示所有匹配文本</li>
+<li>Normal Mode</li>
+<li><code>aw</code>  &ldquo;a word&rdquo; <code>daw</code>可删除整个单词，不管光标在哪里</li>
+<li><code>&lt;C - a&gt;</code>和<code>&lt;C - x&gt;</code> commands perform addition and subtraction on numbers.</li>
+<li><code>g~</code> swap case 改变大小写  <br/>
+<code>gu</code> make lowercase  <br/>
+<code>gU</code> make uppercase</li>
+<li><code>=</code> autoindent  自动缩进</li>
+<li>Insert Mode
+Most of Vim&rsquo;s commands are triggered from other modes, but some functionality is within easy reach from Insert mode.</li>
+<li><code>&lt;C - h&gt;</code> Delete back one character</li>
+<li><code>&lt;C - w&gt;</code> Delete back one word</li>
+<li><code>&lt;C - u&gt;</code> Delete back to start of line</li>
+</ul>
+
+
+<p>以上这几条在bash中也是可以的 <br/>
+4. <code>&lt;C - O&gt;</code>  execute one command, return to Insert mode. 所谓的Insert Normal Mode，在insert模式下进入此模式后可以执行一次normal模式下才能执行的命令后立即返回insert模式，可以配合zz（使光标处在屏幕中间）使用。如在编辑过程中光标处在最上端或者最下端了，此时想要看一看上下文，可以使用<code>&lt;C - O&gt;zz</code>，然后又立即可以继续编辑。
+5. <code>&lt;C - r&gt;{register}</code> Paste from a Register Without Leaving Insert Mode. For example, <code>&lt;C - r&gt;0</code>  不适合大段文本，因为这种情况下文本是一个字符一个字符粘贴过来的。
+6. <code>&lt;C - r&gt;=</code>  expression register. 可以用于在寄存器中evaluate表达式，然后把结果返回到当前光标处。
+7. <code>&lt;C - v&gt;{code}</code> Insert unusual characters by character code. For example, <code>&lt;C -v&gt;065</code>   <br/>
+<code>&lt;C - v&gt;{123}</code> Insert character by decimal code  <br/>
+<code>&lt;C - v&gt;u{1234}</code> Insert character by hexadecimal code  <br/>
+&ndash; Visual Mode
+1. <code>v</code> &ndash;  character-wise Visual mode   <code>V</code> &ndash; line-wise Visual mode  <code>&lt;C - v&gt;</code> &ndash; block-wise Visual mode  <code>gv</code> &ndash; reselect the last visual selection  <code>o</code> &ndash; go to the other end of highlighted text</p>
+
+<ul>
+<li>Command-Line Mode</li>
+<li><code>.</code> 代表当前行 <code>%</code> 代表所有行</li>
+<li><code>:/&lt;html&gt;/,/&lt;\/html&gt;/p</code>  Specify a range of lines by patterns</li>
+<li><code>:/&lt;html&gt;/+1,/&lt;\/html&gt;/-1p</code>Modify an Address using an offset</li>
+<li><code>[range]copy {address}</code>  Duplicate lines  也可以用<code>:t</code>  移动行用<code>:m</code></li>
+<li><code>@:</code>  Repeating the last Ex command</li>
+<li><code>:%normal A;</code>  Run Normal Mode Commands across a range  在命令行模式下运行normal模式下的命令</li>
+<li><code>&lt;C - d&gt;</code>  ask Vim to reveal a list of possible completions  自动补全</li>
+<li><code>&lt;C -r&gt;&lt;C - w&gt;</code>  Insert the current word at the command prompt</li>
+<li><code>:%s//&lt;C-r&gt;&lt;C-w&gt;/g</code>  Leaving the search field of the substitute command blank instructs Vim to reuse the most recent search pattern  重用上次的search pattern</li>
+<li>words与WORDS的区别:   <br/>
+As users, we can think of them in simpler terms: WORDS are bigger than words.  WORDS用W B E gE来操作，且移动的跨度比words大</li>
+<li><code>q:</code> 进入Command-Line Window</li>
+<li><code>:shell</code>   The <code>:!{cmd}</code> syntax is great for firing one-off commands, but what if we want to run several commands in the shell? In that case, we can use this command to start an interactive shell session.  可以用exit退出，回到vim</li>
+<li><code>&lt;C - z&gt;</code>  Putting Vim in the background  用<code>fg</code>返回</li>
+<li><code>:read !{cmd}</code> 把cmd运行结果读入当前buffer     <code>:write !{cmd}</code>  Use the contents of the buffer as standard input for the specified {cmd}.</li>
+<li>Filtering the contents of a buffer through an external command   <br/>
+The <code>:!{cmd}</code>command takes on a different meaning when it&rsquo;s given a range. The lines specified by <code>[range]</code> are passed as standard input for the <code>{cmd}</code>, and then the output from <code>{cmd}</code> overwrites the original contents of <code>[range]</code>.</li>
+<li>Manage Multiple Files</li>
+<li><code>:args</code>  argument list, represents the list of files that was passed as an argument when we ran the vim command.</li>
+<li><code>&lt;C - w&gt;s</code> divide the window horizontally   <code>&lt;C - w&gt;v</code> divide the window vertically. Each time we use these commands, the two resulting split windows will contain the same buffer as the original window that was divided.</li>
+</ul>
+
+
+<p>或者<code>:sp {filename}</code> 水平分割打开文件   <code>:vsp {filename}</code> 垂直分割打开文件</p>
+
+<p><code>&lt;C - w&gt;w</code> cycle between open windows   <br/>
+<code>:cl[ose]</code> or <code>&lt;C - w&gt;c</code>  close the active window   <br/>
+<code>:on[ly]</code> or <code>&lt;C - w&gt;o</code>  keep only the active window, closing all others
+3. <code>:tabe[dit] {filename}</code>  open {filename} in a new tab</p>
+
+<p><code>:tabc[lose]</code> close the current tab page and all of its windows.   <code>:tabo[nly]</code>   keep the active tab page, closing all others</p>
+
+<p><code>tabn[ext]</code>  or gt  Switch to the next tab page
+&ndash; Open Files and Save Them to Disk
+1. <code>:edit %:h&lt;Tab&gt;</code>  Open a File Relative to the active file directory.  The <code>%</code> symbol is a shorthand for the filepath of the active buffer. The <code>:h</code> modifier removes the filename while preserving the rest of the path
+2. <code>:e[dit] .</code> or <code>:E[xplore]</code> Open file explorer for the current working directory or the directory of the active buffer
+&ndash; Navigate Inside Files with Motions
+1. Real lines and Display lines     <br/>
+<code>gj</code> <code>gk</code>  go down/up one display line.    <br/>
+<code>g0</code> to first character of the display line    <br/>
+也就是所有在display line上的操作都是以g开头的
+2. <code>f{char}</code> <code>;</code> <code>,</code>  行内查找字符  重复  反向     <br/>
+小技巧： When using the character search commands, it&rsquo;s better to choose target characters with  a low frequency of occurrences. 尽量选出现频率低的
+3. <code>vi'</code> <code>va'</code>  区别是：第一个是inside，第二个是all. <code>cit</code> stands for &ldquo;change inside the tag&rdquo;
+4. <code>iw</code>与<code>aw</code>的区别  <code>iw</code> stands for &ldquo;current word&rdquo;, while <code>aw</code> stands for &ldquo;current word plus one space&rdquo;. 因此，<code>aw</code>对象适合用于删除（d）操作，而<code>iw</code>适合用于修改（c）操作。
+5. <code>m{a-zA-Z}</code> marks the current cursor location with the designated letter. Lowercase marks are local to each individual buffer, whereal uppercase marks are globally accessible. <code>'{mark}</code> moves to the line where a mark was set, positioning the cursor on the first non-whitespace character.<code>`{mark}</code>moves the cursor to the exact position where a mark was set.</p>
+
+<p>The <code>mm</code> and <code>'m</code> commands makes a handy pair. Respectively, they set the mark m and jump to it.
+6. Surround.vim 插件，非常酷～ 一开始装了不起作用，后来发现是跟.vimrc配置中关于fcitx的设置有冲突，只能暂时不用fcitx的配置了。    <br/>
+&ndash; Navigate Between Files with Jumps
+1. motions and jumps.  motions move around within a file, whereas jumps can move between files. jumps可以在文件之间跳转～
+2. <code>&lt;C - i&gt;</code>  jump back      <code>&lt;C - o&gt;</code> jump forth
+3. <code>(/)</code> <code>{/}</code>  jump to start of previous/next sentence/paragraph
+4. <code>H/M/L</code>  jump to top/middle/bottom of screen
+&ndash; Copy and Paste
+1. vim中使用<code>dd</code>或<code>yy</code>命令时，被复制或剪切的内容默认是放在未命名寄存器中的（unnamed register），若要指定特定的寄存器，需要<code>"{register}</code>，比如要复制内容到a寄存器，需要<code>"ayiw</code>，然后粘贴内容需要<code>"ap</code><br/>
+2. 当我们使用复制命令时（<code>y{motion}</code>），特定的文本不仅被复制到未命名寄存器中，它同时也被复制到了复制寄存器（yank register），这个寄存器可以用<code>"0</code>来引用。
+3. 黑洞寄存器（The Black Hole Register）。 在删除一些内容时，如果确定以后不会再使用它，那么为防止它污染当前的unamed register，可以用<code>"_</code>将它放入黑洞寄存器。 If we run the command <code>"_d{motion}</code>, then Vim deletes the specified text without saving a copy of it.
+4. 系统寄存器和选择寄存器。 用于Vim外的程序与Vim共享内存。<code>"+</code>可以访问到系统中复制、剪切到剪切板的内容，而<code>"*</code>是专门针对Linux平台上的X11系统的，在X11系统中，内容只要被选中即被放在了系统剪切板中了，此时在Vim中可用<code>"*</code>寄存器访问。
+5. 避免系统剪切板的内容剪切到Vim中出现太多缩进的情况。  这个问题的出现是由于autoindent特性的开启，如果此时需要在Insert模式下插入系统剪切板的内容，一个方法是先开启paste模式（<code>:set paste</code>），然后这时用鼠标中键粘贴就不会有问题了，不过记得用完要关掉paste模式（<code>:set paste!</code>）。更简单的方法是：直接在命令行模式下使用<code>"+p</code>或者<code>"*p</code>，不用管什么模式了。
+&ndash; Macros
+1. Series or Parallel 顺序还是并行</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/12/note-from-practical-vim//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2014/10/09/interview-questions/">
+		
+			Interview Questions</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-09T20:23:00+08:00" pubdate data-updated="true">Oct 9<span>th</span>, 2014</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<h3>如何将a、b值进行交换，并且不使用任何中间变量？</h3>
+
+<p>用异或。。</p>
+
+<pre><code>a = a^b
+b = a^b
+a = a^b
+</code></pre>
+
+<h3></h3>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2014/10/09/interview-questions//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -831,315 +1278,6 @@ def make_accumulator_nonlocal():
 </div>
 </article>
 
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/07/14/my-first-vps/">
-		
-			捣鼓VPS翻墙</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-07-14T22:19:00+08:00" pubdate data-updated="true">Jul 14<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/gfw/'>GFW</a>, <a class='category' href='/blog/categories/vps/'>vps</a>
-
-
-</div>
-    </div>
-		<p>在学校论坛上看到有人介绍在vps上搭建shadowsocks服务器来翻墙，看到他推荐的vps很便宜，一年才20多，于是立马也想买一个了，其实以前就想折腾vps的，无奈找到的vps价格都太高，一个月要几百块神马的，像我这么小气的人肿么可能舍得。。不过，这个实在是太便宜了啊，虽然配置是最低的了，72M内存，2G硬盘，但一个月有100G的流量，对于翻墙来说够用了，果断注册下单购买，只支持PayPal支付，于是又注册PayPal，在这上面折腾了很久，一开始注册成中国版的了，结果提示无法跨境支付，放狗搜索后发现，需要注册国际版的，以为还要审核神马的，结果直接绑定银行卡后就可以支付了，很方便啊！</p>
-
-<p>可是才用一天就被墙了！！我目前使用的是长城宽带的服务，ssh都无法登陆了，但后来发现使用学校自己的外网还是可以用的，学校的外网应该是用的联通的服务，后来我到V2EX上问了下发现有人用长城宽带的服务也有类似的问题，该死的长城宽带！</p>
-
-<h2>更新（20141002）</h2>
-
-<p>不久前听人说Bandwagon出加州机房了，一直懒得弄，今天花时间看了下，果然有加州机房了，果断迁移过去，给换了个新ip，然后shadowsocks不能用了，一开始以为是shadowsocks服务器端没开，后来发现是服务器端的设置里ip也需要更新下才行。</p>
-
-<p>正好记录下shadowsocks服务器端的配置，省得下次再忘。</p>
-
-<ul>
-<li>shadowsocks在服务器端是以daemon形式运行的。daemon脚本在<code>/etc/init.d/shadowsocks</code>，配置文件在<code>/etc/shadowsocks/config.json</code></li>
-<li>要启动/关闭/重启shadowsocks，只需在命令行执行<code>/etc/init.d/shadowsocks start/stop/restart</code>，它默认开始是自启动的。</li>
-<li>刚刚才知道，原来shadowsocks是socks代理，因此可以无压力访问https网站，再也不会遇到GoAgent一样的证书问题了～～哈哈，真好</li>
-</ul>
-
-
-<p>对了，火狐代理插件换成foxyproxy了，autoproxy已经好久不更新，基本无法使用了，之前一直迟疑不想换是因为听说foxyproxy配置比较麻烦，今天试了试才发现对于经常折腾的人来说根本就不是事～～ foxyproxy也支持订阅gfwlist列表，于是生活又美好起来了～～</p>
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="https://github.com/madeye/shadowsocks-libev">shadowsocks-libev</a></li>
-<li><a href="http://www.lucong.com.cn/lulu/centos-debian-shadowsocks-libev.html">CentOS、Debian下搭建shadowsocks-libev服务端</a></li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/07/14/my-first-vps//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/30/two-sort-algorithms/">
-		
-			冒泡排序和插入排序</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-30T20:07:00+08:00" pubdate data-updated="true">Mar 30<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<h2>冒泡排序</h2>
-
-<p>应该是最简单的吧，但是效率很低。对于给定的n个无序数列，不断的比较相邻的两个数的大小，若满足条件，则互换两个数的位置，这样经过一次循环后，最大的（或者最小的）数就冒出来了，经过n次循环，顺序就排好了。具体伪代码如下：</p>
-
-<pre><code>    for(i=0; i &lt; n; i++) {
-            for(j = 0; j &lt; n - i - 1; j++) {
-                    if(target[j] &gt; target[j+1]) {
-                            temp = target[j+1];
-                            target[j+1] = target[j];
-                            target[j] = temp;
-                    }   
-            }   
-    }   
-</code></pre>
-
-<h2>插入排序</h2>
-
-<p>模仿的是打牌的时候，插牌的方法。对于给定的n个无序数列，从第二个数开始往下循环到第n个数，在处理某个数的时候，依次比较这个数跟它之前的数的大小，直到找到合适的位置后就插入。具体伪代码如下：</p>
-
-<pre><code>    for(i = 1; i &lt; n; i++) {
-            key = target[i];  // 待插的值
-            for(j = i - 1; (j &gt;= 0) &amp;&amp; (target[j] &gt; key); j--) {
-                    target[j+1] = target[j];   // 移位，给要插入的数让位
-            }
-            target[j+1] = key;    // 插进去
-    }
-</code></pre>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/30/two-sort-algorithms//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/28/relearning-c/">
-		
-			重新学习C</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-28T20:14:00+08:00" pubdate data-updated="true">Mar 28<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>发现写learn python the hard way的大神Zed.A.Shaw的the hard其实是一个系列，除了python还有Ruby、C、SQL、Regex，都是我想学的有木有！这几天在看他的C的教程，虽然只是一个alpha版本，但已经很牛逼了啊，一开始还可以，现在光是消化一小节都要好几天好不好！看了他的教程，感觉自己以前学过的那点东西真的是连屎都不如。。anyway，学到了很多东东，记录下学到的东西。</p>
-
-<ul>
-<li>指针。发现在实际使用中很容易把指针变量和指针所指的内容搞混，要记住，指针变量里存放的只是一个地址而已，所以它的大小（位数）是固定的，应该是4个字节，跟它所指的内容没有一点关系。比如我在练习中遇到的一个问题是，有一个结构体，结构体有几个字符型指针，也就是说这几个指针是指向几个字符串的，然后在给这个结构体申请空间的时候我就晕了。。到底应该申请多少呢？直接malloc(sizeof(struct Address))吗？因为我总纠结着结构体里的字符型指针，想着这几个指针指向的字符数目又没有定，这可怎么办呢？其实是我想多了，把指针和它指向的内容混淆了，要知道，指针就是指针而已，大小固定，4个字节，所以上面那个结构体的大小是固定的，可以直接用sizeof来计算。至于那几个指针指向的字符串嘛，等要用的时候再malloc就可以了，也就是说它们跟上面说的结构体没半毛钱关系！只是因为里面有个指针指向了它们而已。</li>
-<li>内存管理。这个之前真的是没有想过，也没有遇到过。因为总是在用一些脚本语言，根本就没有关注过内存管理的问题，导致现在遇到都不知道该怎么处理了，现在通过一次练习，对内存管理有了一些理解了。基本上，在C中一切内存管理都要自己来，要放东西的时候就要自己malloc申请空间，不需要提前申请，只要在需要使用的时候申请就行了，然后记得申请的空间用完后要自己释放，否则会导致内存泄露！</li>
-<li>动态数据结构从文件的读取和写入。乍一想觉得挺简单，其实还是蛮复杂的好不好。。先说写入，这里说的动态结构是指用指针实现的，就是不是固定的数组，所以具体大小可以到时候malloc随意申请，灵活是灵活，但要写入文件的时候就SB了，不能像固定结构那样直接一个<code>fwrite(&amp;addr, sizeof(struct Addr), 1, fpr)</code>就行了好不好，你要自己找到指针指向的内容，然后一个一个自己写啊！再说读取，首先顺序要一致，怎么写入的就要怎么读取出来，否则肯定是没戏啊，然后读取的时候要先准备好地方啊！也就是说要为读入的数据用malloc提前申请空间啊！还有一个就是一次读入数据大小的问题，这个要好好弄清楚，我在练习的时候就是这个没弄清楚，导致程序一直都有问题，还是那句话，不要把指针和指针指向的内容混淆！！</li>
-<li>gdb。gdb是个神器！！</li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/28/relearning-c//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/03/get-your-visit-internet-frequency-by-python/">
-		
-			统计浏览器历史记录</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-03T19:13:00+08:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/python/'>python</a>, <a class='category' href='/blog/categories/bian-cheng/'>编程</a>
-
-
-</div>
-    </div>
-		<p>又是好久没更新。</p>
-
-<p>知乎是个好网站。那么多大牛分享自己的经验教训～涉及范围包罗万象，无所不有。对我而言，很重要的一点是它拓展了我的眼界，让我知道，哦，原来还可以这么想，事情还可以这么做，这世界上原来还有这样一种活法。。</p>
-
-<p>逛知乎的时候还是不由自主的看起编程方面的提问了，其中有一个问题是“用python可以做哪些有趣的事？”看到大家各种有趣的分享，我想这真是太酷了！一直以来，虽然对编程很感兴趣，但总是深入不进去，刚刚有点想法的时候，可总是考虑的太复杂，牵扯的知识点太多，然后要看很多东西，最后热情就这么一点点被消磨掉了，然后就是扔下好久不去想它，直到某天忽然又有热情了，如此循环往复。。看似做了很多，其实却一直在原地踏步。看了这么多知乎牛人的回答后，有了一点点启发，也有了具体的指导，那么就按各位大牛的做法来试试，从自己感兴趣的、容易实现的小玩意儿开始吧。</p>
-
-<p>要统计浏览器的访问记录，首先要找到访问记录，看起来简单，以为只要随便导出一下就可以了，实际还颇费了一番周折。火狐的历史记录以前是以xml格式存储的，现在则是用数据库格式存储的，位置是在<code>%appdata%\Mozilla\Firefox\Profiles\xxxxx.default\places.sqlite</code>。东西是找到了，可是肿么读出来呢？尼玛是数据库文件啊，我还不会用肿么办呢？google了一番后发现可以用firefox的一个扩展来打开读取，这个扩展叫SQLite Manager，相当赞，各种功能齐全，关键支持csv导出！好的，长话短说，导出为csv文件后就可以请python出场了！</p>
-
-<p>基本步骤是，先从csv文件中按行读出来，这数据库还是蛮大的，共13692条记录，然后从行中提取出需要的网址信息，放入一个列表中，然后再利用字典来统计各个网址的频度，程序如下：</p>
-
-<pre><code>#!/usr/bin/python
-
-import csv
-histList=[]
-histDict={}
-with open('f:\moz_places.csv','rb') as f:
-    reader = csv.reader(f)
-    for row in reader:
-    histList.append('/'.join((row[1].split('/'))[:3]))
-
-
-for place in histList:
-    if place not in histDict:
-    histDict[place] = 1
-    else:
-    histDict[place] += 1
-
-sortedDict = sorted(histDict.iteritems(),key=lambda d:d[1],reverse=True)
-
-for (place,freq) in sortedDict[:50]:
-    print '%s\t\t%s' %(freq,place)
-</code></pre>
-
-<p>PS，再总结下这几天学到的新东西：</p>
-
-<ul>
-<li>splinter。python下的一个网页应用测试库，就是可以操纵浏览器来与网站交互，玩了下还挺好上手，比底层一点的request神马的友好多了，之前还一直坚持不用这种直接操作浏览器的库，嫌太低端，现在看来，还是先从基础开始慢慢来吧。</li>
-<li>xpath。一种选择xml文件中节点的方法，通过它可以快速指定html文件中的元素。</li>
-<li>css selector。也是为了简化css而出现的，通过它也能快速指定网页中的特定元素。</li>
-</ul>
-
-
-<p>以上两个玩意儿的语法并不是很难，阮一峰的博客中都有介绍。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/03/get-your-visit-internet-frequency-by-python//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/12/31/last-day-of-2013/">
-		
-			Last Day of 2013</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-12-31T17:23:00+08:00" pubdate data-updated="true">Dec 31<span>st</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>今天是2013年最后一天了，不经意间一年又过去了。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/12/31/last-day-of-2013//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
 <nav id="pagenavi">
     
     
@@ -1151,7 +1289,7 @@ for (place,freq) in sortedDict[:50]:
     </div>
     <footer id="footer">
     <div style="display:inline">
-    Copyright &copy; 2014
+    Copyright &copy; 2015
 
     linuxfish
 . Powered by <a href="http://octopress.org">Octopress</a> | 

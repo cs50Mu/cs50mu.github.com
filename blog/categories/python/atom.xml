@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: python | The Hard Way Is Easier]]></title>
+  <title><![CDATA[Category: Python | The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2014-10-07T11:51:13+08:00</updated>
+  <updated>2015-02-12T15:20:38+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -14,492 +14,62 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Structure and Interpretation of Computer Programs]]></title>
-    <link href="http://cs50Mu.github.io/blog/2014/07/26/sicp/"/>
-    <updated>2014-07-26T22:59:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2014/07/26/sicp</id>
-    <content type="html"><![CDATA[<p>大名鼎鼎的SICP，下面是我在学习Berkeley的CS61A时做的笔记,非常有意思的一门课！</p>
+    <title type="html"><![CDATA[Python的logging模块总结]]></title>
+    <link href="http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python/"/>
+    <updated>2015-02-02T10:58:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python</id>
+    <content type="html"><![CDATA[<p>里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、文件甚至远程主机上，还支持日志轮转，比如<code>RotatingFileHandler</code>支持按文件轮转，<code>TimedRotatingFileHandler</code>支持按时间轮转，formatter类，顾名思义，负责log信息的格式的设定。</p>
 
-<h2>高阶函数</h2>
+<p>使用logging模块的基本流程为：先通过<code>logging.getlogger('loggername')</code>获取一个logger对象，然后根据需求为这个logger对象添加相应的handler和formatter，这样就算基本配置完了，这样就可以在你的程序里使用<code>logging.debug('debug info')</code>等类似语句来输出log信息了。</p>
 
-<p>理解这玩意儿有时候确实挺费脑筋。。。下面这个trick花了好久才理解。。关键一开始没想明白返回的到底是匿名函数还是匿名函数的执行结果</p>
+<p>在实际开发中一般是通过文件来进行配置的，配置信息全写在一个配置文件中，然后在脚本里读取配置信息，一个简单的示例：</p>
 
-<pre><code>def cons(a, b):
-    return lambda m: m(a,b) # 此处返回的是一个参数为m的匿名函数！！并且m是一个函数，m接受两个参数a和b
+<pre><code>import logging
+import logging.config
 
-def car(p):
-    return p(lambda x,y:x) # 
+logging.config.fileConfig('logging.conf')
 
-car(cons(1,2)) # 结果应该为1
+# create logger
+logger = logging.getLogger('simpleLogger')
+
+# use it
+logger.debug('debug info')
+logger.info('info message')
+logger.warn('warning info')
+logger.critical(''critical info')
 </code></pre>
 
-<p>以上代码大概类似于下面的代码：</p>
+<p>配置文件如下，需要遵守一定的格式，具体要求见参考链接</p>
 
-<pre><code>def fuck(func):
-    def wrapper(a,b):
-        return func(a,b)
-    return wrapper
+<pre><code>[loggers]
+keys=root, simpleLogger
 
-x = fuck(lambda x,y:x)
-x(1,2) # 输出1
+[handlers]
+keys=consoleHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+...
+...
+[formatter_simpleFormatter]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=
 </code></pre>
 
-<h2>递归  破钱</h2>
-
-<p>下面的函数实现的功能是，给定一个数值，比方说100块，和一堆小面额的纸币，找出用这些小面额纸币来表示这100块总共有几种方法。其中link函数是用来制作链表的，first函数返回链表的第一个元素，rest函数返回链表的剩余所有元素。可以看到函数是用递归实现的，依据大概是这样的：100块的表示方法可以分为两类，一类方法中使用链表中的第一个面额，另一类方法中不使用第一个面额。就这么简单。。。神奇的是它竟然是能工作的！</p>
-
-<pre><code>def count_change(amount, denominations):
-    '''
-    Return the number of ways to make change for amount
-    '''
-    if amount &lt; 0 or denominations == empty:
-        return 0
-    elif amount == 0:
-        return 1
-    using_coin = count_change(amount - first(denominations), denominations)
-    not_using_coin = count_change(amount, rest(denominations))
-    return using_coin + not_using_coin
-
-denominations = link(50, link(25, link(10, link(5, link(1, empty)))))
-&gt;&gt;&gt; print_linked_list(denominations)
-&lt; 50 25 10 5 1 &gt;
-&gt;&gt;&gt; count_change(100, denominations)
-292
-</code></pre>
-
-<h2>ADT(Abstract Data type)</h2>
-
-<p>ADT也属于抽象的一种，目的是控制复杂度，把复杂并且与下面要实现的功能无关的细节隐藏起来，只把几个关键的东西暴露给外部，要形成一个ADT一般需要一个constructor，一个selector，一个mutator等，有了这些，外部就可以用它们进一步实现别的功能了，像链表啊，树啊都属于ADT。其中，deep list和tree属于hierarchical data structure</p>
-
-<h2>Implicit Sequences</h2>
-
-<p>a sequence can be represented <strong>without</strong> each element being stored explicitly in the memory of the computer. That is, we can construct an object that provides access to all of the elements of some sequential dataset without computing all of those elements in advance and storing them. Instead, we compute elements on demand. 很巧妙的一种实现方式，不是把元素全部计算出来放在内存里等着去取，而是需要的时候才计算一个出来，这样可以节省大量的内存。这在计算机科学中叫lazy computation(lazy computation describes any program that delays the computation of a value until that value is needed). 但注意，实现这个强大功能的前提是sequential access(相对于random access)，也就是说只能按顺序依次获取，不能想取哪个就取哪个。嗯，iterator就是在这个背景下诞生了。。An iterator is an object that provides <strong>sequential access</strong> to an underlying sequential dataset. iterator就是为了方便处理那些具有内在顺序结构的数据而诞生的。The iterator abstraction has two components: a mechanism for retrieving the next element in some underlying series of elements and a mechanism for signaling that the end of the series has been reached and no further elements remain. In programming languages with built-in object systems, this abstraction typically corresponds to a particular interface that can be implemented by classes.</p>
+<h2>参考</h2>
 
 <ul>
-<li>iterators与iterables</li>
+<li><a href="https://docs.python.org/2/howto/logging.html">Logging HOWTO</a></li>
+<li><a href="https://docs.python.org/2/library/logging.config.html#logging-config-api">Logging configuration</a>  这里详细讲了配置文件到底该怎么写</li>
+<li><a href="http://kenby.iteye.com/blog/1162698">使用python的logging模块</a></li>
+<li><a href="http://www.cnblogs.com/captain_jack/archive/2011/01/21/1941453.html">Python模块学习——logging</a></li>
+<li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
 </ul>
 
-
-<p>原来这两个不是一个东西。iterators需要实现<code>__next__</code>方法，是具体干活的。   <br/>
-An object is iterable if it <strong>returns an iterator</strong> when its <code>__iter__</code> method is invoked. Iterable values represent data collections, and they provide a fixed representation that may produce more than one iterator. iterator和iterable类似于类和实例的关系吧,iterator负责实现模型、架构，iterable负责实例化。For example, an instance of the <code>Letters</code> class below represents a sequence of consecutive letters. Each time its <code>__iter__</code> method is invoked, a new <code>LetterIter</code> instance is constructed, which allows for sequential access to the contents of the sequence.</p>
-
-<pre><code>&gt;&gt;&gt; class LetterIter:
-    """An iterator over letters of the alphabet in ASCII order."""
-    def __init__(self, start='a', end='e'):
-        self.next_letter = start
-        self.end = end
-    def __next__(self):
-        if self.next_letter == self.end:
-        raise StopIteration
-        letter = self.next_letter
-        self.next_letter = chr(ord(letter)+1)
-        return letter
-
-&gt;&gt;&gt; class Letters:
-    def __init__(self, start='a', end='e'):
-        self.start = start
-        self.end = end
-    def __iter__(self):
-        return LetterIter(self.start, self.end)
-
-&gt;&gt;&gt; b_to_k = Letters('b', 'k')
-&gt;&gt;&gt; first_iterator = b_to_k.__iter__()
-&gt;&gt;&gt; next(first_iterator)
-'b'
-&gt;&gt;&gt; next(first_iterator)
-'c'
-&gt;&gt;&gt; second_iterator = iter(b_to_k)
-&gt;&gt;&gt; second_iterator.__next__()
-'b'
-&gt;&gt;&gt; first_iterator.__next__()
-'d'
-&gt;&gt;&gt; first_iterator.__next__()
-'e'
-&gt;&gt;&gt; second_iterator.__next__()
-'c'
-&gt;&gt;&gt; second_iterator.__next__()
-'d'
-</code></pre>
-
-<p>但是！在Python中<code>__next__</code>和<code>__iter__</code>方法是在同一个类中的！To use an iterator in a for loop, the iterator must also have an <code>__iter__</code> method. The <a href="http://docs.python.org/3/library/stdtypes.html#iterator-types">Iterator types</a> section of the Python docs suggest that an iterator have an <code>__iter__</code> method that returns the iterator itself, so that all iterators are iterable. 只要理解了<code>__iter__</code>方法的作用，也很容易理解的啦。</p>
-
-<ul>
-<li>Generators and Yield Statements</li>
-</ul>
-
-
-<p>Generators属于Iterator，a generator is an <strong>iterator</strong> returned by a special class of function called a generator function. Generator functions are distinguished from regular functions in that rather than containing return statements in their body, they use yield statement to return elements of a series.</p>
-
-<p>The Letters and Positives objects above require us to introduce a new field self.current into our object to keep track of progress through the sequence. With simple sequences like those shown above, this can be done easily. With complex sequences, however, it can be quite difficult for the <code>__next__</code> method to save its place in the calculation. Generators allow us to define more complicated iterations by leveraging the features of the Python interpreter.</p>
-
-<p>Generators do not use attributes of an object to track their progress through a series. Instead, they control the execution of the generator function, which runs until the next yield statement is executed each time the generator&rsquo;s <code>__next__</code> method is invoked. The Letters iterator can be implemented much more compactly using a generator function. 虽然实现的功能是一样的，但Generators与iterators的实现机理是不一样的，yield的机理貌似是coroutines，到底是个神马东东，待查。</p>
-
-<pre><code>&gt;&gt;&gt; def letters_generator():
-    current = 'a'
-    while current &lt;= 'd':
-        yield current
-        current = chr(ord(current)+1)
-
-&gt;&gt;&gt; for letter in letters_generator():
-    print(letter)
-a
-b
-c
-d
-</code></pre>
-
-<p>Even though we never explicitly defined <code>__iter__</code> or <code>__next__</code> methods, the yield statement indicates that we are defining a generator function. When called, a generator function doesn&rsquo;t return a particular yielded value, but instead a generator (which is a type of iterator) that itself can return the yielded values. A generator object has <code>__iter__</code> and <code>__next__</code> methods, and each call to <code>__next__</code> continues execution of the generator function from wherever it left off previously until another yield statement is executed.</p>
-
-<p>The first time <code>__next__</code> is called, the program executes statements from the body of the <code>letters_generator</code> function until it encounters the yield statement. Then, it pauses and returns the value of current. yield statements do not destroy the newly created environment, they preserve it for later. When <code>__next__</code> is called again, execution resumes where it left off. The values of current and of any other bound names in the scope of <code>letters_generator</code> are preserved across subsequent calls to <code>__next__</code>.</p>
-
-<p>这样，可以用yield语句来简化iterables的写法</p>
-
-<pre><code>&gt;&gt;&gt; class LettersWithYield:
-    def __init__(self, start='a', end='e'):
-        self.start = start
-        self.end = end
-    def __iter__(self):
-        next_letter = self.start
-        while next_letter &lt; self.end:
-        yield next_letter
-        next_letter = chr(ord(next_letter)+1)
-</code></pre>
-
-<p>以前没有Generators的时候，还需要定义一个<code>__next__</code>方法来生成iterator，然后用<code>__iter__</code>方法来返回self，这下因为yield本身返回的就是一个Generator(也属于Iterator)，所以无需<code>__next__</code>方法来生成iterator。</p>
-
-<h2>Mutation in for loops</h2>
-
-<p>如果在for循环中对对象做了修改（增加或删除），会出现无法预测的结果</p>
-
-<pre><code># Demo: Mutation in For Loops
-# lst = list(range(10, 20))
-# for item in lst:
-#     print(item)
-#     lst.remove(item)
-# lst
-# 下面是解决办法, 不过原理未搞懂，待查
-class BetterList(list):
-    def __iter__(self):
-    return list.__iter__(self[:])
-</code></pre>
-
-<h2>nonlocal与list</h2>
-
-<p>看下面两段代码</p>
-
-<pre><code>def make_accumulator():
-    """Return an accumulator function that takes a single numeric argument and
-    accumulates that argument into total, then returns total.
-    """
-    total = []
-    def accumulator(amount):
-    total.append(amount)
-    return sum(total)
-    return accumulator
-
-def make_accumulator_nonlocal():
-    """Return an accumulator function that takes a single numeric argument and
-    accumulates that argument into total, then returns total.
-    """
-    total = 0
-    def accumulator(amount):
-    nonlocal total
-    total += amount
-    return total
-    return accumulator
-</code></pre>
-
-<p>为何单个变量(total)在"全局"访问的时候需要nonlocal参数，而列表就不用了呢？</p>
-
-<h2>format method of strings</h2>
-
-<pre><code>&gt;&gt;&gt; 'I {0}, you {0}, we all {0} for {1}!'.format('scream', 'ice cream')
-'I scream, you scream, we all scream for ice cream!'
-</code></pre>
-
-<h2>Generic Functions</h2>
-
-<p>Generic functions are methods or functions that apply to arguments of different types. 我理解就是不管对象类型是不是一样，都可以用这个通用函数来做运算。Generic functions主要有下面三种实现方式：
-&ndash; Interfaces
-&ndash; Type dispatching
-&ndash; Coercion</p>
-
-<h2>Memoization</h2>
-
-<p>Keep track of all the calls we have ever made to fib and their answers. Then when we made a repeated recursive call, we immediately return the answer.</p>
-
-<h2>Huffman Encoding</h2>
-
-<p>一种可变编码方式，可针对词频进行优化编码，出现次数多的字母用相对小的位数来编码，出现次数多的字母用相对多的位数来编码，这样相对于固定位编码方式可节省存储空间。  <br/>
-使用方法：</p>
-
-<ul>
-<li>统计字母出现频率，并据此创建霍夫曼二叉树。创建的方法就是对给定的字母、频率，不停的merge掉频率最小的两个，并根据这两个生成一个新的HuffmanTree，它的频率为那两个频率最小的频率之和，以此直至只剩下两个HuffmanTree为止.</li>
-<li>编码</li>
-<li>解码
-编码和解码部分可用递归优雅的实现
-
-<h2>Scheme</h2></li>
-<li>区分symbol和string. When you type things in the interpreter, Scheme will evaluate it. The rule for evaluating a symbol is to get the value bound to that symbol. This is one difference between strings and symbols&mdash;symbols don&rsquo;t evaluate to themselves(which strings do). However, as you saw above, when you type in &lsquo;a, you get a. This is because when you use single quote, you&rsquo;re telling Scheme <strong>not to follow</strong> the normal rules of the evaluation and just have the symbol return as itself.</li>
-<li>Special Forms. 类似于其它语言中的关键字，比如define if and or等等</li>
-<li>Lambdas. 语法： <code>(lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code></li>
-<li>Functions. 语法：<code>(define (&lt;FUNCTIONNAME&gt; &lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code>. Python will automatically transform it to <code>(define &lt;FUNCTIONNAME&gt; (lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code> for you.所以在Scheme中，lambda更基础.</li>
-<li>关键字let. 语法：
-  (let ( (<SYMBOL1> <EXPR1>)
-      &hellip;
-      (<SYMBOLN> <EXPRN>) )
-      <BODY> )
-它等价于：<code>( (lambda (&lt;SYMBOL1&gt; ... &lt;SYMBOLN&gt;) &lt;BODY&gt;) &lt;EXPR1&gt; ... &lt;EXPRN&gt;)</code></li>
-<li>Pairs. 创建：<code>(define a (cons 1 2))</code> 获取： <code>(car a)</code> <code>(cdr a)</code></li>
-<li>List. A List is a specific kind of Pair that is either nil(an empty list) or a Pair whose cdr is another List. 比如，(cons 1 (cons 2 nil))，它可以简写成'(1 2)，检查List是否为空可用null?语句</li>
-</ul>
-
-
-<h2>Tail Recursion 尾递归</h2>
-
-<p>是对递归的一种优化，我们都知道，一般线性递归在新的调用之前需要在堆栈中保存当前调用的信息，这样随着函数调用的增多，对内存的占用会越来越大，而尾递归能够实现这一次的调用使用的堆栈空间直接覆盖上次用过的，因此虽然函数调用在不断进行，但对内存的占用却是不变的！（linuxfish注：看了一堆介绍，我肿么觉得尾递归有点过程语言中循环的感觉，是不是因为函数式编程中没有循环，才用尾递归的？）</p>
-
-<p>注意，要区分尾递归语法和尾递归优化，也就是说，你可以把递归写成尾递归的形式，但底层（解释器、编译器）是否给你优化就不一定了。比如，Python可以写成尾递归的形式，但是没用，照样会stackoverflow，因为解释器并不支持。</p>
-
-<h2>Streams</h2>
-
-<p>这应该是Python中generator的鼻祖了吧。Streams are a clever idea that allows one to use sequence manipulations without incurring the costs of manipulating sequences as list. With streams we can achieve the best of both worlds: We can formulate programs elegantly as sequences manipulations, while attaining the efficiency of <strong>incremental computation</strong>. The basic idea is to arrange to construct a stream only partially, and to pass the partial construction to the program that consumes the stream. If the consumer attempts to access a part of the stream that has not yet been constructed, the stream will automatically construct just enough more of itself to produce the required part, thus preserving the illusion that the entire stream exists. In other words. In other words, although we will write programs as if we were processing complete sequences, we design our stream implemention to automatically and transparently interleave the construction of the stream with its use.感觉这玩意儿纯粹是Schemer们妄图所有问题都用list pair来解决，发现不行后又整出来的一个东东。这也是所谓的函数式语言的懒惰特性，所谓懒就是不到万不得已不动弹。。而不是傻乎乎的一下子就把整个list都计算出来。</p>
-
-<h2>Declarative Programming</h2>
-
-<p>比如SQL语言</p>
-
-<p>data values are often stored in large repositories called databases. A database consists of a data store containing structured data values and an interface for retrieving subsets of the data based on their characteristics. Each value stored in a database is called a record. Records are typically retrieved via a query, which is an expression in a query programming language. By far the most ubiquitous query language in use is called Structure Query Language or SQL.</p>
-
-<p>SQL is an example of a declarative programming language. Expressions do not <strong>describe computations directly</strong>, but instead state the form of the <strong>result</strong> of some computation. It is the role of the <strong>query interpreter</strong> of the database system to design and perform a computational process to produce such a result.</p>
-
-<p>This interaction differs substantially from the procedural programming paradigm of Python or Scheme. In Python, <strong>computational processes are described directly by the programmer.</strong> A declarative language specifies the form of the result, but abstracts away procedural details.</p>
-
-<h2>Concurrency 并行</h2>
-
-<ul>
-<li>并行是一个现实问题，生活中经常会遇到，又是一个提升效率的好办法，并行办事比串行等待效率要高很多！</li>
-<li>由于线程并行所导致的问题可以通过引入锁的机制来解决，不过要注意防止死锁现象。</li>
-<li>还可以通过Message Passing来解决</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[统计浏览器历史记录]]></title>
-    <link href="http://cs50Mu.github.io/blog/2014/03/03/get-your-visit-internet-frequency-by-python/"/>
-    <updated>2014-03-03T19:13:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2014/03/03/get-your-visit-internet-frequency-by-python</id>
-    <content type="html"><![CDATA[<p>又是好久没更新。</p>
-
-<p>知乎是个好网站。那么多大牛分享自己的经验教训～涉及范围包罗万象，无所不有。对我而言，很重要的一点是它拓展了我的眼界，让我知道，哦，原来还可以这么想，事情还可以这么做，这世界上原来还有这样一种活法。。</p>
-
-<p>逛知乎的时候还是不由自主的看起编程方面的提问了，其中有一个问题是“用python可以做哪些有趣的事？”看到大家各种有趣的分享，我想这真是太酷了！一直以来，虽然对编程很感兴趣，但总是深入不进去，刚刚有点想法的时候，可总是考虑的太复杂，牵扯的知识点太多，然后要看很多东西，最后热情就这么一点点被消磨掉了，然后就是扔下好久不去想它，直到某天忽然又有热情了，如此循环往复。。看似做了很多，其实却一直在原地踏步。看了这么多知乎牛人的回答后，有了一点点启发，也有了具体的指导，那么就按各位大牛的做法来试试，从自己感兴趣的、容易实现的小玩意儿开始吧。</p>
-
-<p>要统计浏览器的访问记录，首先要找到访问记录，看起来简单，以为只要随便导出一下就可以了，实际还颇费了一番周折。火狐的历史记录以前是以xml格式存储的，现在则是用数据库格式存储的，位置是在<code>%appdata%\Mozilla\Firefox\Profiles\xxxxx.default\places.sqlite</code>。东西是找到了，可是肿么读出来呢？尼玛是数据库文件啊，我还不会用肿么办呢？google了一番后发现可以用firefox的一个扩展来打开读取，这个扩展叫SQLite Manager，相当赞，各种功能齐全，关键支持csv导出！好的，长话短说，导出为csv文件后就可以请python出场了！</p>
-
-<p>基本步骤是，先从csv文件中按行读出来，这数据库还是蛮大的，共13692条记录，然后从行中提取出需要的网址信息，放入一个列表中，然后再利用字典来统计各个网址的频度，程序如下：</p>
-
-<pre><code>#!/usr/bin/python
-
-import csv
-histList=[]
-histDict={}
-with open('f:\moz_places.csv','rb') as f:
-    reader = csv.reader(f)
-    for row in reader:
-    histList.append('/'.join((row[1].split('/'))[:3]))
-
-
-for place in histList:
-    if place not in histDict:
-    histDict[place] = 1
-    else:
-    histDict[place] += 1
-
-sortedDict = sorted(histDict.iteritems(),key=lambda d:d[1],reverse=True)
-
-for (place,freq) in sortedDict[:50]:
-    print '%s\t\t%s' %(freq,place)
-</code></pre>
-
-<p>PS，再总结下这几天学到的新东西：</p>
-
-<ul>
-<li>splinter。python下的一个网页应用测试库，就是可以操纵浏览器来与网站交互，玩了下还挺好上手，比底层一点的request神马的友好多了，之前还一直坚持不用这种直接操作浏览器的库，嫌太低端，现在看来，还是先从基础开始慢慢来吧。</li>
-<li>xpath。一种选择xml文件中节点的方法，通过它可以快速指定html文件中的元素。</li>
-<li>css selector。也是为了简化css而出现的，通过它也能快速指定网页中的特定元素。</li>
-</ul>
-
-
-<p>以上两个玩意儿的语法并不是很难，阮一峰的博客中都有介绍。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[python复习]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/09/30/some-python-practices/"/>
-    <updated>2013-09-30T21:47:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/09/30/some-python-practices</id>
-    <content type="html"><![CDATA[<p>发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫<strong>The Practice of Computing Using Python</strong>，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！</p>
-
-<p>书中在程序开发进阶一章中讲到了一点机器学习(machine learning)的东西，例子是一个预测乳腺癌的程序，基本的过程是这样的：首先，有一个数据样本，样本的参数是肿瘤的属性描述和是否为良性和恶性肿瘤的诊断结果，程序读入数据样本来构造分类器，构造的方法是，分别求出良性和恶性肿瘤的属性的平均值，然后再求这两个平均值的平均值，最后用这个分类器去预测一个肿瘤是良性还是恶性的。预测的方法是投票，若某个属性倾向于良性属性，则良性记一票，反之，恶性记一票，统计所有的属性，票数多者取胜。</p>
-
-<p>课后有一个类似的练习是预测成人的收入，用的还是UCI的机器学习资源库的数据集，不过不同的是这个数据样本里还有一些离散的属性，也就是不是一个具体的数值，是几个选项参数，比如，性别属性，当然只有男女了，国籍属性，当然就是那几个国家了，题目里没有说该怎么处理这类属性（或者说了我没有看懂），我想了个方法，根据收入大于5万和小于5万的分成两类，就某一类来说，对于某个离散属性，统计样本中该属性的分布情况，比如，国籍属性，就统计大于5万的人中美国的有多少个，加拿大的有多少个，英国的有多少个等等，然后找最大的作为这个属性的代表，也就是说在以后预测的时候，如果这个人这个属性的值是这个最大的值（或者说最流行的）的话就投一票。可惜实现起来有些问题，后来在写程序的过程中发现，有几个属性在两类中最大的那个都是一样的。。那这样就没什么意义了啊。。于是又想了一招，把那些离散属性的分布情况按从大到小排序，然后挨个比较，相同的话就继续往下找，直到找到最大的且不同的为止，恩，其它的非离散的参数跟例子是一样的处理，结果。。很不理想，预测的结果有20%的错误。。</p>
-
-<p>以下是在看书过程中做的笔记</p>
-
-<p>看到一篇讲编码的文章，来自<a href="http://ipie.blogbus.com/logs/19379694.html">这里</a>，看了后总算不那么迷糊了。</p>
-
-<p>首先要搞清楚，字符串在Python内部的表示是unicode编码，因此，在做编码转换时，通常需要以unicode作为中间编码，即先将其他编码的字符串解码（decode）成unicode，再从unicode编码（encode）成另一种编码。</p>
-
-<p>decode的作用是将其他编码的字符串转换成unicode编码，如str1.decode(&lsquo;gb2312&rsquo;)，表示将gb2312编码的字符串转换成unicode编码。</p>
-
-<p>encode的作用是将unicode编码转换成其他编码的字符串，如str2.encode(&lsquo;gb2312&rsquo;)，表示将unicode编码的字符串转换成gb2312编码。</p>
-
-<p>在某些IDE中，字符串的输出总是出现乱码，甚至错误，其实是由于IDE的结果输出控制台自身不能显示字符串的编码，而不是程序本身的问题。如在UliPad中运行如下代码：</p>
-
-<pre><code>s=u"中文"
-print s
-</code></pre>
-
-<p>会提示：UnicodeEncodeError: &lsquo;ascii&rsquo; codec can&rsquo;t encode characters in position 0-1: ordinal not in range(128)。这是因为UliPad在英文WindowsXP上的控制台信息输出窗口是按照ascii编码输出的（英文系统的默认编码是ascii），而上面代码中的字符串是Unicode编码的，所以输出时产生了错误。</p>
-
-<p>将最后一句改为：<code>print s.encode('gb2312')</code></p>
-
-<p>则能正确输出“中文”两个字。</p>
-
-<p>若最后一句改为：<code>print s.encode('utf8')</code></p>
-
-<p>则输出：<code>\xe4\xb8\xad\xe6\x96\x87</code>，这是控制台信息输出窗口按照ascii编码输出utf8编码的字符串的结果。</p>
-
-<p>另外，代码中字符串的默认编码与代码文件本身的编码一致，如：</p>
-
-<pre><code>s='中文'
-</code></pre>
-
-<p>如果是在utf8的文件中，该字符串就是utf8编码，如果是在gb2312的文件中，则其编码为gb2312。 这种情况下，要进行编码转换，都需要先用decode方法将其转换成unicode编码，再使用encode方法将其转换成其他编码。通常，在没有指定特定的编码方式时，都是使用的系统默认编码创建的代码文件，在这篇文章中可以看到如何获得系统的默认编码。</p>
-
-<p>如果字符串是这样定义：</p>
-
-<pre><code>s=u'中文'
-</code></pre>
-
-<p>则该字符串的编码就被指定为unicode了，即python的内部编码，而与代码文件本身的编码无关。因此，对于这种情况做编码转换，只需要直接使用encode方法将其转换成指定编码即可。</p>
-
-<p>如果一个字符串已经是unicode了，再进行解码则将出错，因此通常要对其编码方式是否为unicode进行判断：</p>
-
-<pre><code>isinstance(s, unicode)  #用来判断是否为unicode
-</code></pre>
-
-<p><strong>以下是才是读书笔记哦亲～～</strong></p>
-
-<p><em>关于复制</em>   <br/>
-python中分为深copy和浅copy。只复制引用，而不复制对象本身的情况，称为浅copy。复制对象内容，称为深copy。对于单个列表，深copy可以用[:]分片复制来实现；而对于
-列表的列表等复杂列表结构需要用copy模块的deepcopy函数实现。</p>
-
-<p><em>关于split()函数</em>  <br/>
-它在分割字符串的时候会自动把结尾的换行(\n)删除掉</p>
-
-<p><em>关于参数传递  可变对象</em>  <br/>
-由于传递的只是对象的引用，所以若对象为可变对象，则若在函数中对可变对象进行了修改，变化会反应在主调函数的实参对象上，这很容易造成莫名其妙的结果，切记！
-相应的，对于设置默认值参数也有一个类似的问题，如果默认参数设置为可变对象的话，默认参数会随着函数的调用不断变化。。引发看似很诡异的问题，所以一定不要用可变对象做默认参数！</p>
-
-<p><em>关于字典的copy</em>   <br/>
-newDict=myDict.copy()  注意，这依然是浅copy，会影响到字典中的可变对象。
-字典排序：先用列表解析转化为列表[(val,key) for key,val in d.items()]，然后再用列表的sort方法即可。
-键值交换：</p>
-
-<pre><code>  for (k,v) in d.items():
-        d2[v]=k
-</code></pre>
-
-<p><em>关于作用域</em>  <br/>
-作用域搜寻遵照LEGB规则(local/eclosing(指封闭在函数中的函数)/global/built-in)</p>
-
-<p><em>关于文件</em></p>
-
-<ul>
-<li>跳过第一行
-
-<ol>
-<li> 先使用readline()，再用for循环</li>
-<li> 用next(f)跳过</li>
-</ol>
-</li>
-<li>换行符：针对不同平台的不同标准，使用U修饰符可以由python统一解决，无需你操心。fd=open(&lsquo;file.txt&rsquo;,&lsquo;rU&rsquo;)文件内的移动：seek，fd.tell()报告当前位置，最常用的是fd.seek(0)，回到文件开头</li>
-</ul>
-
-
-<p><em>列表</em>   <br/>
-[0]*9=[0,0,0,0,0,0,0,0,0]</p>
-
-<p><em>关于类</em>   <br/>
-属性的名字前面有两条下划线时表示这是一个私有属性，不推荐在类外部更改私有属性。如果在类之外使用该属性，python会将属性名字改变，使得访问出错，比如会将<code>_attribute</code>改为<code>_className__attribute</code></p>
-
-<p><em>关于运算符重载</em>   <br/>
-python首先会用自检来检查参数的类型，再确定操作方式，若没有合适的操作，则会报错。  <br/>
-修复int+Rational的错误，Rational是新建的一个类，那么1+Rational(1,2)会报错，但又不可能修改int类为它添加针对Rational类的<code>__add__()</code>方法，那肿么办呢？答案是<code>__radd__()</code>方法，在Rational类中新加一个<code>__radd__()</code>方法，那么，python在计算1+Rational(1,2)时的步骤是这样的：首先尝试为int类型找到合适的带Rational参数的方法，可惜没找到，那么python开始在第二个操作类即Rational类查找<code>__radd__()</code>方法，如果找到的话，那么python将自动将表达式反转并调用<code>__add__()</code>方法，在这个例子中表达是变为<code>Rational(1,2).__radd__(1)</code>，这样在Rational类中再定义<code>__radd__()</code>方法直接返回<code>__add__()</code>的结果即可，因为加法是可交换的。</p>
-
-<p><em>捕获开发者犯的错误</em>   <br/>
-try-except是用来捕获用户犯的错误，而assert是用来捕获用户犯的错误，assert函数有两个参数，第一个参数是布尔值，如果为真，代码继续；如果为假，则引发assertionError。第二个参数是用于显示错误提示信息的。</p>
-
-<p><em>测试模块</em>   <br/>
-doctest  unittest</p>
-
-<p><em>递归</em>    <br/>
-1. 递归的思想是通过调用自身的函数来实现的，递归的主要思想还是分治，把一个大问题不断的分解成小的问题，直到最小的问题，而最小的问题是有答案的，最后，再把较小的解决方案重新组合成整体方案。  <br/>
-2. 递归是如何实现的呢？是通过栈(stack)来实现的，栈是一种后进先出的数据结构，计算机通过栈来对函数的调用进行跟踪。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[归并排序的非递归算法]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/07/03/merge-sort/"/>
-    <updated>2013-07-03T21:24:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/07/03/merge-sort</id>
-    <content type="html"><![CDATA[<p>归并排序的效率很高，复杂度只有NlogN，但想起来很费劲啊。。尤其是递归算法，绕来绕去的被绕晕了。。今天在看《Python编程实践》（Practical Programming-An Introduction to Computer Science Using Python）时看到一个归并排序的非递归算法，很好理解，记录下。</p>
-
-<pre><code>def merge(L1,L2):
-    """Merge sorted lists L1 and L2 and return the result."""
-    mergedlist = []
-    i1 = i2 = 0 
-    while i1 != len(L1) and i2 != len(L2):
-    if L1[i1] &lt;= L2[i2]:
-        mergedlist.append(L1[i1])
-        i1 += 1
-    else:
-        mergedlist.append(L2[i2])
-        i2 += 1
-
-    mergedlist.extend(L1[i1:])
-    mergedlist.extend(L2[i2:])
-    return mergedlist
-
-def mergesort(L):
-    """Sort L."""
-
-    workspace = []
-    for i in range(len(L)):
-    workspace.append([L[i]])
-
-    count = 0
-    while count &lt; len(workspace)-1:
-    newList = merge(workspace[count],workspace[count+1])
-    print newList
-    workspace.append(newList)
-    count += 2
-
-    return workspace[-1][:]
-</code></pre>
-
-<p>归并排序的基本思想是这样的，从归并两个字来看我们知道这种算法是通过合并子序列来实现的，普通的乱序序列肯定是不行的，但对于两个已经排好序的序列，很容易把它们合并成一个有序的序列，这就是第一个函数merge的作用。你会问：这有什么用啊？离我们的目标还差很远嘛！我们怎么可能从一个无序的序列变出两个有序的序列嘛？别急，这里用到了二分法的思想（so-called devide and conquer），不断的把问题二分化，直到最简单的情形，在这里也就是单个元素了，两个单个元素肯定是两个有序的序列啊！可以用merge函数来合并它们为一个含有两个元素的有序序列，那么第二个函数mergesort的作用就是：首先把无序列表分解成含有N个含单个元素的小列表，然后依次两两合并这些小列表，并把合并后的有序列表添加到这个列表之后，直到最后合并成一个有序的列表。</p>
-
-<p>额，表达能力太差了。。还是没有讲清楚</p>
-
-<p>比如列表原来为[8,7,6,5,4]，那么它的变化为<code>[[8],[7],[6],[5],[4]]--&gt;[[8],[7],[6],[5],[4],[7,8]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6],[4,7,8]]--&gt;[[8],[7],[6],[5],[4],[7,8],[5,6],[4,7,8],[4,5,6,7,8]]</code> <br/>
-结果列表的最后一个内嵌列表就是已排好序的序列了。</p>
 ]]></content>
   </entry>
   
