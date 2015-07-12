@@ -145,12 +145,18 @@
         <lastmod>2015-07-12T13:08:57+08:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://cs50Mu.github.io/blog/2015/07/12/continue-blogging-on-macosx-using-octoress/
+        </loc>
+        <lastmod>2015-07-12T20:18:57+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://cs50Mu.github.io/blog/archives/</loc>
-        <lastmod>2015-07-12T13:08:57+08:00</lastmod>
+        <lastmod>2015-07-12T20:18:57+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/</loc>
-        <lastmod>2015-07-12T13:08:57+08:00</lastmod>
+        <lastmod>2015-07-12T20:18:57+08:00</lastmod>
     </url>
     <url>
         <loc>http://cs50Mu.github.io/robots.txt</loc>
