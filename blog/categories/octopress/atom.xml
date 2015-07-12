@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Octopress | The Hard Way Is Easier]]></title>
+  <title><![CDATA[Category: octopress | The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2015-02-12T15:20:38+08:00</updated>
+  <updated>2015-07-12T13:13:42+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -14,114 +14,63 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Octopress搭建备忘]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/06/12/memo-about-octopress/"/>
-    <updated>2013-06-12T22:19:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/06/12/memo-about-octopress</id>
-    <content type="html"><![CDATA[<h2>缘由</h2>
+    <title type="html"><![CDATA[understand octopress]]></title>
+    <link href="http://cs50Mu.github.io/blog/2013/10/13/understand-octopress/"/>
+    <updated>2013-10-13T17:42:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2013/10/13/understand-octopress</id>
+    <content type="html"><![CDATA[<p>好奇害死猫。</p>
 
-<p>突然想玩玩Octopress，于是开始搜索，发现在Archlinux上使用Octopress会有两个问题</p>
+<p>一开始是想着给现在的博客主题添加一个sidebar，再后来就想着搞清楚Octopress的原理，仔细一研究，原来里面用到了好多好玩的新技术啊（对我而言的新技术，我对网页的认识还停留在html css php等），下面就盘点下我从Octopress/Jekyll里了解到的“新”技术。</p>
 
 <ul>
-<li>Ruby版本问题。Arch上的Ruby版本已经更新到2.0版本了，而Octopress用的是1.9版本的</li>
-<li>Octopress使用Pygments来高亮代码，而Pygments不支持Arch默认的Python 3</li>
+<li>Octopress是Jekyll的一个wrapper程序，Jekyll transform your plain text into static websites and blogs. Jekyll是一个静态博客编译器，负责把你写的代码编译成一个完整的博客网站。这样生成的网站属于静态网站，它是想对于wordpress这样的带数据库的动态网站而言的。很显然，静态网站的一大优点就是响应速度比动态网站相对要快，因为所有页面一旦生成就不再改变了嘛，不需要跟跟数据库交互；缺点就是每次更新都需要重新编译。</li>
+<li><p>Sass &amp;&amp; Compass。这年头写CSS是用Sass和Compass了，我已经OUT了太久了。CSS不是一种编程语言，没有变量，没有条件语句，只是一行行的描述，写起来很费事，于是程序员童鞋忍不住了，Sass诞生了！Sass是一种CSS的开发工具，提供了很多便利的写法，可大大节省设计者的时间，使得CSS的开发变得简单。Compass是Sass的工具库(toolkit)，Sass本身只是一个编译器，Compass在它的基础上，封装了一系列有用的模板，使得CSS的开发更加便利！它们之间的关系，类似Javascript和jQuery、python和Django的关系。  <br/>
+<strong>说到这里我可以自我鄙视下嘛？人家其实连CSS都不会。。</strong> 唉，各种标签、类一会儿就被转晕了。。</p></li>
+<li><p>YAML。递归的名字是YAML Ain&rsquo;t Markup Language，官方给出的定义：YAML is a human friendly data serialization
+standard for all programming languages.也就是说它是一种数据表示的标准，类似于xml，实际上是将来可能会取代xml的数据标准，YAML试图用一种比XML更敏捷的方式，来完成XML所完成的任务。我的感觉是，YAML确实比xml和jason更容易阅读，看起来结构比较清楚，容易理解一点。</p></li>
+<li>Liquid。Ruby library for rendering safe templates which cannot affect the security of the server they are rendered on.所谓的templating language，模板语言。可以嵌入在web页面中来形成模板页面，后期根据不同的页面参数会编译成不同的页面，甚至还支持使用if for等类编程语句，非常灵活。Jekyll在它的模板文件中大量使用了liquid语言。</li>
+<li>FontAwesome。The iconic font designed for Bootstrap.Font Awesome gives you scalable vector icons that can instantly be customized — size, color, drop shadow, and anything that can be done with the power of CSS.Font Awesome是一种出色的免费iconic font，别让字面意思误导了，这货其实不是字体，是网站上用的一些小图标，可能你都没有注意到，但也确实会给网站增色不少。看到一篇介绍iconic font的文章，<a href="http://lepture.com/work/iconic-fonts">Iconic Fonts 簡介</a>，讲的非常不错！我目前用的主题fabric的header里用的字体就是来自google font的Slackey。</li>
+<li>Animate.css。animate.css is a bunch of cool, fun, and cross-browser animations for you to use in your projects. Great for emphasis, home pages, sliders, and general just-add-water-awesomeness.用纯CSS实现的动画效果集合，非常酷！ <br/>
+How to use it?  <br/>
+To use animate.css in your website,simply drop the stylesheet into your document&rsquo;s <code>&lt;head&gt;</code>, and add the class <code>animated</code> to an element, along with any of the animation names.That&rsquo;s it! You&rsquo;ve got a CSS animated element.Super!
+关于怎么用CSS3实现动画效果，看<a href="http://www.w3schools.com/css3/css3_animations.asp">这里</a></li>
+<li>google web font。顾名思义，是Google提供的网上免费字体。使用方法之一是，首先在<code>&lt;header&gt;</code>里添加对网上字体的引用，比如<code>&lt;link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Tangerine"&gt;</code>，然后就可以在CSS里指定了。</li>
+<li><p>fancybox。FancyBox is a tool for displaying images, html content and multi-media in a Mac-style &ldquo;lightbox&rdquo; that floats overtop of web page. It was built using the jQuery library.</p></li>
+<li><p>两个html5新标签。通过这番折腾知道了两个新标签<code>&lt;header&gt;</code>和<code>&lt;article&gt;</code></p></li>
+<li>Octopress/Jekyll的layouts</li>
 </ul>
 
 
-<p>重新以“octopress archlinux”为参数搜索，找到一篇很好的针对Arch的教程，不过它是针对zsh写的，所以bash用户需要略做修改。</p>
+<p>其实很容易理解的东西，不知为什么搞了很久才弄明白，layouts文件夹里放的是博客的模板文件，顾名思义就是一个框架，相当于人的骨骼，把具体的博客内容填进去后就成了最终的博客。通常为了不同的用途，会有多个模板文件，为了简化代码，这几个模板文件之间通常有继承关系。比如，default.html里放的是所有页面都会有的东西，比如页面开始的引用、head、footer等，post.html在default.html的基础上再做进一步的修改，思想有点类似类的继承，不过在这里只能在原有的基础上继续添加，不能覆盖原来的“方法”。</p>
 
-<h2>安装过程</h2>
-
-<p>基本比较顺利，只记录下遇到的问题</p>
-
-<ul>
-<li><p>rbenv exec gem install bundler 这一步死活进行不下去！提示找不到bundler，搜索后说是可能是<code>http://rubygems.org/</code>无法访问了，在浏览器看了下访问正常啊！但就是不行。。最终解决办法，换源（尼玛还是GFW的事）:</p>
-
-<pre><code>  gem sources --remove http://rubygems.ogr/
-  gem sources -a http://ruby.taobao.org/   # 淘宝的RubyGems镜像
-  gem sources -l
-  *** CURRENT SOURCES ***
-
-  http://ruby.taobao.org
-</code></pre></li>
-<li><p>安装python-virtualenvwrapper的时候，有一个包一直装不上，提示不存在，纠结了很久，最后才恍然大悟，更新系统源后解决。</p></li>
-<li><p>新建帖子时不能用中文，否则标题会出乱码,可以先在<code>rake new_post["new post name"]</code>中使用英文名字，然后在具体编辑帖子的时候，修改title选项使用中文。</p></li>
-</ul>
-
-
-<h2>网站结构</h2>
-
-<p>根据我粗浅的理解，安装完成后博客的结构在github上是这样的：博客代码库名称是cs50mu.github.com，下面有两个分支，master分支是根据源码生成的blog静态页面；source分支是用于生成blog的源码，所以每次提交静态页面后还需要提交更新的blog源码，这个不要忘记了。</p>
-
-<h2>发布流程</h2>
-
-<p>首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）</p>
-
-<pre><code>workon blog_env
-</code></pre>
-
-<p>退出这个虚拟环境需要</p>
-
-<pre><code>deactivate
-</code></pre>
-
-<p>然后就可以开始啦！</p>
-
-<ol>
-<li>用<code>rake new_post["new post name"]</code>命令新建blog文章。</li>
-<li>在<code>souce/_post</code>文件夹用vim编辑新建的blog文件。</li>
-<li><code>rake preview</code>在本机预览。</li>
-<li><code>rake generate</code>和<code>rake deploy</code>提交到github。</li>
-<li><p>最后，不要忘记将更新后的源码提交到source分支。</p>
-
-<pre><code> git add .
- git commit -m 'some comment'
- git push origin source
-</code></pre></li>
-</ol>
-
-
-<h2>To-Do List</h2>
-
-<ul>
-<li>换一套博客模板,目前用的是系统默认的，我发现太多懒人了。。</li>
-<li>添加评论系统</li>
-<li>去掉twitter等在天朝不和谐的东东</li>
-</ul>
-
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="http://www.wongdev.com/blog/2013/01/16/octopress-on-archlinux/">Octopress on Arch Linux</a></li>
-<li><a href="http://shadow.ma/blog/2013/04/07/octopress-on-arch-linux/">Octopress 在 Arch Linux 下的一些問題</a></li>
-<li><a href="http://ishalou.com/blog/2012/10/15/how-to-use-octopress/">使用Octopress + Github管理blog</a>,这篇很不错，很适合我这样的菜鸟，看了它后基本理解了整个搭建原理。</li>
-</ul>
-
-
-<h2>不错的Markdown示例</h2>
-
-<ul>
-<li><a href="http://equation85.github.io/blog/markdown-examples/">Markdown语法示例</a>，非常不错！上面代码，下面展示效果，非常直观。</li>
-<li><a href="http://wowubuntu.com/markdown/#list">Markdown 语法说明</a></li>
-</ul>
-
-
-<h3>update:</h3>
-
-<p>终于找到Markdown中插入代码不起作用的原因了！原来在列表中嵌套的代码需要缩进2个tab才起作用。</p>
-
-<blockquote><p>To put a code block within a list item, the code block needs to be indented twice — 8 spaces or two tabs.
-<a href="http://daringfireball.net/projects/markdown/syntax#list">Ref</a></p></blockquote>
+<p>另外，在某个模板中还可以include进别的模板，比如在default.html中include进foot.html，这样做有利于管理代码，否则所有的代码都在一个文件里，看着混乱，也不容易管理。所有include的模板都在<code>source/_include</code>文件夹里。</p>
 ]]></content>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Hello,World]]></title>
-    <link href="http://cs50Mu.github.io/blog/2013/06/12/hello/"/>
-    <updated>2013-06-12T20:45:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2013/06/12/hello</id>
-    <content type="html"><![CDATA[<p>Hello,<em>Octopress</em>!This is my first post!</p>
+    <title type="html"><![CDATA[A brand new blog]]></title>
+    <link href="http://cs50Mu.github.io/blog/2013/10/08/change-the-default-theme-for-octopress/"/>
+    <updated>2013-10-08T15:41:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2013/10/08/change-the-default-theme-for-octopress</id>
+    <content type="html"><![CDATA[<p>终于忍不住了。</p>
+
+<ul>
+<li><p>添加了disqus评论系统，还是挺简单的，Octopress内建了对disqus的支持，只要去disqus官网注册，然后在Octopress里开启一下就可以用了。具体是在<code>_config.yml</code>中设置。</p></li>
+<li><p>换了新主题fabric，好酷啊～～，竟然还有javascript特效！以前想着换主题应该挺麻烦，现在看来挺简单的，就是输几条命令而已：</p>
+
+<pre><code>  $ cd octopress
+  $ git clone git://github.com/panks/fabric.git .themes/fabric
+  $ rake install['fabric']
+  $ rake generate
+</code></pre></li>
+<li>添加了tag或category功能。其实，这个本来就有的，只是我不知道而已。。在每篇文章开始添加上category参数后它就有标签了～～一篇文章可以添加多个标签哦～</li>
+</ul>
+
+
+<p>于是，现在的博客是这个样子的。。有种屌丝一秒变高帅富的感觉有木有？！
+<img class="center" src="/images/newTheme.png">
+一个小tip，有时候可能会有一些帖子不想发布出去的，那要肿么办呢？  <br/>
+其实也很简单，在文章开头的参数中添加<code>published: false</code>，就可以隐藏文章(但其实已经发布到github了)，要公开文章只需要将参数改为<code>true</code>即可。</p>
 ]]></content>
   </entry>
   
