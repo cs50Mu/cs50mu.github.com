@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Sep 18th, 2014 Tags: 算法 昨天去知道创宇的面试失败了，很感谢他们能给我这个机会。通过这次面试，我总算迈出了一步，更加明确了自己应该努力的方向。这次面试反映出的一个很严重的问题就是，手太生，学了这么长时间Python，竟然连一些常用的用法， &hellip;">
+	<meta name="description" content="Published on: Jul 26th, 2014 Tags: programming, python 大名鼎鼎的SICP，下面是我在学习Berkeley的CS61A时做的笔记,非常有意思的一门课！ 高阶函数 理解这玩意儿有时候确实挺费脑筋。。。下面这个trick花了好久才理解。。 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -94,131 +94,6 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration/">
-		
-			Binary Search and Spreadsheet Numeration</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-09-18T18:54:00+08:00" pubdate data-updated="true">Sep 18<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/suan-fa/'>算法</a>
-
-
-</div>
-    </div>
-		<p>昨天去知道创宇的面试失败了，很感谢他们能给我这个机会。通过这次面试，我总算迈出了一步，更加明确了自己应该努力的方向。这次面试反映出的一个很严重的问题就是，手太生，学了这么长时间Python，竟然连一些常用的用法，命令都得现查文档。自己反思一下，没有自己动手写多少代码，这个是问题的关键。</p>
-
-<p>面试我的雨哥人非常nice，面对我这么菜的表现没有一点不耐烦，他说的一句话让我印象深刻，“既然是有兴趣，平时就多花点时间，对得起兴趣这两个字”。我会的。</p>
-
-<h2>二分法查找</h2>
-
-<p>我想这个应该是最容易理解的算法了吧，我差点就在面试的时候完成了，well,almost&hellip;</p>
-
-<p>思路很简单，因为给出的列表已经是排好顺序的了，因此直接找到中间的一个记为mid，若是要找的元素，任务完成。若mid比要找的元素大，好的，那么要找的元素肯定在start跟mid之间了，若mid比要找的元素小，那么要找的元素肯定在mid和end之间了。</p>
-
-<pre><code>def binarySearch(lst, element, start, end):
-    mid = (start + end)/2 
-    if element == lst[mid]:
-    print 'Found, %d' % mid 
-    elif mid == start:
-    if element == lst[mid+1]:  # 主要处理两个相邻的数的情况，这种情形下mid必然等于start
-        print 'Found, %d' % (mid+1) # 因此如果end（也就是mid+1）不等于element的话，则没找到
-    else:
-        print 'Not found'
-    elif element &gt; lst[mid]:
-    return binarySearch(lst, element, mid, end)
-    elif element &lt; lst[mid]:
-    return binarySearch(lst, element, start, mid)
-
-def binarySearch2(lst, element, start, end):
-    mid = (start + end)/2
-    if element == lst[mid]:
-    return 'Found, %d' % mid 
-    elif start &gt; end:
-    return 'Not found'
-    elif element &lt; lst[mid]:
-    return binarySearch2(lst, element, start, mid-1)
-    elif element &gt; lst[mid]:
-    return binarySearch2(lst, element, mid+1, end)
-
-def binarySearch3(lst, element):
-    start = 0 
-    end = len(lst) - 1
-    while (start &lt;= end):
-    mid = (start + end)/2
-    if lst[mid] == element:
-        return 'Found', mid
-    elif lst[mid] &gt; element:
-        end = mid - 1
-    elif lst[mid] &lt; element:
-        start = mid + 1
-    return 'Not found'
-</code></pre>
-
-<p>上面的方法一是我自己瞎想的ugly思路，方法三是我在一站式C编程上看到的，方法二是我根据方法三的思路用递归改写的</p>
-
-<h2>spreadsheet numeration</h2>
-
-<p>这个题目其实我之前在CodeForces上做过的，可惜没有理解它的真谛，虽然当时误打误撞做出来了，还是没有效果，现在遇到还是不会做，面试中雨哥一句话点醒我，“进制转换”，是啊，这个问题实质上就是十进制转换26进制的问题。那进制转换无非就是要做除法、取余。但是也不是这么简单，有一个比较tricky的问题，就是在转换26的倍数的时候，需要做一些特殊处理才行。</p>
-
-<pre><code>def numTochar(num):
-    result = ''
-    ori = num 
-    while num:
-    mod = num % 26
-    if mod == 0:
-        mod = 26
-        num = num/26 - 1 # special cases for 'Z' 
-    else:
-        num /= 26
-    result = chr(mod + ord('A') - 1) + result
-    return result,ori
-
-def numTochar2(num):
-    result = ''
-    ori = num 
-    while num:
-    mod = num % 26
-    if mod == 0:
-        mod = 26
-    num -= 1       # a more elegant solution
-    num /= 26
-    result = chr(mod + ord('A') - 1) + result
-    return result,ori
-</code></pre>
-
-<p>方法一是我自己捣鼓的，方法二是我在CodeForces上看到了，效果应该是一样的，都是为了在转换26的倍数的时候能够得出正确的结果，做出的一点特殊处理，不过显然后者更加优雅，每个数在除26之前先减1,这样既对于非26倍数的数没有影响，又能巧妙的处理26的倍数时的特殊情况。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration//blog/page/2/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
 
 
     <article class="post">
@@ -896,6 +771,58 @@ for (place,freq) in sortedDict[:50]:
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2013/12/01/nexus5-has-arrived//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/11/26/grandfather-is-gone/">
+		
+			爷爷走了</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-26T22:28:00+08:00" pubdate data-updated="true">Nov 26<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/qin-qing/'>亲情</a>, <a class='category' href='/blog/categories/si-wang/'>死亡</a>, <a class='category' href='/blog/categories/sheng-huo/'>生活</a>
+
+
+</div>
+    </div>
+		<p>今晚接到爸爸的电话，说要跟我说点事，我就猜是不是爷爷，果然，一时间竟不知该说什么好。</p>
+
+<p>爷爷是星期天（24号）没的，刚刚几天前打电话，才得知他又病了，送去医院检查，医生说太严重要进重症监护室，姑姑们可能嫌医药费太贵又让搬回家了。当时爸爸说爷爷可能时日不多了，我就问要不要回去看看他，爸爸说先不用，我也没有多说什么。</p>
+
+<p>当时打电话说到爷爷重病的时候，我脑海里立马浮现的是今年过年回去看他时他的样子，吃饭时坐着个高高的马扎，双手吃力的举着碗，一副病恹恹的样子，可怜的眼神，记得当时还捏了我的胳膊一下，说胳膊这么细。。没想到当时就是最后一别了！</p>
+
+<p>因为爸妈跟爷爷奶奶的关系不好，我从大概高中就很少去爷爷奶奶家了，每年去的次数都可以数过来，过年去一次，平时放假去一次，中秋去一次，除了这些日子，除非有什么事，一般是不会再去了。小时候不懂事还是会经常去，现在仍能清晰记得在奶奶家时，他们如何说我爸妈不好，然后我又回家如实“转告”给爸妈，然后惹得妈妈又生气难受。。从小到大都是在这样的环境中成长的，奶奶对爸妈无休止的数落，妈妈如祥林嫂般的诉苦，而爸爸只会默默的不说话。</p>
+
+<p>我不知道大人们为什么要这样，我曾经也以为或许别人家也是这样的，或许这个世界就是这样的，直到我成了大人才发现原来不是这样的。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/11/26/grandfather-is-gone//blog/page/2/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
