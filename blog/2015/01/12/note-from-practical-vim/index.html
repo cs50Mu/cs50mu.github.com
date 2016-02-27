@@ -225,7 +225,22 @@ The <code>mm</code> and <code>'m</code> commands makes a handy pair. Respectivel
 <li>Macros
 
 <ol>
-<li> Series or Parallel 顺序还是并行</li>
+<li> <code>q{register}</code> 开始录制，再次按q来停止录制，可以通过<code>:reg {register}</code>来查看宏的内容</li>
+<li> 通过<code>@{register}</code>来执行宏，<code>@@</code>来执行最近调用过的宏</li>
+<li> Series or Parallel 顺序还是并行。以并行方式执行宏，遇到错误时不会停止。</li>
+<li> 录制宏的原则：确保每条命令都可以被<strong>重复</strong>执行</li>
+<li> 如何以并行方式执行宏？先在visual模式下选中需要执行宏的所有行，然后在命令行<code>:normal @a</code></li>
+<li> 在宏的末尾追加命令。假设之前录制的宏为a，则使用<code>qA</code>可以在原来的宏末尾继续添加命令而不会覆盖之前的宏。</li>
+</ol>
+</li>
+<li>Matching Patterns and Literals
+
+<ol>
+<li> 按正则表达式查找时，使用<code>\v</code>模式开关，这会开启very magic搜索模式 eg. <code>/\v#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})</code></li>
+<li> 按原义查找文本时，使用<code>\V</code>原义开关 eg. <code>/\Va.k.a</code></li>
+<li> 界定单词的边界。用<code>&lt; &gt;</code>来标识单词的边界  eg. <code>/\v&lt;the&gt;</code></li>
+<li> 界定匹配的边界。用<code>\zs</code>标识匹配的开始，<code>\ze</code>标识匹配的结束，比较有趣，查找还按原来的规则查找，只是显示匹配的时候只把感兴趣的部分显示出来。 eg. <code>/\v"\zs[^"]+\ze"</code> 只显示引号内的内容</li>
+<li> 统计当前模式的匹配个数。 <code>:%s///gn</code></li>
 </ol>
 </li>
 </ul>
@@ -251,7 +266,7 @@ The <code>mm</code> and <code>'m</code> commands makes a handy pair. Respectivel
     </div>
     <footer id="footer">
     <div style="display:inline">
-    Copyright &copy; 2015
+    Copyright &copy; 2016
 
     linuxfish
 . Powered by <a href="http://octopress.org">Octopress</a> | 
