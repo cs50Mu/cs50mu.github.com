@@ -1,0 +1,219 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>csapp system level io - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="概览 是什么？ Input/output (I/O) is the process of copying data between main memory and external devices such as disk drives, terminals, and networks. An &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+    <!--    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.useso.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <!-- <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>-->
+    <link href='http://fonts.useso.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>-->
+    <link href='http://fonts.useso.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+    <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>-->
+	<script src="//ajax.useso.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
+
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
+
+</head>
+
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
+  
+  <!-- GitHub -->
+  <li>
+  <a href="https://github.com/cs50mu" class="github" title="Github"></a>
+  </li>
+  
+  
+  <!-- Google Plus -->
+  <li>
+  <a href="http://plus.google.com/linuxfish.exe@gmail.com?rel=author" class="google" title="Google+"></a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li>
+  <a href="http://www.twitter.com/linuxfish" class="twitter" title="Twitter"></a>
+  </li>
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
+
+</header>
+
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Csapp System Level Io</h2>
+	<div class="entry-content"><h3>概览</h3>
+
+<p>是什么？</p>
+
+<p>Input/output (I/O) is the process of copying data between main memory and external devices such as disk drives, terminals, and networks. An input operation copies data from an I/O device to main memory, and an output operation copies data from memory to a device.</p>
+
+<p>为什么？</p>
+
+<p>All language run-time systems provide higher-level facilities for performing I/O. For example, ANSI C provides the standard I/O library, with functions such as printf and scanf that perform buffered I/O. The C++ language provides similar functionality with its overloaded &lt;&lt; (“put to”) and >> (“get from”) operators. On Unix systems, these higher-level I/O functions are implemented using system-level Unix I/O functions provided by the kernel. <strong>Most of the time, the higher-level I/O functions work quite well and there is no need to use Unix I/O directly. So why bother learning about Unix I/O?</strong></p>
+
+<ul>
+<li><p>Understanding Unix I/O will help you understand other systems concepts. I/O is integral to the operation of a system, and because of this we often encounter circular dependences between I/O and other systems ideas.</p></li>
+<li><p>Sometimes you have no choice but to use Unix I/O. There are some important cases where using higher-level I/O functions is either impossible or inappro- priate. For example, the standard I/O library provides no way to access file metadata such as file size or file creation time. Further, there are problems with the standard I/O library that make it risky to use for network programming.</p></li>
+</ul>
+
+
+<h3>Unix I/O</h3>
+
+<p>A Unix file is a sequence of m bytes.</p>
+
+<p>All I/O devices, such as networks, disks, and terminals, are modeled as files, and all input and output is performed by reading and writing the appropriate files. This elegant mapping of devices to files allows the Unix kernel to export a simple, low-level application interface, known as Unix I/O, that enables all input and output to be performed in a uniform and consistent way. 所有的io设备都被抽象成文件，对设备的输入输出操作被抽象成对文件的读和写操作。</p>
+
+<p>针对文件的基本操作：</p>
+
+<ul>
+<li>Opening files. An application announces its intention to access an I/O device by asking the kernel to open the corresponding file. The kernel returns a small nonnegative integer, called a descriptor, that identifies the file in all subsequent operations on the file. The kernel keeps track of all information about the open file. The application only keeps track of the descriptor.</li>
+</ul>
+
+
+<p>Each process created by a Unix shell begins life with three open files: standard input (descriptor 0), standard output (descriptor 1), and standard error (descriptor 2). The header file <code>&lt;unistd.h&gt;</code> defines constants <code>STDIN_ FILENO</code>, <code>STDOUT_FILENO</code>, and <code>STDERR_FILENO</code>, which can be used instead of the explicit descriptor values. 进程从出生自带三个打开的文件：标准输入、标准输出和标准错误输出。</p>
+
+<ul>
+<li><p>Changing the current file position. The kernel maintains a file position k, ini- tially 0, for each open file. The file position is a byte offset from the beginning of a file. An application can set the current file position k explicitly by per- forming a seek operation.</p></li>
+<li><p>Reading and writing files. A read operation copies n > 0 bytes from a file to memory, starting at the current file position k, and then incrementing k by n. Given a file with a size of m bytes, performing a read operation when k ≥ m triggers a condition known as end-of-file (EOF), which can be detected by the application. There is no explicit “EOF character” at the end of a file. 在文件中并不存在EOF这个字符，EOF是由操作系统触发的。</p></li>
+<li><p>Closing files. When an application has finished accessing a file, it informs the kernel by asking it to close the file. The kernel responds by freeing the data structures it created when the file was opened and restoring the descriptor to a pool of available descriptors. When a process terminates for any reason, the kernel closes all open files and frees their memory resources.</p></li>
+</ul>
+
+
+<p>读或者写函数有时候返回的字节数要比你要求的要少，这并不代表有错，出现这种情形的原因有以下几点(In some situations, read and write transfer fewer bytes than the application requests. Such short counts do not indicate an error. They occur for a number of reasons)：</p>
+
+<ul>
+<li><p>Encountering EOF on reads. Suppose that we are ready to read from a file that contains only 20 more bytes from the current file position and that we are reading the file in 50-byte chunks. Then the next read will return a short count of 20, and the read after that will signal EOF by returning a short count of zero. 读的时候碰到EOF了。</p></li>
+<li><p>Reading text lines from a terminal. If the open file is associated with a terminal (i.e., a keyboard and display), then each read function will transfer one text line at a time, returning a short count equal to the size of the text line(A text line is a sequence of ASCII characters terminated by a newline character.). 从终端读的时候，是按行返回的，用户输入了几个字符就会返回几个。</p></li>
+<li><p>Reading and writing network sockets. If the open file corresponds to a network socket (Section 11.3.3), then internal buffering constraints and long network delays can cause read and write to return short counts. Short counts can also occur when you call read and write on a Unix pipe, an interprocess communication mechanism that is beyond our scope. 从socket返回时，由于buffer或者网络延迟。</p></li>
+</ul>
+
+
+<p>In practice, you will never encounter short counts when you read from disk files except on EOF, and you will never encounter short counts when you write to disk files. However, if you want to build robust (reliable) network applications such as Web servers, then you must deal with short counts by repeatedly calling read and write until all requested bytes have been transferred. 实际在从硬盘文件中读的时候，除了碰到EOF其它时候都不应该遇到返回字节数少的情况；在往硬盘文件中写的时候，任何时候都不应该出现这种情况。</p>
+</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2016/08/28/csapp-system-level-io/#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+版权声明：自由转载-非商用-非衍生-保持署名 | <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">Creative Commons BY-NC-ND 3.0</a>
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+    </div>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2016
+
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'thehardwayiseasier';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cs50Mu.github.io/blog/2016/08/28/csapp-system-level-io/';
+        var disqus_url = 'http://cs50Mu.github.io/blog/2016/08/28/csapp-system-level-io/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
+</body>
+</html>
