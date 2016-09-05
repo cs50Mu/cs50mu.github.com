@@ -7,7 +7,7 @@ title: The Hard Way Is Easier
 subtitle: learn one thing at a time
 author: linuxfish 
 simple_search: http://google.com/search
-description:
+description: my wonderland
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
@@ -39,7 +39,7 @@ rdiscount:
     - autolink
     - footnotes
     - smart
-pygments: false # default python pygments have been replaced by pygments.rb
+pygments: true # default python pygments have been replaced by pygments.rb
 
 paginate: 10          # Posts per page on the blog index
 pagination_dir: blog  # Directory base for pagination URLs eg. /blog/page/2/

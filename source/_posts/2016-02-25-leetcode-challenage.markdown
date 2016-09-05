@@ -92,9 +92,32 @@ class Solution(object):
             return max(left, right)
 ```
 ### Invert Binary Tree
+递归，先把左右分支交换，然后依次递归反转左右分支
+```python invert-binary-tree
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution(object):
+    def invertTree(self, root):
+        """
+        :type root: TreeNode
+        :rtype: TreeNode
+        """
+        if not root:
+            return None
+        else:
+            root.left, root.right = root.right, root.left
+            self.invertTree(root.left)
+            self.invertTree(root.right)
+            return root
+```
 
 ### Move Zeroes
-
+维护两个指针, i用于遍历数组，j初始指向数组开始，当i遇到非零元素时，交换i和j指向的元素，并把i、j各自递增。因此，若一个数组中没有零元素，i和j是始终指向同一个元素的。
 ```python move zeroes
 class Solution(object):
     def moveZeroes(self, nums):
@@ -107,4 +130,320 @@ class Solution(object):
             if nums[i]:
                 nums[i], nums[j] = nums[j], nums[i]
                 j += 1
+```
+
+### Majority Element
+Moore投票算法，维护两个变量candidate和count，candidate记录的是当前可能的候选人，count记录的是当前可能候选人的票数。遍历数组，当遇到的元素等于候选人时就把票数加1；当遇到的元素不等于候选人的时候就把票数减1；当票数为0的时候说明这个候选人没希望了，将候选人置为当前遍历到的元素，然后票数初始化为0。最后得到的candidate就是这个数组中出现次数最多的元素。
+```python majority-element
+class Solution(object):
+    def majorityElement(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        candidate, count = None, 0
+        for i in nums:
+            if count == 0:
+                candidate, count = i, 1
+            elif i == candidate:
+                count += 1
+            else:
+                count -= 1
+        return candidate
+```
+
+### Reverse Linked List
+迭代版本：
+基本原理就是新建一个linked list，一边遍历旧的linked list，一边把读出来的元素添加到新建的linked list中，不过注意添加的方法，是从最后一个一个往开始生成的。
+```python reverse linked list iter
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def reverseList(self, head):
+        """
+        :type head: ListNode
+        :rtype: ListNode
+        """
+        dummy = ListNode(0)   # dummy is indeed a dummy, lol
+        while head:
+            next = head.next  # save the next node for later process
+            head.next = dummy.next  # 先把head接到已处理过的linked lis的前面
+            dummy.next = head   # 再跟原来的dummy连起来
+            head = next  #  指针指向下一个node
+        return dummy.next
+```
+递归版本：
+还是递归实现起来简单些
+```python reverse linked list recursion
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def reverseList(self, head):
+        """
+        :type head: ListNode
+        :rtype: ListNode
+        """
+        return self.reverseListRecursion(head, None)
+        
+    def reverseListRecursion(self, head, new_head):
+        if not head:
+            return new_head
+        next = head.next   # save the rest temporarily
+        head.next = new_head   # next point to new_head
+        return self.reverseListRecursion(next, head)  # doing this recursively
+```
+
+###Roman to Integer
+自己想出来的，不容易啊。。
+
+首先把罗马数字与阿拉伯数字的映射关系准备好，然后遍历罗马数字的字符，同时维护一个prev变量保存前一个遍历过的字符，当发现当前字符比前一个字符代表的阿拉伯数字小时，使用特殊的累加策略，否则就是简单的把当前字符对应的阿拉伯数字累加到总和total中。
+```python Roman to integer
+class Solution(object):
+    def romanToInt(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        hash = {'I':1, 'V':5, 'X':10, 'L':50, 'C':100, 'D':500, 'M':1000}
+        total = 0
+        prev = None
+        for i in s:
+            if prev and hash[i] > hash[prev]:
+                total += hash[i] - 2 * hash[prev]
+            else:
+                total += hash[i]
+            prev = i
+        return total
+```
+
+###Odd Even Linked List
+思路其实比较简单，就是遍历链表，奇数序元素放到奇数链表中，偶数序元素放到偶数链表中。但是，要维护的指针比较多，不注意就会搞混。。新生成的奇数链表和偶数链表都需要指针来操作。
+而且，在从头生成一个指针时，需要先初始化一个DummyNode，然后再把元素一个一个接在后面，元素添加完成后，`DummyNode.next`就是这条刚生成的链表的head了。
+
+```python Odd Even Linked List
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def oddEvenList(self, head):
+        """
+        :type head: ListNode
+        :rtype: ListNode
+        """
+        oddHead = ListNode(0)
+        oddCurrent = oddHead   # pointer
+        evenHead = ListNode(0)
+        evenCurrent = evenHead  # pointer
+        count = 1
+        while head != None:
+            if count % 2 != 0:
+                oddCurrent.next = ListNode(head.val)
+                oddCurrent = oddCurrent.next
+            else:
+                evenCurrent.next = ListNode(head.val)
+                evenCurrent = evenCurrent.next
+
+            head = head.next
+            count += 1
+            
+        oddCurrent.next = evenHead.next
+            
+        return oddHead.next
+```
+###Remove Duplicates from Sorted List
+
+维护两个指针，一个prev，一个current，分别指向遍历链表的前一个元素和当前元素，当 前一个元素跟当前元素相同时，舍弃掉当前元素。
+否则，就把prev和current各自向下移动一位元素。
+```python Remove Duplicates from Sorted List
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def deleteDuplicates(self, head):
+        """
+        :type head: ListNode
+        :rtype: ListNode
+        """
+        prev = None
+        current = head
+        while current is not None:
+            if prev and prev.val == current.val:
+                prev.next = current.next
+                current = prev.next
+            else:
+                prev = current
+                current = current.next
+        return head
+```
+
+###Happy Number
+用一个集合来放已经算过的数，如果有数重复出现，说明开始进入循环了。
+
+```python Happy Number
+class Solution(object):
+    def isHappy(self, n):
+        """
+        :type n: int
+        :rtype: bool
+        """
+        if n <= 0:
+            return False
+        number = set()
+        while n != 1 and n not in number:
+            number.add(n)
+            sum = 0
+            while n != 0:
+                tmp = n % 10
+                sum += tmp**2
+                n /= 10
+            n = sum
+        return n == 1
+```
+
+###Merge Two Sorted Lists
+
+比较两个链表当前的元素大小，把符合条件的元素加到新list中，同时把符合条件的元素所在的链表的指针往下移动一个元素，另一个链表的指针不动，
+如此直到至少一个链表遍历完成，最后把剩下的链表未遍历完的元素全部追加到新链表即可。
+
+```python Merge Two Sorted Lists
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def mergeTwoLists(self, l1, l2):
+        """
+        :type l1: ListNode
+        :type l2: ListNode
+        :rtype: ListNode
+        """
+        dummy = ListNode(0)
+        current = dummy
+        while l1 and l2:
+            if l1.val >= l2.val:
+                current.next = ListNode(l2.val)
+                l2 = l2.next
+            else:
+                current.next = ListNode(l1.val)
+                l1 = l1.next
+            current = current.next
+        if l1:
+            current.next = l1
+        elif l2:
+            current.next = l2
+        return dummy.next
+```
+
+###Intersection of Two Arrays
+
+先对两个数组排序，然后对两个数组各自维护一个指针，同时遍历两个数组，当在一个数组中当前指针对应的值小于另一个数组中当前指针对应的值时，把指针往前移动。
+当两个指针对应的元素相等时，说明找到一个interaction了。
+
+```python Intersection of Two Arrays
+class Solution(object):
+    def intersection(self, nums1, nums2):
+        """
+        :type nums1: List[int]
+        :type nums2: List[int]
+        :rtype: List[int]
+        """
+        if not nums1 or not nums2:
+            return []
+        sorted_nums1 = sorted(nums1)
+        sorted_nums2 = sorted(nums2)
+        i = j = 0
+        last = None
+        res = []
+        while i < len(nums1) and j < len(nums2):
+            if sorted_nums1[i] < sorted_nums2[j]:
+                i += 1
+            elif sorted_nums1[i] > sorted_nums2[j]:
+                j += 1
+            elif sorted_nums1[i] == sorted_nums2[j]:
+                if sorted_nums1[i] != last:
+                    ans = sorted_nums1[i]
+                    last = ans
+                    res.append(ans)
+                i += 1
+                j += 1
+        return res
+```
+
+###Top K Frequent Elements
+
+使用桶排序  比较有意思，先遍历一遍找到每个元素的频率存在字典中，然后初始化一个数组，以每个元素的频率为数组的下标（index）把对应的元素存入这个数组，
+最后把这个数组从后往前遍历，得到的结果就是出现频率从高到低的元素
+
+
+
+###Binary Tree Preorder Traversal
+
+```python Binary Tree Preorder Traversal
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+# recursive version
+class Solution(object):
+    def preorderTraversal(self, root):
+        """
+        :type root: TreeNode
+        :rtype: List[int]
+        """
+        result = []
+        self.recursive_traversal(root, result)
+        return result
+
+    def recursive_traversal(self, root, list):
+        if root:
+            list.append(root.val)
+            self.recursive_traversal(root.left, list)
+            self.recursive_traversal(root.right, list)
+
+# another recursive version
+class Solution(object):
+    def preorderTraversal(self, root):
+        """
+        :type root: TreeNode
+        :rtype: List[int]
+        """
+        if not root:
+            return []
+        return [root.val] + self.preorderTraversal(root.left) + self.preorderTraversal(root.right)
+
+# iteritive version
+class Solution(object):
+    
+    def preorderTraversal(self, root):
+        res = []
+        if root == None:
+            return res
+        stack = [root]
+        while stack:
+            root = stack.pop()
+            res.append(root.val)
+            if root.right:
+                stack.append(root.right)
+            if root.left:
+                stack.append(root.left)
+        return res
 ```
