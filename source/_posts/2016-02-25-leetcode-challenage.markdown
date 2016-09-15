@@ -447,3 +447,269 @@ class Solution(object):
                 stack.append(root.left)
         return res
 ```
+
+###Kth Smallest Element in a BST
+
+对BST的in-order traversal就是按顺序的遍历，所以执行一个in-order traversal，同时记录遍历到第几个就行了。
+
+```python
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution(object):
+    def kthSmallest(self, root, k):
+        """
+        :type root: TreeNode
+        :type k: int
+        :rtype: int
+        """
+        node = root
+        stack= []
+        # traverse to the left-most element, aka, the smallest element
+        while node:
+            stack.append(node)
+            node = node.left
+        i = 0
+        # in-order traversal using stack
+        while stack and i < k:
+            element = stack.pop()
+            if element.right:
+                temp = element.right
+                while temp:
+                    stack.append(temp)
+                    temp = temp.left
+            i += 1
+        return element.val
+```
+
+###Two Sum II - Input array is sorted
+
+维护两个指针，从两边向中间搜索
+
+```python
+class Solution(object):
+    def twoSum(self, numbers, target):
+        """
+        :type numbers: List[int]
+        :type target: int
+        :rtype: List[int]
+        """
+        low = 1
+        high = len(numbers)
+        while low < high:
+            s = numbers[low-1] + numbers[high-1]
+            if target > s:
+                low += 1
+            elif target < s:
+                high -= 1
+            else:
+                return [low, high]
+        return []
+```
+
+###Linked List Random Node
+
+蓄水池抽样（Reservoir Sampling）
+
+```python
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+import random
+
+class Solution(object):
+
+    def __init__(self, head):
+        """
+        @param head The linked list's head.
+        Note that the head is guaranteed to be not null, so it contains at least one node.
+        :type head: ListNode
+        """
+        self.head = head
+        
+
+    def getRandom(self):
+        """
+        Returns a random node's value.
+        :rtype: int
+        """
+        cnt = 0
+        node = self.head
+        while node:
+            if random.randint(0, cnt) == 0:
+                res = node.val
+            node = node.next
+            cnt += 1
+        return res
+        
+
+
+# Your Solution object will be instantiated and called as such:
+# obj = Solution(head)
+# param_1 = obj.getRandom()
+```
+###Shuffle an Array
+
+对于每个i，从0-i随机选择一个数r，交换
+
+```python
+class Solution(object):
+
+    def __init__(self, nums):
+        """
+        
+        :type nums: List[int]
+        :type size: int
+        """
+        self.nums = nums[:]
+        self.original = nums[:]
+        
+
+    def reset(self):
+        """
+        Resets the array to its original configuration and return it.
+        :rtype: List[int]
+        """
+        return self.original
+        
+
+    def shuffle(self):
+        """
+        Returns a random shuffling of the array.
+        :rtype: List[int]
+        """
+        for i in range(len(self.nums)):
+            rand = random.randint(0, i)
+            self.nums[i], self.nums[rand] = self.nums[rand], self.nums[i]
+        return self.nums
+        
+
+
+# Your Solution object will be instantiated and called as such:
+# obj = Solution(nums)
+# param_1 = obj.reset()
+# param_2 = obj.shuffle()
+```
+###Count Numbers with Unique Digits
+
+排列组合
+
+设i为长度为i的各个位置上数字互不相同的数。
+
+    i==1 : 10（0~9共10个数，均不重复）
+    i==2: 9 * 9 （第一个位置上除0外有9种选择，第2个位置上除第一个已经选择的数，还包括数字0，也有9种选择）
+    i ==3: 9* 9 * 8 （前面两个位置同i==2，第三个位置除前两个位置已经选择的数还有8个数可以用）
+    ……
+    i== n: 9 * 9 * 8 *…… (9-i+2)
+
+需要注意的是，9- i + 2 >0 即 i < 11，也就是i最大为10，正好把每个数都用了一遍。
+
+```python
+class Solution(object):
+    def countNumbersWithUniqueDigits(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        res = [1] + [9] * n
+        for i in range(2, n+1):
+            for j in range(9, 9-i+1, -1):
+                res[i] *= j
+        return sum(res)
+```
+
+###Kth Smallest Element in a Sorted Matrix
+
+利用优先队列 heapq
+
+先把第一行加入heapq，然后经过k次循环即可得到第k大的元素，在每次循环中，pop出最小的元素，然后push进刚pop出的元素下方的元素（即它同一列上相邻的元素）
+
+```python
+import heapq
+class Solution(object):
+    def kthSmallest(self, matrix, k):
+        """
+        :type matrix: List[List[int]]
+        :type k: int
+        :rtype: int
+        """
+        row_count = len(matrix)
+        col_count = len(matrix[0])
+        
+        pq = []
+        for i in range(col_count):
+            heapq.heappush(pq, (matrix[0][i], 0, i))
+            
+        for _ in range(k):
+            val, row, col = heapq.heappop(pq)
+            next = row + 1
+            if next < row_count:
+                heapq.heappush(pq, (matrix[next][col], next, col))
+        return val
+```
+
+###Product of Array Except Self
+
+除自己之外的其它数的乘积可以看作由两部分组成：该数左边部分的数的积和改数右边部分的数的积。
+
+```python
+class Solution(object):
+    def productExceptSelf(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[int]
+        """
+        nums_length = len(nums)
+        output = [1]
+
+# calcute left part
+        pre_product = 1
+        for i in range(1, nums_length):
+            pre_product *= nums[i-1]
+            output.append(pre_product)
+
+# calcute right part and the final result
+        after_product = 1
+        for i in range(nums_length-2, -1, -1):
+            after_product *= nums[i+1]
+            output[i] *= after_product
+
+        return output
+```
+
+###Binary Tree Paths
+
+DFS 深度优先搜索，在traverse过程中记住经过的node，当到达叶子节点时，把路径打印出来
+
+```python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    # @param {TreeNode} root
+    # @return {string[]}
+    def binaryTreePaths(self, root):
+        self.result = []
+        if not root:
+            return self.result
+        def dfs(node, path):
+            if not node.left and not node.right:
+                self.result.append(path)
+            if node.left:
+                dfs(node.left, path + '->' + str(node.left.val))
+            if node.right:
+                dfs(node.right, path + '->' + str(node.right.val))
+        dfs(root, str(root.val))
+        return self.result
+```
