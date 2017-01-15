@@ -8,6 +8,8 @@ categories:
 
 主要是一些定制的问题，其实django admin已经集成的非常好了，该有的都有了，一般开箱即用就行了。
 
+如果你对Django Admin不熟悉的话，[这里](http://dokelung-blog.logdown.com/posts/220832-django-notes-6-manage-your-system-admin)有一篇很好的介绍。
+
 ###dependent select fields
 其实就是子field的可选项是依赖它的父field的，这个需求在admin中没有找到配置方法，找到一个插件[`django-smart-selects`](https://github.com/digi604/django-smart-selects)
 
