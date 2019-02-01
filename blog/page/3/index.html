@@ -6,7 +6,9 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Oct 5th, 2014 Tags: 一直傻傻分不清楚，都是因为平时很少接触，虽然翻墙常用，但也只是按教程一步一步来，并未知其所以然。 之前一直听别人说socks代理多么多么好，自己只是模模糊糊半懂不懂，现在终于切身体会到了一个好处， &hellip;">
+	<meta name="description" content="Published on: Oct 6th, 2014 Tags: 面试太渣，皆因毫无准备。 多进程与多线程的区别 进程叫process，线程叫thread，cpu在任一时刻只能运行一个进程。一个进程可以包含多个线程
+进程开销较大，线程开销较小
+进程是资源分配的基本单位， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +100,161 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2014/10/06/preparing-for-the-job/">
+		
+			Preparing for the Job</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-06T10:16:00+08:00" pubdate data-updated="true">Oct 6<span>th</span>, 2014</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>面试太渣，皆因毫无准备。</p>
+
+<h3>多进程与多线程的区别</h3>
+
+<ul>
+<li>进程叫process，线程叫thread，cpu在任一时刻只能运行一个进程。一个进程可以包含多个线程</li>
+<li>进程开销较大，线程开销较小</li>
+<li>进程是<strong>资源分配</strong>的基本单位，线程是cpu调度的基本单位</li>
+<li>进程有自己的地址空间，系统必须分配给它独立的地址空间，建立众多的数据表来维护它的代码段、堆栈段和数据段，是一种非常昂贵的多任务工作方式。而一个进程中的线程，它们之间共享大部分数据，使用相同的地址空间，因此切换线程比切换进程快的多，也就是说线程之间的通信比较方便，但从另一方面来说，如何控制线程对共享数据的访问又是一个难点了。</li>
+<li>多进程程序比多线程程序要健壮。一个进程挂了，对别的进程基本不会有影响，但一个线程挂了，很可能会导致进程内的其它线程也挂掉。</li>
+</ul>
+
+
+<p>参考：
+<a href="http://blog.csdn.net/morewindows/article/details/7392749">秒杀多线程第一篇 多线程笔试面试题汇总</a></p>
+
+<h3>Python如何进行内存管理？</h3>
+
+<ul>
+<li>在一个对象的引用计数减为0时，对此对象进行内存回收</li>
+</ul>
+
+
+<p>参考：
+<a href="http://www.cnblogs.com/vamei/p/3232088.html">Python深入06 Python的内存管理</a></p>
+
+<h3>Python里如何拷贝一个对象？</h3>
+
+<ul>
+<li>首先要知道为什么要复制对象，因为在Python中无论是把对象作为参数传递还是作为函数返回值，都是引用传递的。那当我们不想传递引用的时候就要复制一个全新的对象了。</li>
+<li>复制分为浅复制和深复制。浅复制是指只复制对象，但对象里的元素仍然使用引用。深复制（deepcopy）就是完完全全的复制了。</li>
+</ul>
+
+
+<p>参考：
+<a href="http://blog.csdn.net/sharkw/article/details/1934090">深复制和浅复制</a></p>
+
+<h3>RE模块中search和match的区别</h3>
+
+<ul>
+<li>match只搜寻第一个是否满足，若满足返回它，若不满足，则返回None</li>
+<li>search搜索字符串，返回它遇到的第一个满足条件的，而不仅仅是查看第一个
+注意这两个命令都是只返回一个满足条件的，要想返回所有满足条件的，要用findall</li>
+</ul>
+
+
+<p>参考：
+<a href="https://docs.python.org/2/library/re.html#search-vs-match">search vs match</a></p>
+
+<h3>用Python匹配HTML tag的时候，<code>&lt;.*&gt;</code>和<code>&lt;.*?&gt;</code>有什么区别？</h3>
+
+<p>贪婪模式和非贪婪模式。
+The <code>'*'</code>, <code>'+'</code>, and <code>'?'</code> qualifiers are all greedy; they match as much text as possible. Sometimes this behaviour isn’t desired; if the RE <code>&lt;.*&gt;</code> is matched against <code>'&lt;H1&gt;title&lt;/H1&gt;'</code>, it will match the entire string, and not just <code>'&lt;H1&gt;'</code>. Adding <code>'?'</code> after the qualifier makes it perform the match in non-greedy or minimal fashion; as few characters as possible will be matched. Using <code>.*?</code> in the previous expression will match only <code>'&lt;H1&gt;'</code>.</p>
+
+<h3>python程序中文输出问题怎么解决？</h3>
+
+<p>中文输出的问题都是由于编码问题。</p>
+
+<p>中文字符串使用的编码与其所在的文件使用的编码一致。所以正确处理的步骤是：先用其原有编码decode成python内部的unicode，做了该做的处理后，什么时候想输出啦，这时候再使用encode，把它encode成任何想输出的编码形式。</p>
+
+<h3>正则表达式匹配ip</h3>
+
+<p><code>src = "security/afafsff/?ip=123.4.56.78&amp;id=45"</code>，请写一段代码用正则匹配出ip</p>
+
+<pre><code>regx = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)')
+m = regx.search("security/afafsff/?ip=123.4.56.78&amp;id=45")
+m.groups()
+('123', '4', '56', '78')
+</code></pre>
+
+<p>注意，使用groups可以返回找到的所有subgroups，非常方便。另外，group(0)返回整个匹配，group(1)返回第一个subgroup等等</p>
+
+<h3>json</h3>
+
+<p>写一段代码用json数据的处理方式获取{&ldquo;persons&rdquo;:[{&ldquo;name&rdquo;:&ldquo;yu&rdquo;,&ldquo;age&rdquo;:&ldquo;23&rdquo;},{&ldquo;name&rdquo;:&ldquo;zhang&rdquo;,&ldquo;age&rdquo;:&ldquo;34&rdquo;}]}这一段json中第一个人的名字。</p>
+
+<pre><code>j = json.loads('{"persons":[{"name":"yu","age":"23"},{"name":"zhang","age":"34"}]}')
+j.get('persons')[0]['name']
+</code></pre>
+
+<h3>平衡点</h3>
+
+<p>比如int[] numbers = {1,3,5,7,8,25,4,20}; 25前面的总和为24，25后面的总和也是24，25这个点就是平衡点；假如一个数组中的元素，其前面的部分等于后面的部分，那么这个点的位序就是平衡点
+我写出的版本，完全就是把题意翻译了一遍，能满足要求，效率应该不好</p>
+
+<pre><code>def findMiddle(lst):
+    for i in xrange(1, len(lst)-1):
+    if sum(lst[:i]) == sum(lst[i+1:]):
+        print i
+</code></pre>
+
+<p>看到别人的做法是，先算一遍总和，然后从左往右一个一个加，出现和一半的时候，说明找到平衡点了。</p>
+
+<pre><code>def findMiddle2(lst):
+    totle = sum(lst)
+
+    add = 0 
+    for i in xrange(0, len(lst)-1):
+    add += lst[i]
+    if totle - lst[i+1] == 2 * add:
+        print i+1, lst[i+1]
+</code></pre>
+
+<h3>支配点</h3>
+
+<p>支配数：数组中某个元素出现的次数大于数组总数的一半时就成为支配数，其所在位序成为支配点；比如int[] a = {3,3,1,2,3};3为支配数，0，1，4分别为支配点；</p>
+
+<pre><code>def findDomain(lst):
+    count = [ i for i,x in enumerate(lst) if lst.count(x) &gt; len(lst)//2 ]  # elegant solution
+    if count:
+    print lst[count[0]], count
+</code></pre>
+
+<h3>什么是PEP 8？</h3>
+
+<p>Python编码规范</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2014/10/06/preparing-for-the-job//blog/page/3/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1016,62 +1173,6 @@ for (place,freq) in sortedDict[:50]:
 </div>
 </article>
 
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/11/20/bad-days/">
-		
-			最近各种不顺</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-11-20T20:30:00+08:00" pubdate data-updated="true">Nov 20<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/nexus-5/'>nexus 5</a>, <a class='category' href='/blog/categories/tu-cao/'>吐槽</a>
-
-
-</div>
-    </div>
-		<p>最近一个月都不在状态。</p>
-
-<p>也许是因为停止跑步了？天气一冷就懒得跑了。。唉，最终还是没有坚持下去。</p>
-
-<p>最可恨的是买个谷歌5儿子，从月初就开始买，直到现在愣是没买成功。。唉，搞得我都无力吐槽了，不过也算是知道海淘是怎么回事了。。唉，建议心理承受能力不行的还是别掺和了，虐心啊！因为nexus在伟大的天朝根本不上市，所以只能国外海淘，本来是想去美国google play淘的，贴吧里研究了一下，看到有人说在日本google play下单发货快，虽然要比美国的价格贵多了，但算上运费啥的也贵不了多少。海淘还必须得有国外的ip才行，为了这个还专门买了一个月的vpn帐号，然后注册转运公司。哦，先说下海淘的流程吧，基本工具要有，vpn用来做代理，信用卡用来支付。首先，你得注册一个转运公司，获取到一个你的转运地址，然后去国外google play上下单，用信用卡付款，送货地址就填你注册转运公司获取到的地址，然后就等吧，扣款成功后一般就会发货了。唉，哥就悲剧的卡在付款这个环节上了，一开始是没有信用卡，到处借卡，其实我之前有一张信用卡，但因为年费太高被我注销了。。好不容易借到一张卡，不管怎么填账单信息，google就是不扣款。。别人不是一下订单就扣款就是等了没多久就扣款，可我的订单就是没一点动静。。后来又看到贴吧里有人说没信用卡的用易票联的虚拟信用卡也支付成功了，于是又赶紧注册易票联，手机的钱也打进易票联了，更新名字和电话为自己的真实信息，地址因为无法选中国，只能用转运公司的了，所有这些做完后竟然还是不行！！！跟我同一天下订单的人，人家都收到发货通知了，我的还是一点动静都没，唉，感觉不能再爱了。。</p>
-
-<p>然后就因为一直挺期待五儿子的，搞得每天都没心思了学习了有木有！！感觉好久都没看书了，英语跟读也好久没有进行了。</p>
-
-<p>最后，祸不单行，服务器最近也问题不断，一开始是被顶ip，后来竟然升级到MAC攻击。。还专门在半夜10点11点的时候，也不知道到底是有人故意的还是有人电脑中病毒了，昨天外网网线竟然被剪了，当时听到这个消息我就震惊了，这真是不碰上不知道，什么样的奇葩都有啊。。</p>
-
-<p>吐了这么多槽，其实还是有点好事的，经某大神指点发现宽带竟然可以多拨～～于是，生活又美好了一点点。</p>
-
-<p>以上      by 快要崩溃感觉无法再爱的linuxfish</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/11/20/bad-days//blog/page/3/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
 <nav id="pagenavi">
     
         <a href="/blog/page/2/" class="prev">Prev</a>
@@ -1085,7 +1186,7 @@ for (place,freq) in sortedDict[:50]:
     </div>
     <footer id="footer">
     <div style="display:inline">
-    Copyright &copy; 2017
+    Copyright &copy; 2019
 
     linuxfish
 . Powered by <a href="http://octopress.org">Octopress</a> | 

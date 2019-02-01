@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2017-11-27T00:21:14+08:00</updated>
+  <updated>2019-02-01T22:54:18+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,372 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Golang FAQ]]></title>
+    <link href="http://cs50Mu.github.io/blog/2019/02/01/golang-faq/"/>
+    <updated>2019-02-01T22:37:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2019/02/01/golang-faq</id>
+    <content type="html"><![CDATA[<p>这几天看了下Golang FAQ，解了不少困惑，我相信有人会有同样的困惑，挑选了一些有意思的问题翻译了一下。</p>
+
+<h3>Design</h3>
+
+<blockquote><p>Does Go have a runtime? / Go有运行时吗？</p></blockquote>
+
+<p>Go确实有一个runtime库(runtime library)。这个runtime库主要实现了垃圾回收、并发管理、堆栈管理等其它Go语言的关键特性。这个所谓的runtime可以类比于c语言的标准库(libc)</p>
+
+<p>但很重要的一点是要理解，Go的这个所谓的runtime并没有带虚拟机（比如，像Java一样）。所以，尽管runtime这个词一般用来指某些语言带的虚拟机实现，但在Golang的语境下，它仅仅指代标准库。</p>
+
+<blockquote><p>Why does Go not have generic types? / 为什么没有泛型？</p></blockquote>
+
+<p>泛型在将来的某个时候可能会被加上。但我们并不着急加它，虽然我们理解有些程序员可能不认同。</p>
+
+<p>Go的目的是用于服务端程序开发，它的设计的目标在于增强程序的可扩展性、并发能力以及代码的可读性。泛型对于这些设计目标并没有多大帮助，所以为了实现的简单，当时并没有支持泛型。</p>
+
+<p>现在Go语言已经越来越成熟了，可以考虑加上泛型的支持，但是对于泛型我还是想多说几句。</p>
+
+<p>泛型很方便，但是它大大增加了语言的类型系统(type system)和运行时的实现复杂度，我们还没有找到一种能很好平衡两者的设计方案。目前大家先用<code>interface{}</code>来顶一顶吧。</p>
+
+<blockquote><p>Why does Go not have exceptions? / 为什么没有异常？</p></blockquote>
+
+<p>我们认为把exception耦合进正常逻辑中（比如其它语言中常见的<code>try-catch-finally</code>惯用法）会导致混乱的代码。使用exception的方式也倾向于鼓励程序员把很多普通的错误（比如无法打开文件）当成异常来处理。</p>
+
+<p>对于普通的错误，需要在函数调用后立即处理。</p>
+
+<p>Go也提供了一组内置函数用来处理真正的异常情况（panic和recovery）。</p>
+
+<p>linuxfish注：我个人理解，关键是要区分普通错误和真正的异常。</p>
+
+<h3>Types</h3>
+
+<blockquote><p>Why does Go not support overloading of methods and operators? / 为何不支持方法和运算符重载？</p></blockquote>
+
+<p>在其它语言上的经验告诉我们，搞一堆名字一样，签名不同的方法，只是偶尔有点用处，更多的会带来理解上的混乱。相反，不支持重载大大简化了Go语言的类型系统的设计。</p>
+
+<p>至于运算符重载，在我们看来它可以带来一定的便利性，但并非必须。按照我们的惯例，宁缺毋滥。</p>
+
+<blockquote><p>Why doesn&rsquo;t Go have &ldquo;implements&rdquo; declarations? / 为何不用<code>implements</code>显示声明？</p></blockquote>
+
+<p>一个Go的类型如果实现了某个interface的方法，那它就隐式的“声明”为这个interface类型了（即可以当成这个interface类型来用了）。</p>
+
+<p>好处是实现了接口和实现的真正解耦，允许在不更改现有代码的前提下定义和使用接口。</p>
+
+<blockquote><p>Can I convert a []T to an []interface{}?</p></blockquote>
+
+<p>不能直接转，因为它们在内存中的表示并不一样，需要这样做：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">t</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">}</span>
+</span><span class='line'><span class="nx">s</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nb">len</span><span class="p">(</span><span class="nx">t</span><span class="p">))</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">t</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">s</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">v</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Can I convert []T1 to []T2 if T1 and T2 have the same underlying type?</p></blockquote>
+
+<p>不可以，只能一个一个转。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">T1</span> <span class="kt">int</span>
+</span><span class='line'><span class="kd">type</span> <span class="nx">T2</span> <span class="kt">int</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">t1</span> <span class="nx">T1</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">x</span> <span class="p">=</span> <span class="nx">T2</span><span class="p">(</span><span class="nx">t1</span><span class="p">)</span> <span class="c1">// OK</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">st1</span> <span class="p">[]</span><span class="nx">T1</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">sx</span> <span class="p">=</span> <span class="p">([]</span><span class="nx">T2</span><span class="p">)(</span><span class="nx">st1</span><span class="p">)</span> <span class="c1">// NOT OK</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Why is my nil error value not equal to nil?</p></blockquote>
+
+<p>首先，interface类型的底层实现是一个二元组（一个类型T和一个值V），V就是具体的值，T就是这个值的类型。比如，我们存了一个int 3在接口里，那么用字符简单的表示，这个接口值现在就等于<code>(T=int, V=3)</code>。</p>
+
+<p>一个接口值当且仅当V和T都未设置时（T=nil, V未设置）才为nil。特别地，一个值为nil的接口的底层T永远都是nil。那么，如果把一个值为nil类型为<code>*int</code>存入一个接口中，此时这个接口值的底层表示为<code>(T=*int, V=nil)</code>，按照定义，这个接口值不等于nil。</p>
+
+<p>但这跟我们的日常认知相悖，明明是个空指针嘛！这种情况在从函数中返回error时更容易使人困惑：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">returnsError</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">p</span> <span class="o">*</span><span class="nx">MyError</span> <span class="p">=</span> <span class="kc">nil</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">bad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">p</span> <span class="p">=</span> <span class="nx">ErrBad</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">p</span> <span class="c1">// Will always return a non-nil error.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上面的写法的错误之处在于，不管有没有错误发生，函数返回的error永远都是non-nil的，所以当无错误发生时，应当显式地返回nil：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">returnsError</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">bad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">ErrBad</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Values</h3>
+
+<blockquote><p>Why does Go not provide implicit numeric conversions? / 为何不提供隐式数字类型转换？</p></blockquote>
+
+<p>c语言中的自动数值类型转换带来的那点便利性跟它引起的困惑相比根本不值得一提。表达式的结果什么时候是无符号的？它的值有多大？是不是溢出了？结果是不是可移植的（执行结果跟程序所在的机器无关）？考虑到移植性的问题，我们要求在进行类型转换时必须进行显式的转换，尽管有些麻烦。</p>
+
+<p>一个相关的细节是，就算<code>int</code>实质上是一个<code>int64</code>（当在64位机器上时），<code>int</code>和<code>int64</code>也是两个不同的类型。如果你真的关心一个应该用多少位来表示一个整数，我们鼓励你显式地声明它（用int32或者int64，而不是int）。</p>
+
+<blockquote><p>How do constants work in Go?</p></blockquote>
+
+<p>尽管Go要求不同的数值类型必须进行显式的转换，它对常数值的要求比较灵活。因为常数值默认是无类型的（untyped），所以不必这么写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">sqrt2</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>你可以直接写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">sqrt2</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>想了解Go中的常数值的具体实现的可以参考<a href="https://blog.golang.org/constants">这篇Blog</a></p>
+
+<blockquote><p>Should I define methods on values or pointers? / 方法定义在值上还是指针上？</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">MyStruct</span><span class="p">)</span> <span class="nx">pointerMethod</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// method on pointer</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="nx">MyStruct</span><span class="p">)</span>  <span class="nx">valueMethod</span><span class="p">()</span>   <span class="p">{</span> <span class="p">}</span> <span class="c1">// method on value</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接收者是要定义成值还是指针本质上跟函数的参数是定义成值还是指针是一个问题。</p>
+
+<p>我们在回答这个问题时通常有以下考虑：</p>
+
+<ul>
+<li>方法是否需要修改这个接收者？如果需要修改，那没有什么纠结的，必须用指针（slice 和 map 本身就是引用类型，需要单独讨论）。</li>
+<li>效率上的考虑。如果接收者是一个大结构体，那么很显然用指针更合适</li>
+<li>一致性。如果有些方法必须用指针做为接收者，那么为了使用上的一致，其它的方法也应该用指针</li>
+<li>除非必须，一般情况下使用值就可以了</li>
+</ul>
+
+
+<blockquote><p>What&rsquo;s the difference between new and make? / new 和 make 的区别？</p></blockquote>
+
+<p>简而言之，new 用来分配内存，而 make 用来初始化slice，map 和 channel。</p>
+
+<p>具体解释可参考 Effective Go 中的<a href="https://golang.org/doc/effective_go.html#allocation_new">相关章节</a></p>
+
+<h3>Concurrency</h3>
+
+<blockquote><p>Why doesn&rsquo;t my program run faster with more CPUs?</p></blockquote>
+
+<p>一个程序是否会因为有更多的CPU资源而运行更快取决于这个程序所要解决的问题。Go语言提供了基本的并发原语，比如 goroutine 和 channel，但只有当要解决的问题存在并行执行的可能性时才会发挥它们的作用。本质上是串行的问题，仅仅通过增加更多的CPU资源无法获得更高的执行效率。</p>
+
+<h3>Functions and Methods</h3>
+
+<blockquote><p>What happens with closures running as goroutines? / 闭包的坑</p></blockquote>
+
+<p>在并发中使用闭包时，可能会出现一些令人困惑的现象，考虑以下代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">values</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'>            <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>        <span class="p">}()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// wait for all goroutines to complete before exiting</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">_</span> <span class="p">=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>        <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们可能错误的认为输出结果应该是<code>a,b,c</code>，但实际上你看到的结果可能是<code>c,c,c</code>。这是因为所有的闭包都共享了一个变量v，而v在循环中被不断的更新，当闭包中的程序真正在另一个goroutine中运行时，v的值已经变了。使用<code>go vet</code>可以在运行程序前提前检测这种情况。</p>
+
+<p>针对这个“坑”，有两个解决方案：</p>
+
+<p>要么，把v显式传入闭包中</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">u</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">u</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="p">}(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>或者这样写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">v</span> <span class="o">:=</span> <span class="nx">v</span> <span class="c1">// create a new &#39;v&#39;.</span>
+</span><span class='line'>    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="p">}()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Control flow</h3>
+
+<blockquote><p>Why does Go not have the ?: operator? / 为何没有<code>?:</code>操作符？</p></blockquote>
+
+<p>可以使用以下代码实现类似的效果：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">if</span> <span class="nx">expr</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">n</span> <span class="p">=</span> <span class="nx">trueVal</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">n</span> <span class="p">=</span> <span class="nx">falseVal</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Go中不存在这个三元操作符的原因是Go语言的设计者认为这个三元操作符经常被用来写出晦涩难懂的表达式。<code>if-else</code>的模式，虽然写起来更长一些，但毫无疑问表达的更清楚。一门语言只需要一种条件控制结构就够了。</p>
+
+<h3>Packages and Testing</h3>
+
+<blockquote><p>Where is my favorite helper function for testing?</p></blockquote>
+
+<p>使用Go标准库中的测试包很容易写单元测试，但这个测试包缺乏一些其它测试框架中常用的功能，比如断言。之前的章节中已经解释了为啥Go不支持断言，这个解释同样适用于写测试。在进行单元测试时，正确的错误处理方式是在某个测试出错后，允许其它的测试继续进行，这样进行测试的人可以从全局看到是什么地方出了问题。举个例子，现在正在测试 isPrime 这个函数，那么与其只报告了isPrime对于2这个输入的结果是错的，然后就停止测试了，直接报告 isPrime 对于输入（2，3，5，7）的结果都是错的明显更有用处。运行测试代码的人可能对被测试的代码并不熟悉，那么在写测试代码时，好好写一个错误提示信息就很有必要了，能帮助后面测试出现错误定位问题时省不少力气。</p>
+
+<p>还有一点是测试框架都喜欢定义自己的一套用来表示条件、控制语句和打印等固定模式的DSL，但问题是Go本身就能实现这些功能，为什么还要重复造轮子呢？可以少学一门语言，何乐而不为呢？</p>
+
+<p>如果你觉得用Go的测试包来写测试太啰嗦了，会有很多重复的代码，那么你可以考虑用驱动表的方式来写测试，这样的话，重复的代码会大大减少。Go标准库中有大量的测试代码可供你参考。</p>
+
+<h3>Implementation</h3>
+
+<blockquote><p>Why is my trivial program such a large binary? / 为啥那么点代码就编译出这么大一个二进制文件？</p></blockquote>
+
+<p>gc 工具链中的链接器(linker)默认创建静态链接的二进制文件。 因此所有的 Go 二进制文件包含了Go的运行时，同时还有执行动态类型检测、反射甚至崩溃时的堆栈信息的运行时</p>
+
+<p>一个简单的 hello world 版 c 程序，用 gcc 在 linux 上静态编译后，体积大约是750KB。同样的 Go 程序，体积大概有几M，但功能也更强大，因为它有 run time 支持，还有动态类型检查和 debug 信息。</p>
+
+<p>Go程序在用 gc 编译时可以带上<code>-ldflags=-w</code>参数来关闭 debug 信息的生成，这不会影响程序的正常功能，但会很大程度地减少程序的体积。</p>
+
+<blockquote><p>Can I stop these complaints about my unused variable/import? / 能不能别老提示我未用的变量和引入库？</p></blockquote>
+
+<p>代码中存在未使用的变量可能意味着潜在的 bug，而未使用的引用库只会增大编译时间，而且随着代码量的增长，这个问题会越来越严重。基于以上原因 Go 拒绝编译存在未使用变量和未使用的引用库的代码，短期来看，这个决定带来了很多麻烦，但从长远来看，它利于提升程序的编译速度和代码的整洁性。</p>
+
+<p>当然了，在写代码的时候，创建一堆临时变量是常见的，每次都必须要先处理一下这些用不上的临时变量才能编译确实是挺烦的。</p>
+
+<p>有人提议加一个编译器的参数可以关闭这个傻X的检查，或者至少编译能通过，比如只是发个警告信息提示用户。但我们没有加这个参数，一是因为我们认为编译器的参数不应该影响语言的语义；二是 Go 编译器没有警告，它只报告错误。</p>
+
+<p>Go编译器没有警告，原因有二：一是，如果一个问题需要报警提示，那它就应该被改正（相反，如果它不值得被修正，那也根本无需发警告提示）；第二，有时候太多警告反而会掩盖了真实的问题。</p>
+
+<p>使用空白标识符<code>_</code>可以一定程度的缓解这个问题。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">import</span> <span class="s">&quot;unused&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// This declaration marks the import as used by referencing an</span>
+</span><span class='line'><span class="c1">// item from the package.</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">_</span> <span class="p">=</span> <span class="nx">unused</span><span class="p">.</span><span class="nx">Item</span>  <span class="c1">// TODO: Delete before committing!</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">debugData</span> <span class="o">:=</span> <span class="nx">debug</span><span class="p">.</span><span class="nx">Profile</span><span class="p">()</span>
+</span><span class='line'>    <span class="nx">_</span> <span class="p">=</span> <span class="nx">debugData</span> <span class="c1">// Used only during debugging.</span>
+</span><span class='line'>    <span class="o">...</span><span class="p">.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然了，现在大部分Go程序员都知道有这个神器，goimports，它能分析你的源文件，自动清理掉未用到的变量，在你保存文件的时候自动重写源文件，大部分的编辑器都支持它。</p>
+
+<h3>Changes from C</h3>
+
+<blockquote><p>Why is there no pointer arithmetic? / 为啥不支持指针运算？</p></blockquote>
+
+<p>安全。不支持指针运算能避免很多诡异的问题。编译器和硬件技术发展到现在，用数组索引和用指针来遍历一个数组，在效率上已经没有什么区别。另外，不支持指针运算使得垃圾回收也更好实现了。</p>
+
+<blockquote><p>Why are ++ and &mdash; statements and not expressions? And why postfix, not prefix?</p></blockquote>
+
+<p>不支持指针运算的话，那么对<code>++</code>和<code>--</code>的需求就没那么大了。通过把<code>++</code>和<code>--</code>限制为 statement，而不是表达式(expression)，我们可以避免类似以下写法的出现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">f</span><span class="p">(</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+</span><span class='line'><span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">q</span><span class="p">[</span><span class="o">++</span><span class="nx">i</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[如何处理数据库大结果集?]]></title>
@@ -4119,130 +4485,6 @@ if __name__ == '__main__':
 <li><a href="http://5ydycm.blog.51cto.com/115934/304324">Python之sys模块小探</a></li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[preparing for the job]]></title>
-    <link href="http://cs50Mu.github.io/blog/2014/10/06/preparing-for-the-job/"/>
-    <updated>2014-10-06T10:16:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2014/10/06/preparing-for-the-job</id>
-    <content type="html"><![CDATA[<p>面试太渣，皆因毫无准备。</p>
-
-<h3>多进程与多线程的区别</h3>
-
-<ul>
-<li>进程叫process，线程叫thread，cpu在任一时刻只能运行一个进程。一个进程可以包含多个线程</li>
-<li>进程开销较大，线程开销较小</li>
-<li>进程是<strong>资源分配</strong>的基本单位，线程是cpu调度的基本单位</li>
-<li>进程有自己的地址空间，系统必须分配给它独立的地址空间，建立众多的数据表来维护它的代码段、堆栈段和数据段，是一种非常昂贵的多任务工作方式。而一个进程中的线程，它们之间共享大部分数据，使用相同的地址空间，因此切换线程比切换进程快的多，也就是说线程之间的通信比较方便，但从另一方面来说，如何控制线程对共享数据的访问又是一个难点了。</li>
-<li>多进程程序比多线程程序要健壮。一个进程挂了，对别的进程基本不会有影响，但一个线程挂了，很可能会导致进程内的其它线程也挂掉。</li>
-</ul>
-
-
-<p>参考：
-<a href="http://blog.csdn.net/morewindows/article/details/7392749">秒杀多线程第一篇 多线程笔试面试题汇总</a></p>
-
-<h3>Python如何进行内存管理？</h3>
-
-<ul>
-<li>在一个对象的引用计数减为0时，对此对象进行内存回收</li>
-</ul>
-
-
-<p>参考：
-<a href="http://www.cnblogs.com/vamei/p/3232088.html">Python深入06 Python的内存管理</a></p>
-
-<h3>Python里如何拷贝一个对象？</h3>
-
-<ul>
-<li>首先要知道为什么要复制对象，因为在Python中无论是把对象作为参数传递还是作为函数返回值，都是引用传递的。那当我们不想传递引用的时候就要复制一个全新的对象了。</li>
-<li>复制分为浅复制和深复制。浅复制是指只复制对象，但对象里的元素仍然使用引用。深复制（deepcopy）就是完完全全的复制了。</li>
-</ul>
-
-
-<p>参考：
-<a href="http://blog.csdn.net/sharkw/article/details/1934090">深复制和浅复制</a></p>
-
-<h3>RE模块中search和match的区别</h3>
-
-<ul>
-<li>match只搜寻第一个是否满足，若满足返回它，若不满足，则返回None</li>
-<li>search搜索字符串，返回它遇到的第一个满足条件的，而不仅仅是查看第一个
-注意这两个命令都是只返回一个满足条件的，要想返回所有满足条件的，要用findall</li>
-</ul>
-
-
-<p>参考：
-<a href="https://docs.python.org/2/library/re.html#search-vs-match">search vs match</a></p>
-
-<h3>用Python匹配HTML tag的时候，<code>&lt;.*&gt;</code>和<code>&lt;.*?&gt;</code>有什么区别？</h3>
-
-<p>贪婪模式和非贪婪模式。
-The <code>'*'</code>, <code>'+'</code>, and <code>'?'</code> qualifiers are all greedy; they match as much text as possible. Sometimes this behaviour isn’t desired; if the RE <code>&lt;.*&gt;</code> is matched against <code>'&lt;H1&gt;title&lt;/H1&gt;'</code>, it will match the entire string, and not just <code>'&lt;H1&gt;'</code>. Adding <code>'?'</code> after the qualifier makes it perform the match in non-greedy or minimal fashion; as few characters as possible will be matched. Using <code>.*?</code> in the previous expression will match only <code>'&lt;H1&gt;'</code>.</p>
-
-<h3>python程序中文输出问题怎么解决？</h3>
-
-<p>中文输出的问题都是由于编码问题。</p>
-
-<p>中文字符串使用的编码与其所在的文件使用的编码一致。所以正确处理的步骤是：先用其原有编码decode成python内部的unicode，做了该做的处理后，什么时候想输出啦，这时候再使用encode，把它encode成任何想输出的编码形式。</p>
-
-<h3>正则表达式匹配ip</h3>
-
-<p><code>src = "security/afafsff/?ip=123.4.56.78&amp;id=45"</code>，请写一段代码用正则匹配出ip</p>
-
-<pre><code>regx = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)')
-m = regx.search("security/afafsff/?ip=123.4.56.78&amp;id=45")
-m.groups()
-('123', '4', '56', '78')
-</code></pre>
-
-<p>注意，使用groups可以返回找到的所有subgroups，非常方便。另外，group(0)返回整个匹配，group(1)返回第一个subgroup等等</p>
-
-<h3>json</h3>
-
-<p>写一段代码用json数据的处理方式获取{&ldquo;persons&rdquo;:[{&ldquo;name&rdquo;:&ldquo;yu&rdquo;,&ldquo;age&rdquo;:&ldquo;23&rdquo;},{&ldquo;name&rdquo;:&ldquo;zhang&rdquo;,&ldquo;age&rdquo;:&ldquo;34&rdquo;}]}这一段json中第一个人的名字。</p>
-
-<pre><code>j = json.loads('{"persons":[{"name":"yu","age":"23"},{"name":"zhang","age":"34"}]}')
-j.get('persons')[0]['name']
-</code></pre>
-
-<h3>平衡点</h3>
-
-<p>比如int[] numbers = {1,3,5,7,8,25,4,20}; 25前面的总和为24，25后面的总和也是24，25这个点就是平衡点；假如一个数组中的元素，其前面的部分等于后面的部分，那么这个点的位序就是平衡点
-我写出的版本，完全就是把题意翻译了一遍，能满足要求，效率应该不好</p>
-
-<pre><code>def findMiddle(lst):
-    for i in xrange(1, len(lst)-1):
-    if sum(lst[:i]) == sum(lst[i+1:]):
-        print i
-</code></pre>
-
-<p>看到别人的做法是，先算一遍总和，然后从左往右一个一个加，出现和一半的时候，说明找到平衡点了。</p>
-
-<pre><code>def findMiddle2(lst):
-    totle = sum(lst)
-
-    add = 0 
-    for i in xrange(0, len(lst)-1):
-    add += lst[i]
-    if totle - lst[i+1] == 2 * add:
-        print i+1, lst[i+1]
-</code></pre>
-
-<h3>支配点</h3>
-
-<p>支配数：数组中某个元素出现的次数大于数组总数的一半时就成为支配数，其所在位序成为支配点；比如int[] a = {3,3,1,2,3};3为支配数，0，1，4分别为支配点；</p>
-
-<pre><code>def findDomain(lst):
-    count = [ i for i,x in enumerate(lst) if lst.count(x) &gt; len(lst)//2 ]  # elegant solution
-    if count:
-    print lst[count[0]], count
-</code></pre>
-
-<h3>什么是PEP 8？</h3>
-
-<p>Python编码规范</p>
 ]]></content>
   </entry>
   
