@@ -63,6 +63,27 @@ for i, v := range t {
 }
 ```
 
+一个更通用但也更慢的函数：
+
+```go
+func InterfaceSlice(slice interface{}) []interface{} {
+    s := reflect.ValueOf(slice)
+    if s.Kind() != reflect.Slice {
+        panic("InterfaceSlice() given a non-slice type")
+    }
+
+    ret := make([]interface{}, s.Len())
+
+    for i:=0; i<s.Len(); i++ {
+        ret[i] = s.Index(i).Interface()
+    }
+
+    return ret
+}
+```
+
+参考：[Type converting slices of interfaces in go](https://stackoverflow.com/questions/12753805/type-converting-slices-of-interfaces-in-go)
+
 > Can I convert []T1 to []T2 if T1 and T2 have the same underlying type?
 
 不可以，只能一个一个转。
