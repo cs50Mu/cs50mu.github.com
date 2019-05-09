@@ -1,0 +1,457 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>database with sqlx in Golang - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="database with sqlx in Golang Parameterized Queries 翻译为参数化查询？是个什么概念呢？ Bind parameters—also called dynamic parameters or bind variables—are an &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Slackey' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Amethysta' rel='stylesheet' type='text/css'> -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--<script src="http://ajax.useso.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script> -->
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
+
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
+
+</head>
+
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
+  
+  <!-- GitHub -->
+  <li>
+  <a href="https://github.com/cs50mu" class="github" title="Github"></a>
+  </li>
+  
+  
+  <!-- Google Plus -->
+  <li>
+  <a href="http://plus.google.com/linuxfish.exe@gmail.com?rel=author" class="google" title="Google+"></a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li>
+  <a href="http://www.twitter.com/linuxfish" class="twitter" title="Twitter"></a>
+  </li>
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
+
+</header>
+
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Database With Sqlx in Golang</h2>
+	<div class="entry-content"><h2>database with sqlx in Golang</h2>
+
+<h3>Parameterized Queries</h3>
+
+<p>翻译为参数化查询？是个什么概念呢？</p>
+
+<p>Bind parameters—also called dynamic parameters or bind variables—are an alternative way to pass data to the database. Instead of putting the values directly into the SQL statement, you just use a placeholder like ?, :name or @name and provide the actual values using a separate API call.</p>
+
+<p>原来说的是这种形式：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Query</span><span class="p">(</span><span class="s">&quot;select * from users where name = ?&quot;</span><span class="p">,</span> <span class="s">&quot;linuxfish&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>与之比较的是还有一种写法，这种是臭名昭著的sql拼接，之前一直理解上面的那种写法也是sql拼接，看来是错怪它了：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// 这样写是有被sql注入的危险的</span>
+</span><span class='line'><span class="nx">myName</span> <span class="o">:=</span> <span class="nx">getNameFromUser</span><span class="p">()</span>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Query</span><span class="p">(</span><span class="s">&quot;select * from users where name = &quot;</span> <span class="o">+</span> <span class="nx">myName</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那么 Parameterized Queries 的好处是什么？</p>
+
+<ul>
+<li>安全
+
+<ul>
+<li>the best way to prevent SQL injection.</li>
+</ul>
+</li>
+<li>性能高
+
+<ul>
+<li>数据库会缓存执行计划，但必须是一模一样的sql，差一点都不行，那么在实际应用中这个缓存的作用就大打折扣了，因为<code>select * from users where id = 2</code>和<code>select * from users where id = 3</code>在数据库看来也是不一样的，尽管它们本质上是一个sql。</li>
+<li>用Parameterized Queries可以解决这个问题，因为变化的值变成参数了，对于数据库而言，请求一直是<code>select * from users where id = ?</code></li>
+<li>但其实并没有那么完美，使用Parameterized Queries后，尽管sql不变了，但相对于真正执行的sql，它缺失了一部分信息，导致优化器无法作出最优的执行计划，因为参数的不同，最终的执行计划也可能是不一样的，因此，使用Parameterized Queries会性能高，是个伪命题</li>
+<li>这又是个取舍的问题（tradeoff），从总体来看，使用Parameterized Queries的好处还是大于坏处，所以，尽量还是使用Parameterized Queries</li>
+<li>参考：<a href="https://use-the-index-luke.com/sql/where-clause/bind-parameters">Parameterized Queries</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h3>what sqlx brings us</h3>
+
+<h4>StructScan</h4>
+
+<p>这是下面说的 Get 和 Select 实现的基础，支持把select出来的字段一下scan进一个struct</p>
+
+<p>The primary extension on sqlx.Rows is StructScan(), which automatically scans results into struct fields. Note that the fields must be exported (capitalized) in order for sqlx to be able to write into them, something true of all marshallers in Go. You can use the db struct tag to specify which column name maps to each struct field, or set a new default mapping with db.MapperFunc(). The default behavior is to use strings.Lower on the field name to match against the column names.</p>
+
+<p>那么是根据什么规则scan的呢？如上面所说，优先会找字段有没有设置<code>db</code> tag，如果设置了就用它，如果没有设置，那么默认使用的是<code>strings.Lower(fieldName)</code>，当然这个转换机制是可以定制的，你可以传入自己的处理函数。对应的实现代码应该在这里：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">NameMapper</span> <span class="p">=</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToLower</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// mapper returns a valid mapper using the configured NameMapper func.</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">mapper</span><span class="p">()</span> <span class="o">*</span><span class="nx">reflectx</span><span class="p">.</span><span class="nx">Mapper</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">mprMu</span><span class="p">.</span><span class="nx">Lock</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">defer</span> <span class="nx">mprMu</span><span class="p">.</span><span class="nx">Unlock</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">mpr</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">mpr</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;db&quot;</span><span class="p">,</span> <span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">origMapper</span> <span class="o">!=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">NameMapper</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// if NameMapper has changed, create a new mapper</span>
+</span><span class='line'>        <span class="nx">mpr</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;db&quot;</span><span class="p">,</span> <span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">origMapper</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">mpr</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 定制自己的mapper</span>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;github.com/jmoiron/sqlx/reflectx&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Create a new mapper which will use the struct field tag &quot;json&quot; instead of &quot;db&quot;</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">Mapper</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;json&quot;</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToLower</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Get and Select</h4>
+
+<p>把 query 和 scan 结合到一步了！</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">p</span> <span class="o">:=</span> <span class="nx">Place</span><span class="p">{}</span>
+</span><span class='line'><span class="nx">pp</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Place</span><span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will pull the first place directly into p</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM place LIMIT 1&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will pull places with telcode &gt; 50 into the slice pp</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Select</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">pp</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM place WHERE telcode &gt; ?&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// they work with regular types as well</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">id</span> <span class="kt">int</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">id</span><span class="p">,</span> <span class="s">&quot;SELECT count(*) FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// fetch at most 10 place names</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">names</span> <span class="p">[]</span><span class="kt">string</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Select</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">names</span><span class="p">,</span> <span class="s">&quot;SELECT name FROM place LIMIT 10&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>risks 潜在风险点</p>
+
+<p>Select can save you a lot of typing, but beware! It&rsquo;s semantically different from Queryx, since <strong>it will load the entire result set into memory at once.</strong> If that set is not bounded by your query to some reasonable size, it might be best to use the classic Queryx/StructScan iteration instead. 作者建议如果返回的数据集大小不确定，还是使用经典的for Next Scan的模式</p>
+
+<h5>Todo： 了解下 Get 和 Select 的原理</h5>
+
+<h4>Transactions</h4>
+
+<p>Exec and all other query verbs will ask the DB for a connection and then return it to the pool each time. There&rsquo;s no guarantee that you will receive the same connection that the BEGIN statement was executed on. To use transactions, you must therefore use <code>DB.Begin()</code> 必须先 Begin 一个transaction</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">tx</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Begin</span><span class="p">()</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">Commit</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since transactions are connection state, the Tx object must bind and control a single connection from the pool. A Tx will maintain that single connection for its entire life cycle, releasing it only when Commit() or Rollback() is called. You should take care to call at least one of these, or else the connection will be held until garbage collection. 只有当<code>Commit()</code>或<code>Rollback()</code>时数据库连接才被放回连接池，记得调这两个函数，否则会有连接不释放的问题</p>
+
+<p>Because you only have one connection to use in a transaction, you can only execute one statement at a time; the cursor types Row and Rows must be Scanned or Closed, respectively, before executing another query. If you attempt to send the server data while it is sending you a result, it can potentially corrupt the connection. 事务中只有一个连接可以使用，因此查询（Query）必须被Scan完或者Close后，后续的查询才能继续执行。</p>
+
+<h4>Named Queries</h4>
+
+<p>Named queries are common to many other database packages. They allow you to use a bindvar syntax which refers to the names of struct fields or map keys to bind variables a query, rather than having to refer to everything positionally. 这个类似于 Python format中的这种写法：<code>print("网站名：{name}, 地址 {url}".format(name="菜鸟教程", url="www.runoob.com"))</code> 好处是不用在意参数的位置了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// named query with a struct</span>
+</span><span class='line'><span class="nx">p</span> <span class="o">:=</span> <span class="nx">Place</span><span class="p">{</span><span class="nx">Country</span><span class="p">:</span> <span class="s">&quot;South Africa&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">NamedQuery</span><span class="p">(</span><span class="s">`SELECT * FROM place WHERE country=:country`</span><span class="p">,</span> <span class="nx">p</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// named query with a map</span>
+</span><span class='line'><span class="nx">m</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span><span class="s">&quot;city&quot;</span><span class="p">:</span> <span class="s">&quot;Johannesburg&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="nx">result</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">NamedExec</span><span class="p">(</span><span class="s">`SELECT * FROM place WHERE city=:city`</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Named query support is implemented by parsing the query for the :param syntax and replacing it with the bindvar supported by the underlying database, then performing the mapping at execution, so it is usable on any database that sqlx supports. 实现原理</p>
+
+<h4>Advanced Scanning</h4>
+
+<h5>Scan Destination Safety</h5>
+
+<p>扫描的destination变量里的字段必须是select的字段的超集，否则会报错，当然也可以忽略这个错误</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">p</span> <span class="nx">Person</span>
+</span><span class='line'><span class="c1">// err here is not nil because there are no field destinations for columns in `place`</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM person, place LIMIT 1;&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will NOT return an error, even though place columns have no destination</span>
+</span><span class='line'><span class="nx">udb</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Unsafe</span><span class="p">()</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">udb</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM person, place LIMIT 1;&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h5>Alternate Scan Types</h5>
+
+<p>In addition to using Scan and StructScan, an sqlx Row or Rows can be used to automatically return a slice or a map of results，还能scan成slice和map！！:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Queryx</span><span class="p">(</span><span class="s">&quot;SELECT * FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// cols is an []interface{} of all of the column results</span>
+</span><span class='line'>    <span class="nx">cols</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">SliceScan</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Queryx</span><span class="p">(</span><span class="s">&quot;SELECT * FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})</span>
+</span><span class='line'>    <span class="nx">err</span> <span class="p">=</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">MapScan</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h5>Custom Types / 自定义类型</h5>
+
+<p>the examples above all used the built-in types to both scan and query with, but database/sql provides interfaces to allow you to use any custom types. database/sql包提供了接口让你来扩展你的自定义类型，让它们也可以被Scan和Query</p>
+
+<p>参考：<a href="http://jmoiron.net/blog/built-in-interfaces">Built In Interfaces</a></p>
+
+<h4>The Connection Pool</h4>
+
+<p>database/sql 包内置连接池，而且提供了几个函数来定制连接池的行为：</p>
+
+<ul>
+<li>DB.SetMaxIdleConns(n int)
+
+<ul>
+<li> sets the maximum number of connections in the idle connection pool</li>
+<li> The default max idle connections is currently 2. This may change in a future release. 默认2个</li>
+</ul>
+</li>
+<li>DB.SetMaxOpenConns(n int)
+
+<ul>
+<li>sets the maximum number of open connections to the database.</li>
+<li>默认无限制</li>
+</ul>
+</li>
+<li>DB.SetConnMaxLifetime(d time.Duration)
+
+<ul>
+<li>sets the maximum amount of time a connection may be reused.</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="http://jmoiron.github.io/sqlx/">Illustrated guide to SQLX</a></li>
+</ul>
+
+</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2019/05/09/database-with-sqlx-in-golang/#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+版权声明：自由转载-非商用-非衍生-保持署名 | <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">Creative Commons BY-NC-ND 3.0</a>
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+    </div>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2019
+
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'thehardwayiseasier';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cs50Mu.github.io/blog/2019/05/09/database-with-sqlx-in-golang/';
+        var disqus_url = 'http://cs50Mu.github.io/blog/2019/05/09/database-with-sqlx-in-golang/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
+</body>
+</html>

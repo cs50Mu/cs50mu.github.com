@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Sep 11th, 2013 Tags: macro economics 《一转念》 by 兰小欢 书中大部分内容讲的是用经济学的供求原理来解释生活中一些看似古怪的现象，还有一些作者的随想。以下是摘录： 你要是把喜儿都霸占了，那大春儿可就要参军了 表再谈神马公平了， &hellip;">
+	<meta name="description" content="Published on: Oct 8th, 2013 Tags: cron, linux 昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。 于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？ &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,220 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/10/08/confused-about-cronie/">
+		
+			Confused About Cronie</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-08T11:49:00+08:00" pubdate data-updated="true">Oct 8<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/cron/'>cron</a>, <a class='category' href='/blog/categories/linux/'>linux</a>
+
+
+</div>
+    </div>
+		<p>昨天想要为每日一图脚本添加定时运行时才发现，貌似crond不工作了。  <br/>
+于是发现原来的dcron早就被踢进AUR了，现在的crond是cronie童鞋。。可是要肿么用呢？</p>
+
+<p>发现Archlinux论坛上也有人有这样的疑问，思路整理如下：</p>
+
+<p>目前，可以使用<code>crontab -e</code>来添加命令或者把想定时运行的命令放在相应的<code>cron.{hourly,daily,monthly,weekly}</code>文件夹中。两者的区别是，通过<code>crontab -e</code>添加的任务可以指定具体的运行时间，可以精确到分钟，但需要保证机器一直运行，若在指定的时间点计算机没有在线，那么任务就不会运行；而放在那几个文件夹的脚本不可以指定精确的运行时间，但不要求计算机一直在线，计算机一旦在线就会检查相应文件夹下的脚本是否应该执行，若符合执行的条件则执行。那么它是通过什么方法来检查的呢？配置文件<code>/etc/anacrontab</code>的一个字段<code>period in days</code>指定了某个文件夹下的脚本的运行间隔时间，若计算机看到某个脚本距上次执行时间已经有n天或大于n天，那么它就会运行这个脚本。  <br/>
+以下的专业解释来自Man，哈哈</p>
+
+<blockquote><p>Anacron  is used to execute commands periodically, with a frequency specified in days.  Unlike cron(8),it does not assume that the machine is running continuously.  Hence, it can be used  on  machines  that are not running 24 hours a day to control regular jobs as daily, weekly, and monthly jobs.</p>
+
+<p>Anacron  reads  a  list  of jobs from the /etc/anacrontab configuration file (see anacrontab(5)).  This file contains the list of jobs that Anacron controls.  Each job entry specifies a  period  in  days, a delay in minutes, a unique job identifier, and a shell command.</p>
+
+<p>For each job, Anacron checks whether this job has been executed in the last n days, where n is the time period specified for that job.  If a job has not been executed in n days  or  more,  Anacron  runs  the job&rsquo;s shell command, after waiting for the number of minutes specified as the delay parameter.</p>
+
+<p>After  the  command exits, Anacron records the date (excludes the hour) in a special timestamp file for that job, so it knows when to execute that job again.</p></blockquote>
+
+<p>To summerize then,if you want to execute a script at a particular time, you should use <code>crontab -e</code>.If you just want the script to execute regardless of the time, you should drop it in the appropriate folder.</p>
+
+<p>做完上面这些后，我悲催的发现crond其实不适合用于定时运行每日一图的脚本。。最后加在awesome的开机启动，通过<code>theme.wallpaper</code>参数可以来设置墙纸，不过有一个矛盾，只能先设置墙纸然后才能下载每日一图。。暂时没找到很好的可以先下载再设置的方法。所以，目前用不了当天的图，用的是前一天的图。。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/10/08/confused-about-cronie//blog/page/5/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/09/30/some-python-practices/">
+		
+			Python复习</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-30T21:47:00+08:00" pubdate data-updated="true">Sep 30<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/python/'>python</a>
+
+
+</div>
+    </div>
+		<p>发现了一本学python的好书，额，起码感觉很对我的口味。。名字叫<strong>The Practice of Computing Using Python</strong>，中译名很二，叫《Python入门经典》。。这本书是美国密歇根州立大学的教材，这本书很好的一点是教会了我如何一点一点的来实现复杂的程序，也就是如何把一个看似很复杂的任务分拆成几个小任务，或者先实现一个很简略的版本，然后再一点一点的去优化，增加新功能，直至完成！</p>
+
+<p>书中在程序开发进阶一章中讲到了一点机器学习(machine learning)的东西，例子是一个预测乳腺癌的程序，基本的过程是这样的：首先，有一个数据样本，样本的参数是肿瘤的属性描述和是否为良性和恶性肿瘤的诊断结果，程序读入数据样本来构造分类器，构造的方法是，分别求出良性和恶性肿瘤的属性的平均值，然后再求这两个平均值的平均值，最后用这个分类器去预测一个肿瘤是良性还是恶性的。预测的方法是投票，若某个属性倾向于良性属性，则良性记一票，反之，恶性记一票，统计所有的属性，票数多者取胜。</p>
+
+<p>课后有一个类似的练习是预测成人的收入，用的还是UCI的机器学习资源库的数据集，不过不同的是这个数据样本里还有一些离散的属性，也就是不是一个具体的数值，是几个选项参数，比如，性别属性，当然只有男女了，国籍属性，当然就是那几个国家了，题目里没有说该怎么处理这类属性（或者说了我没有看懂），我想了个方法，根据收入大于5万和小于5万的分成两类，就某一类来说，对于某个离散属性，统计样本中该属性的分布情况，比如，国籍属性，就统计大于5万的人中美国的有多少个，加拿大的有多少个，英国的有多少个等等，然后找最大的作为这个属性的代表，也就是说在以后预测的时候，如果这个人这个属性的值是这个最大的值（或者说最流行的）的话就投一票。可惜实现起来有些问题，后来在写程序的过程中发现，有几个属性在两类中最大的那个都是一样的。。那这样就没什么意义了啊。。于是又想了一招，把那些离散属性的分布情况按从大到小排序，然后挨个比较，相同的话就继续往下找，直到找到最大的且不同的为止，恩，其它的非离散的参数跟例子是一样的处理，结果。。很不理想，预测的结果有20%的错误。。</p>
+
+<p>以下是在看书过程中做的笔记</p>
+
+<p>看到一篇讲编码的文章，来自<a href="http://ipie.blogbus.com/logs/19379694.html">这里</a>，看了后总算不那么迷糊了。</p>
+
+<p>首先要搞清楚，字符串在Python内部的表示是unicode编码，因此，在做编码转换时，通常需要以unicode作为中间编码，即先将其他编码的字符串解码（decode）成unicode，再从unicode编码（encode）成另一种编码。</p>
+
+<p>decode的作用是将其他编码的字符串转换成unicode编码，如str1.decode(&lsquo;gb2312&rsquo;)，表示将gb2312编码的字符串转换成unicode编码。</p>
+
+<p>encode的作用是将unicode编码转换成其他编码的字符串，如str2.encode(&lsquo;gb2312&rsquo;)，表示将unicode编码的字符串转换成gb2312编码。</p>
+
+<p>在某些IDE中，字符串的输出总是出现乱码，甚至错误，其实是由于IDE的结果输出控制台自身不能显示字符串的编码，而不是程序本身的问题。如在UliPad中运行如下代码：</p>
+
+<pre><code>s=u"中文"
+print s
+</code></pre>
+
+<p>会提示：UnicodeEncodeError: &lsquo;ascii&rsquo; codec can&rsquo;t encode characters in position 0-1: ordinal not in range(128)。这是因为UliPad在英文WindowsXP上的控制台信息输出窗口是按照ascii编码输出的（英文系统的默认编码是ascii），而上面代码中的字符串是Unicode编码的，所以输出时产生了错误。</p>
+
+<p>将最后一句改为：<code>print s.encode('gb2312')</code></p>
+
+<p>则能正确输出“中文”两个字。</p>
+
+<p>若最后一句改为：<code>print s.encode('utf8')</code></p>
+
+<p>则输出：<code>\xe4\xb8\xad\xe6\x96\x87</code>，这是控制台信息输出窗口按照ascii编码输出utf8编码的字符串的结果。</p>
+
+<p>另外，代码中字符串的默认编码与代码文件本身的编码一致，如：</p>
+
+<pre><code>s='中文'
+</code></pre>
+
+<p>如果是在utf8的文件中，该字符串就是utf8编码，如果是在gb2312的文件中，则其编码为gb2312。 这种情况下，要进行编码转换，都需要先用decode方法将其转换成unicode编码，再使用encode方法将其转换成其他编码。通常，在没有指定特定的编码方式时，都是使用的系统默认编码创建的代码文件，在这篇文章中可以看到如何获得系统的默认编码。</p>
+
+<p>如果字符串是这样定义：</p>
+
+<pre><code>s=u'中文'
+</code></pre>
+
+<p>则该字符串的编码就被指定为unicode了，即python的内部编码，而与代码文件本身的编码无关。因此，对于这种情况做编码转换，只需要直接使用encode方法将其转换成指定编码即可。</p>
+
+<p>如果一个字符串已经是unicode了，再进行解码则将出错，因此通常要对其编码方式是否为unicode进行判断：</p>
+
+<pre><code>isinstance(s, unicode)  #用来判断是否为unicode
+</code></pre>
+
+<p><strong>以下是才是读书笔记哦亲～～</strong></p>
+
+<p><em>关于复制</em>   <br/>
+python中分为深copy和浅copy。只复制引用，而不复制对象本身的情况，称为浅copy。复制对象内容，称为深copy。对于单个列表，深copy可以用[:]分片复制来实现；而对于
+列表的列表等复杂列表结构需要用copy模块的deepcopy函数实现。</p>
+
+<p><em>关于split()函数</em>  <br/>
+它在分割字符串的时候会自动把结尾的换行(\n)删除掉</p>
+
+<p><em>关于参数传递  可变对象</em>  <br/>
+由于传递的只是对象的引用，所以若对象为可变对象，则若在函数中对可变对象进行了修改，变化会反应在主调函数的实参对象上，这很容易造成莫名其妙的结果，切记！
+相应的，对于设置默认值参数也有一个类似的问题，如果默认参数设置为可变对象的话，默认参数会随着函数的调用不断变化。。引发看似很诡异的问题，所以一定不要用可变对象做默认参数！</p>
+
+<p><em>关于字典的copy</em>   <br/>
+newDict=myDict.copy()  注意，这依然是浅copy，会影响到字典中的可变对象。
+字典排序：先用列表解析转化为列表[(val,key) for key,val in d.items()]，然后再用列表的sort方法即可。
+键值交换：</p>
+
+<pre><code>  for (k,v) in d.items():
+        d2[v]=k
+</code></pre>
+
+<p><em>关于作用域</em>  <br/>
+作用域搜寻遵照LEGB规则(local/eclosing(指封闭在函数中的函数)/global/built-in)</p>
+
+<p><em>关于文件</em></p>
+
+<ul>
+<li>跳过第一行
+
+<ol>
+<li> 先使用readline()，再用for循环</li>
+<li> 用next(f)跳过</li>
+</ol>
+</li>
+<li>换行符：针对不同平台的不同标准，使用U修饰符可以由python统一解决，无需你操心。fd=open(&lsquo;file.txt&rsquo;,&lsquo;rU&rsquo;)文件内的移动：seek，fd.tell()报告当前位置，最常用的是fd.seek(0)，回到文件开头</li>
+</ul>
+
+
+<p><em>列表</em>   <br/>
+[0]*9=[0,0,0,0,0,0,0,0,0]</p>
+
+<p><em>关于类</em>   <br/>
+属性的名字前面有两条下划线时表示这是一个私有属性，不推荐在类外部更改私有属性。如果在类之外使用该属性，python会将属性名字改变，使得访问出错，比如会将<code>_attribute</code>改为<code>_className__attribute</code></p>
+
+<p><em>关于运算符重载</em>   <br/>
+python首先会用自检来检查参数的类型，再确定操作方式，若没有合适的操作，则会报错。  <br/>
+修复int+Rational的错误，Rational是新建的一个类，那么1+Rational(1,2)会报错，但又不可能修改int类为它添加针对Rational类的<code>__add__()</code>方法，那肿么办呢？答案是<code>__radd__()</code>方法，在Rational类中新加一个<code>__radd__()</code>方法，那么，python在计算1+Rational(1,2)时的步骤是这样的：首先尝试为int类型找到合适的带Rational参数的方法，可惜没找到，那么python开始在第二个操作类即Rational类查找<code>__radd__()</code>方法，如果找到的话，那么python将自动将表达式反转并调用<code>__add__()</code>方法，在这个例子中表达是变为<code>Rational(1,2).__radd__(1)</code>，这样在Rational类中再定义<code>__radd__()</code>方法直接返回<code>__add__()</code>的结果即可，因为加法是可交换的。</p>
+
+<p><em>捕获开发者犯的错误</em>   <br/>
+try-except是用来捕获用户犯的错误，而assert是用来捕获用户犯的错误，assert函数有两个参数，第一个参数是布尔值，如果为真，代码继续；如果为假，则引发assertionError。第二个参数是用于显示错误提示信息的。</p>
+
+<p><em>测试模块</em>   <br/>
+doctest  unittest</p>
+
+<p><em>递归</em>    <br/>
+1. 递归的思想是通过调用自身的函数来实现的，递归的主要思想还是分治，把一个大问题不断的分解成小的问题，直到最小的问题，而最小的问题是有答案的，最后，再把较小的解决方案重新组合成整体方案。  <br/>
+2. 递归是如何实现的呢？是通过栈(stack)来实现的，栈是一种后进先出的数据结构，计算机通过栈来对函数的调用进行跟踪。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/09/30/some-python-practices//blog/page/5/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -862,192 +1076,12 @@ def mergesort(L):
 </div>
 </article>
 
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/06/12/memo-about-octopress/">
-		
-			Octopress搭建备忘</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-12T22:19:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/markdown/'>Markdown</a>, <a class='category' href='/blog/categories/octopress/'>Octopress</a>
-
-
-</div>
-    </div>
-		<h2>缘由</h2>
-
-<p>突然想玩玩Octopress，于是开始搜索，发现在Archlinux上使用Octopress会有两个问题</p>
-
-<ul>
-<li>Ruby版本问题。Arch上的Ruby版本已经更新到2.0版本了，而Octopress用的是1.9版本的</li>
-<li>Octopress使用Pygments来高亮代码，而Pygments不支持Arch默认的Python 3</li>
-</ul>
-
-
-<p>重新以“octopress archlinux”为参数搜索，找到一篇很好的针对Arch的教程，不过它是针对zsh写的，所以bash用户需要略做修改。</p>
-
-<h2>安装过程</h2>
-
-<p>基本比较顺利，只记录下遇到的问题</p>
-
-<ul>
-<li><p>rbenv exec gem install bundler 这一步死活进行不下去！提示找不到bundler，搜索后说是可能是<code>http://rubygems.org/</code>无法访问了，在浏览器看了下访问正常啊！但就是不行。。最终解决办法，换源（尼玛还是GFW的事）:</p>
-
-<pre><code>  gem sources --remove http://rubygems.ogr/
-  gem sources -a http://ruby.taobao.org/   # 淘宝的RubyGems镜像
-  gem sources -l
-  *** CURRENT SOURCES ***
-
-  http://ruby.taobao.org
-</code></pre></li>
-<li><p>安装python-virtualenvwrapper的时候，有一个包一直装不上，提示不存在，纠结了很久，最后才恍然大悟，更新系统源后解决。</p></li>
-<li><p>新建帖子时不能用中文，否则标题会出乱码,可以先在<code>rake new_post["new post name"]</code>中使用英文名字，然后在具体编辑帖子的时候，修改title选项使用中文。</p></li>
-</ul>
-
-
-<h2>网站结构</h2>
-
-<p>根据我粗浅的理解，安装完成后博客的结构在github上是这样的：博客代码库名称是cs50mu.github.com，下面有两个分支，master分支是根据源码生成的blog静态页面；source分支是用于生成blog的源码，所以每次提交静态页面后还需要提交更新的blog源码，这个不要忘记了。</p>
-
-<h2>发布流程</h2>
-
-<p>首先，需要进入blog编辑的虚拟环境（也就是为了兼容ruby和python而搭的虚拟环境）</p>
-
-<pre><code>workon blog_env
-</code></pre>
-
-<p>退出这个虚拟环境需要</p>
-
-<pre><code>deactivate
-</code></pre>
-
-<p>然后就可以开始啦！</p>
-
-<ol>
-<li>用<code>rake new_post["new post name"]</code>命令新建blog文章。</li>
-<li>在<code>souce/_post</code>文件夹用vim编辑新建的blog文件。</li>
-<li><code>rake preview</code>在本机预览。</li>
-<li><code>rake generate</code>和<code>rake deploy</code>提交到github。</li>
-<li><p>最后，不要忘记将更新后的源码提交到source分支。</p>
-
-<pre><code> git add .
- git commit -m 'some comment'
- git push origin source
-</code></pre></li>
-</ol>
-
-
-<h2>To-Do List</h2>
-
-<ul>
-<li>换一套博客模板,目前用的是系统默认的，我发现太多懒人了。。</li>
-<li>添加评论系统</li>
-<li>去掉twitter等在天朝不和谐的东东</li>
-</ul>
-
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="http://www.wongdev.com/blog/2013/01/16/octopress-on-archlinux/">Octopress on Arch Linux</a></li>
-<li><a href="http://shadow.ma/blog/2013/04/07/octopress-on-arch-linux/">Octopress 在 Arch Linux 下的一些問題</a></li>
-<li><a href="http://ishalou.com/blog/2012/10/15/how-to-use-octopress/">使用Octopress + Github管理blog</a>,这篇很不错，很适合我这样的菜鸟，看了它后基本理解了整个搭建原理。</li>
-</ul>
-
-
-<h2>不错的Markdown示例</h2>
-
-<ul>
-<li><a href="http://equation85.github.io/blog/markdown-examples/">Markdown语法示例</a>，非常不错！上面代码，下面展示效果，非常直观。</li>
-<li><a href="http://wowubuntu.com/markdown/#list">Markdown 语法说明</a></li>
-</ul>
-
-
-<h3>update:</h3>
-
-<p>终于找到Markdown中插入代码不起作用的原因了！原来在列表中嵌套的代码需要缩进2个tab才起作用。</p>
-
-<blockquote><p>To put a code block within a list item, the code block needs to be indented twice — 8 spaces or two tabs.
-<a href="http://daringfireball.net/projects/markdown/syntax#list">Ref</a></p></blockquote>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/06/12/memo-about-octopress//blog/page/5/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/06/12/hello/">
-		
-			Hello,World</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-12T20:45:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/octopress/'>Octopress</a>, <a class='category' href='/blog/categories/hello/'>hello</a>
-
-
-</div>
-    </div>
-		<p>Hello,<em>Octopress</em>!This is my first post!</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/06/12/hello//blog/page/5/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
 <nav id="pagenavi">
     
         <a href="/blog/page/4/" class="prev">Prev</a>
     
+    
+        <a href="/blog/page/6/" class="next">Next</a>
     
     <div class="center"><a href="/blog/archives">Blog Archives</a></div>
 </nav>

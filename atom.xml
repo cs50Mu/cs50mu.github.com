@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2019-03-24T22:48:54+08:00</updated>
+  <updated>2019-05-09T10:46:23+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,436 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[database with sqlx in Golang]]></title>
+    <link href="http://cs50Mu.github.io/blog/2019/05/09/database-with-sqlx-in-golang/"/>
+    <updated>2019-05-09T10:39:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2019/05/09/database-with-sqlx-in-golang</id>
+    <content type="html"><![CDATA[<h2>database with sqlx in Golang</h2>
+
+<h3>Parameterized Queries</h3>
+
+<p>翻译为参数化查询？是个什么概念呢？</p>
+
+<p>Bind parameters—also called dynamic parameters or bind variables—are an alternative way to pass data to the database. Instead of putting the values directly into the SQL statement, you just use a placeholder like ?, :name or @name and provide the actual values using a separate API call.</p>
+
+<p>原来说的是这种形式：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Query</span><span class="p">(</span><span class="s">&quot;select * from users where name = ?&quot;</span><span class="p">,</span> <span class="s">&quot;linuxfish&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>与之比较的是还有一种写法，这种是臭名昭著的sql拼接，之前一直理解上面的那种写法也是sql拼接，看来是错怪它了：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// 这样写是有被sql注入的危险的</span>
+</span><span class='line'><span class="nx">myName</span> <span class="o">:=</span> <span class="nx">getNameFromUser</span><span class="p">()</span>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Query</span><span class="p">(</span><span class="s">&quot;select * from users where name = &quot;</span> <span class="o">+</span> <span class="nx">myName</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那么 Parameterized Queries 的好处是什么？</p>
+
+<ul>
+<li>安全
+
+<ul>
+<li>the best way to prevent SQL injection.</li>
+</ul>
+</li>
+<li>性能高
+
+<ul>
+<li>数据库会缓存执行计划，但必须是一模一样的sql，差一点都不行，那么在实际应用中这个缓存的作用就大打折扣了，因为<code>select * from users where id = 2</code>和<code>select * from users where id = 3</code>在数据库看来也是不一样的，尽管它们本质上是一个sql。</li>
+<li>用Parameterized Queries可以解决这个问题，因为变化的值变成参数了，对于数据库而言，请求一直是<code>select * from users where id = ?</code></li>
+<li>但其实并没有那么完美，使用Parameterized Queries后，尽管sql不变了，但相对于真正执行的sql，它缺失了一部分信息，导致优化器无法作出最优的执行计划，因为参数的不同，最终的执行计划也可能是不一样的，因此，使用Parameterized Queries会性能高，是个伪命题</li>
+<li>这又是个取舍的问题（tradeoff），从总体来看，使用Parameterized Queries的好处还是大于坏处，所以，尽量还是使用Parameterized Queries</li>
+<li>参考：<a href="https://use-the-index-luke.com/sql/where-clause/bind-parameters">Parameterized Queries</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h3>what sqlx brings us</h3>
+
+<h4>StructScan</h4>
+
+<p>这是下面说的 Get 和 Select 实现的基础，支持把select出来的字段一下scan进一个struct</p>
+
+<p>The primary extension on sqlx.Rows is StructScan(), which automatically scans results into struct fields. Note that the fields must be exported (capitalized) in order for sqlx to be able to write into them, something true of all marshallers in Go. You can use the db struct tag to specify which column name maps to each struct field, or set a new default mapping with db.MapperFunc(). The default behavior is to use strings.Lower on the field name to match against the column names.</p>
+
+<p>那么是根据什么规则scan的呢？如上面所说，优先会找字段有没有设置<code>db</code> tag，如果设置了就用它，如果没有设置，那么默认使用的是<code>strings.Lower(fieldName)</code>，当然这个转换机制是可以定制的，你可以传入自己的处理函数。对应的实现代码应该在这里：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">NameMapper</span> <span class="p">=</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToLower</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// mapper returns a valid mapper using the configured NameMapper func.</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">mapper</span><span class="p">()</span> <span class="o">*</span><span class="nx">reflectx</span><span class="p">.</span><span class="nx">Mapper</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">mprMu</span><span class="p">.</span><span class="nx">Lock</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">defer</span> <span class="nx">mprMu</span><span class="p">.</span><span class="nx">Unlock</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">mpr</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">mpr</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;db&quot;</span><span class="p">,</span> <span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">origMapper</span> <span class="o">!=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">NameMapper</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// if NameMapper has changed, create a new mapper</span>
+</span><span class='line'>        <span class="nx">mpr</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;db&quot;</span><span class="p">,</span> <span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">origMapper</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">NameMapper</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">mpr</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 定制自己的mapper</span>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;github.com/jmoiron/sqlx/reflectx&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Create a new mapper which will use the struct field tag &quot;json&quot; instead of &quot;db&quot;</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">Mapper</span> <span class="p">=</span> <span class="nx">reflectx</span><span class="p">.</span><span class="nx">NewMapperFunc</span><span class="p">(</span><span class="s">&quot;json&quot;</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToLower</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Get and Select</h4>
+
+<p>把 query 和 scan 结合到一步了！</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">p</span> <span class="o">:=</span> <span class="nx">Place</span><span class="p">{}</span>
+</span><span class='line'><span class="nx">pp</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Place</span><span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will pull the first place directly into p</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM place LIMIT 1&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will pull places with telcode &gt; 50 into the slice pp</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Select</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">pp</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM place WHERE telcode &gt; ?&quot;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// they work with regular types as well</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">id</span> <span class="kt">int</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">id</span><span class="p">,</span> <span class="s">&quot;SELECT count(*) FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// fetch at most 10 place names</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">names</span> <span class="p">[]</span><span class="kt">string</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Select</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">names</span><span class="p">,</span> <span class="s">&quot;SELECT name FROM place LIMIT 10&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>risks 潜在风险点</p>
+
+<p>Select can save you a lot of typing, but beware! It&rsquo;s semantically different from Queryx, since <strong>it will load the entire result set into memory at once.</strong> If that set is not bounded by your query to some reasonable size, it might be best to use the classic Queryx/StructScan iteration instead. 作者建议如果返回的数据集大小不确定，还是使用经典的for Next Scan的模式</p>
+
+<h5>Todo： 了解下 Get 和 Select 的原理</h5>
+
+<h4>Transactions</h4>
+
+<p>Exec and all other query verbs will ask the DB for a connection and then return it to the pool each time. There&rsquo;s no guarantee that you will receive the same connection that the BEGIN statement was executed on. To use transactions, you must therefore use <code>DB.Begin()</code> 必须先 Begin 一个transaction</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">tx</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Begin</span><span class="p">()</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">Commit</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since transactions are connection state, the Tx object must bind and control a single connection from the pool. A Tx will maintain that single connection for its entire life cycle, releasing it only when Commit() or Rollback() is called. You should take care to call at least one of these, or else the connection will be held until garbage collection. 只有当<code>Commit()</code>或<code>Rollback()</code>时数据库连接才被放回连接池，记得调这两个函数，否则会有连接不释放的问题</p>
+
+<p>Because you only have one connection to use in a transaction, you can only execute one statement at a time; the cursor types Row and Rows must be Scanned or Closed, respectively, before executing another query. If you attempt to send the server data while it is sending you a result, it can potentially corrupt the connection. 事务中只有一个连接可以使用，因此查询（Query）必须被Scan完或者Close后，后续的查询才能继续执行。</p>
+
+<h4>Named Queries</h4>
+
+<p>Named queries are common to many other database packages. They allow you to use a bindvar syntax which refers to the names of struct fields or map keys to bind variables a query, rather than having to refer to everything positionally. 这个类似于 Python format中的这种写法：<code>print("网站名：{name}, 地址 {url}".format(name="菜鸟教程", url="www.runoob.com"))</code> 好处是不用在意参数的位置了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// named query with a struct</span>
+</span><span class='line'><span class="nx">p</span> <span class="o">:=</span> <span class="nx">Place</span><span class="p">{</span><span class="nx">Country</span><span class="p">:</span> <span class="s">&quot;South Africa&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">NamedQuery</span><span class="p">(</span><span class="s">`SELECT * FROM place WHERE country=:country`</span><span class="p">,</span> <span class="nx">p</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// named query with a map</span>
+</span><span class='line'><span class="nx">m</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{}{</span><span class="s">&quot;city&quot;</span><span class="p">:</span> <span class="s">&quot;Johannesburg&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="nx">result</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">NamedExec</span><span class="p">(</span><span class="s">`SELECT * FROM place WHERE city=:city`</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Named query support is implemented by parsing the query for the :param syntax and replacing it with the bindvar supported by the underlying database, then performing the mapping at execution, so it is usable on any database that sqlx supports. 实现原理</p>
+
+<h4>Advanced Scanning</h4>
+
+<h5>Scan Destination Safety</h5>
+
+<p>扫描的destination变量里的字段必须是select的字段的超集，否则会报错，当然也可以忽略这个错误</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">p</span> <span class="nx">Person</span>
+</span><span class='line'><span class="c1">// err here is not nil because there are no field destinations for columns in `place`</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM person, place LIMIT 1;&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this will NOT return an error, even though place columns have no destination</span>
+</span><span class='line'><span class="nx">udb</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Unsafe</span><span class="p">()</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">udb</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">p</span><span class="p">,</span> <span class="s">&quot;SELECT * FROM person, place LIMIT 1;&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h5>Alternate Scan Types</h5>
+
+<p>In addition to using Scan and StructScan, an sqlx Row or Rows can be used to automatically return a slice or a map of results，还能scan成slice和map！！:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Queryx</span><span class="p">(</span><span class="s">&quot;SELECT * FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// cols is an []interface{} of all of the column results</span>
+</span><span class='line'>    <span class="nx">cols</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">SliceScan</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Queryx</span><span class="p">(</span><span class="s">&quot;SELECT * FROM place&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})</span>
+</span><span class='line'>    <span class="nx">err</span> <span class="p">=</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">MapScan</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h5>Custom Types / 自定义类型</h5>
+
+<p>the examples above all used the built-in types to both scan and query with, but database/sql provides interfaces to allow you to use any custom types. database/sql包提供了接口让你来扩展你的自定义类型，让它们也可以被Scan和Query</p>
+
+<p>参考：<a href="http://jmoiron.net/blog/built-in-interfaces">Built In Interfaces</a></p>
+
+<h4>The Connection Pool</h4>
+
+<p>database/sql 包内置连接池，而且提供了几个函数来定制连接池的行为：</p>
+
+<ul>
+<li>DB.SetMaxIdleConns(n int)
+
+<ul>
+<li> sets the maximum number of connections in the idle connection pool</li>
+<li> The default max idle connections is currently 2. This may change in a future release. 默认2个</li>
+</ul>
+</li>
+<li>DB.SetMaxOpenConns(n int)
+
+<ul>
+<li>sets the maximum number of open connections to the database.</li>
+<li>默认无限制</li>
+</ul>
+</li>
+<li>DB.SetConnMaxLifetime(d time.Duration)
+
+<ul>
+<li>sets the maximum amount of time a connection may be reused.</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="http://jmoiron.github.io/sqlx/">Illustrated guide to SQLX</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Error Handling in Go]]></title>
+    <link href="http://cs50Mu.github.io/blog/2019/05/09/error-handling-in-go/"/>
+    <updated>2019-05-09T08:50:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2019/05/09/error-handling-in-go</id>
+    <content type="html"><![CDATA[<p>From: <a href="https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully">Don’t just check errors, handle them gracefully</a></p>
+
+<h3>error变量</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">ErrNotFound</span> <span class="p">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;datastore:notfound&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">err</span> <span class="o">:=</span> <span class="nx">Foo</span><span class="p">()</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">ErrNotFound</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// ...</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>优点：简单</p>
+
+<p>缺点：不能带上下文，只有一个简单的固定字符描述；而且错误要耦合进调用方</p>
+
+<h3>error类型</h3>
+
+<p>好处是可以承载更多的上下文信息</p>
+
+<p>缺点还是这个错误必须耦合进调用方</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">PathError</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'><span class="nx">Op</span> <span class="kt">string</span>
+</span><span class='line'><span class="nx">Path</span> <span class="kt">string</span>
+</span><span class='line'><span class="nx">Err</span> <span class="kt">error</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">PathError</span><span class="p">)</span> <span class="nx">Error</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">err</span><span class="p">.(</span><span class="nx">PathError</span><span class="p">);</span> <span class="nx">ok</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>opaque error handling / 黑盒错误处理</h3>
+
+<p>不对返回的error做任何假设，因此也不能干啥。。  直接返回error</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">foo</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">x</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">bar</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// use x</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>assert errors for behavior, not type / 根据行为来处理</h3>
+
+<p>上面的方法太简单。。有时候确实是需要区分error种类，来按情况处理的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">temporary</span> <span class="kd">interface</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">Temporary</span><span class="p">()</span> <span class="kt">bool</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// IsTemporary returns true if err is temporary.</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">IsTemporary</span><span class="p">(</span><span class="nx">err</span> <span class="kt">error</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">te</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">err</span><span class="p">.(</span><span class="nx">temporary</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">ok</span> <span class="o">&amp;&amp;</span> <span class="nx">te</span><span class="p">.</span><span class="nx">Temporary</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>优点：调用方不用依赖定义error的包了</p>
+
+<p>缺点：这种方法依赖 第三方包作者的配合，需要他先让他返回的error满足一定的interface（比如temporary)，包的使用者才能这么用呢</p>
+
+<p>Don’t assert errors for type, assert for behaviour.</p>
+
+<p>For package authors, if your package generates errors of a temporary nature, ensure you return error types that implement the respective interface methods. If you wrap error values on the way out, ensure that your wrappers respect the interface(s) that the underlying error value implemented.</p>
+
+<p>For package users, if you need to inspect an error, use interfaces to assert the behaviour you expect, not the error’s type. Don’t ask package authors for public error types; ask that they make their types conform to common interfaces by supplying Timeout() or Temporary() methods as appropriate.</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://dave.cheney.net/2014/12/24/inspecting-errors">Inspecting errors</a></li>
+</ul>
+
+
+<h3>extra tip</h3>
+
+<ul>
+<li><p>annotating errors</p></li>
+<li><p>only handle errors once</p></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Redis中set元素设置过期？]]></title>
@@ -4338,114 +4768,6 @@ datefmt=
 <li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[trivial problems]]></title>
-    <link href="http://cs50Mu.github.io/blog/2015/01/20/trivial-problems/"/>
-    <updated>2015-01-20T18:40:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2015/01/20/trivial-problems</id>
-    <content type="html"><![CDATA[<p>今天很高兴，因为解决了几个困扰很久的问题。</p>
-
-<h2>OpenVPN</h2>
-
-<p>为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大。</p>
-
-<p>不过，今天仔细一看，原来并不麻烦，只要把管理员提供的证书文件等放到相应文件夹上就搞定了！</p>
-
-<blockquote><p>将这几个文件放到/etc/openvpn目录下   xxx.ovpn ca.crt  xxx.crt  xxx.key  其中xxx.pvpn是配置文件
-然后就可以启动了！ sudo openvpn /etc/openvpn/xxx.ovpn   会提示输入密码，输入管理员提供的密码即可</p></blockquote>
-
-<h2>urxvt SSH远程登陆的问题</h2>
-
-<p>之前在Arch上用urxvt一直比较happy，不过公司里开发都是SSH远程登陆到linux主机上进行的，那么问题来了，明明在本地显示很正常的vim，SSH到了公司上的Linux主机上，显示就成了一堆渣。。明明vim的配置文件都是一样的啊。。  后来慢慢发现不是vim的问题，是终端的问题！！因为我换用lilyterm后就显示正常了！！然后，终于在今天让我google到解决方案了～</p>
-
-<blockquote><ol>
-<li><p>Run the following command on the external host to make a terminfo directory
-under the logged in user&rsquo;s home folder.</p>
-
-<pre><code>mkdir -p ~/.terminfo/r/
-</code></pre></li>
-<li><p>Copy the appropriate terminal profile from your local machine to the newly
-created folder on the remote host.</p>
-
-<pre><code>scp /usr/share/terminfo/r/rxvt-unicode-256color user@helloworld.com:.terminfo/r/
-</code></pre></li>
-<li><p>Restart the SSH connection. It should work now.</p></li>
-</ol>
-</blockquote>
-
-<h2>vim中使用tab自动补全</h2>
-
-<p>对于程序员来说，这世界上如果没有自动补全的话，简直不能想象。。之前习惯了使用TAB自动补全，现在在公司的远程Linux上却怎么也搞不出TAB自动补全的效果。。配置文件和插件都装一样的也不行。。。真是见鬼了。。 今天发现应该是之前装了supertab，然后不知道怎么又自己给删了，但是效果还在。。在远程Linux上装了supertab后，嗯，就是这个感觉～～</p>
-
-<p>本事件的教训就是，无论做什么一定要做好记录。。</p>
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="http://www.cs.helsinki.fi/u/andrews/misc/full_urxvt_support_on_ssh_terminals.txt" title="">FULL URXVT TERMINAL SUPPORT FOR REMOTE (SSH) CONNECTIONS</a></li>
-<li><a href="" title="https://stavrovski.net/blog/installing-and-setting-up-openvpn-in-archlinux">Installing and setting up OpenVPN in ArchLinux</a></li>
-<li><a href="" title="https://wiki.archlinux.org/index.php/Airvpn">Configuring OpenVPN to connect as a client to an AirVPN server</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[problems about python and mysql]]></title>
-    <link href="http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql/"/>
-    <updated>2015-01-19T15:47:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2015/01/19/problems-about-python-and-mysql</id>
-    <content type="html"><![CDATA[<p>记录一下这几天项目上遇到的问题</p>
-
-<h2>Python 2.7的编码问题</h2>
-
-<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
-
-<pre><code>import sys
-print sys.getdefaultencoding()  # 获取系统默认编码
-reload(sys)
-sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
-</code></pre>
-
-<h2>MySQL 乱码解决</h2>
-
-<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
-创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
-
-<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
-
-<h2>git</h2>
-
-<ul>
-<li>基于某个分支新建分支
-  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
-  git checkout muchunyu  # 切换到这个分支
-或者可以直接：   <br/>
-  git checkout -b muchunyu origin/dev</li>
-<li>只clone某个分支到本地
-  git clone -b <branch> &lt;remote_repo></li>
-</ul>
-
-
-<h2>常用数据库操作</h2>
-
-<pre><code>create database xxx; #创建数据库
-use xxx;   # 转到某个数据库
-create table xxx (....); # 创建表
-show tables;  # 显示数据库中的表
-describe xxxx; # 显示表结构
-drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
-truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
-</code></pre>
-
-<h2>参考</h2>
-
-<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
-<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
-<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
 ]]></content>
   </entry>
   
