@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2019-05-09T10:46:23+08:00</updated>
+  <updated>2019-05-19T22:49:00+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,251 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Golang 中的文字编码问题]]></title>
+    <link href="http://cs50Mu.github.io/blog/2019/05/19/a-encoding-problem-in-golang/"/>
+    <updated>2019-05-19T22:41:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2019/05/19/a-encoding-problem-in-golang</id>
+    <content type="html"><![CDATA[<h3>过程描述</h3>
+
+<p>记录一个文字编码的问题</p>
+
+<p>在请求支付宝支付的接口时，发现返回的Response如果有中文的话，print出来后会有乱码。第一反应肯定是编码有问题，那就先转一下编码吧。</p>
+
+<p>一开始的代码大概如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">Post</span><span class="p">(</span><span class="nx">aliPayBillURL</span><span class="p">,</span> <span class="s">&quot;application/x-www-form-urlencoded&quot;</span><span class="p">,</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBufferString</span><span class="p">(</span><span class="nx">output</span><span class="p">))</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">defer</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+</span><span class='line'><span class="nx">body</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="c1">//...</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">queryResp</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">data</span> <span class="o">:=</span> <span class="nx">queryResp</span><span class="p">.</span><span class="nx">Data</span>
+</span><span class='line'><span class="c1">// data.SubMsg里含有中文，会乱码</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Code</span> <span class="o">!=</span> <span class="s">&quot;10000&quot;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;download failed: msg: %s, sub_code: %s, sub_msg: %s\n&quot;</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Msg</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubCode</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubMsg</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="s">&quot;download failed&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>改为了：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">Post</span><span class="p">(</span><span class="nx">aliPayBillURL</span><span class="p">,</span> <span class="s">&quot;application/x-www-form-urlencoded&quot;</span><span class="p">,</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBufferString</span><span class="p">(</span><span class="nx">output</span><span class="p">))</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">defer</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+</span><span class='line'><span class="nx">body</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="c1">//...</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">queryResp</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">data</span> <span class="o">:=</span> <span class="nx">queryResp</span><span class="p">.</span><span class="nx">Data</span>
+</span><span class='line'><span class="nx">converted</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gbkToUtf8</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">SubMsg</span><span class="p">))</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Code</span> <span class="o">!=</span> <span class="s">&quot;10000&quot;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;download failed: msg: %s, sub_code: %s, sub_msg: %s\n&quot;</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Msg</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubCode</span><span class="p">,</span> <span class="nx">converted</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="s">&quot;download failed&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>结果是依旧乱码。。难道不是编码的问题？</p>
+
+<p>改<code>%s</code>为<code>%x</code>看看具体字节：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Code</span> <span class="o">!=</span> <span class="s">&quot;10000&quot;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;download failed: msg: %s, sub_code: %s, sub_msg: %x\n&quot;</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Msg</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubCode</span><span class="p">,</span> <span class="nx">converted</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="s">&quot;download failed&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然后看到了这个<code>efbfbdefbfbdd0a7efbfbdefbfbd 4170704944 efbfbdefbfbdefbfbd</code>，之所以分成了三段贴出来，是因为我发现中间那段对应了部分正常显示的字符“Appid”，然后尝试手动解码一下其它两段，不管是GBK还是utf8都没有找到对应的字符。</p>
+
+<p>然后发现第一段和最后一段的模式有点类似啊，都是<code>efbfbd</code>啥的，有点奇怪。尝试直接搜索<code>efbfbd</code>，定位到一篇<a href="https://liudanking.com/golang/utf-8_replacement_character/">文章</a>，里面主要讲到两点：</p>
+
+<ul>
+<li>这个序列就是utf8编码的，但它比较特殊，它是专门用来替换那些在解码时不认识的码点的，显示出来就是「�」</li>
+<li>某些语言，比如 Goang，会自动进行这个转换，不会报错</li>
+</ul>
+
+
+<p>借用一下原文的例子：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Unix</span><span class="p">()</span> <span class="c1">// 一个无效的码点值</span>
+</span><span class='line'><span class="nx">str</span> <span class="o">:=</span> <span class="nb">string</span><span class="p">(</span><span class="nx">now</span><span class="p">)</span> <span class="c1">// golang是utf-8编码，会对无效码点进行替换</span>
+</span><span class='line'><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;%X&quot;</span><span class="p">,</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">str</span><span class="p">))</span> <span class="c1">// EFBFBD，即字符「�」</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这一下坚定了认为是编码的问题，那就是转码出问题了，再一看，我是在json decode之后再转码的，json decode的时候可能已经把数据按utf8解码了，而数据如果不是utf8编码的话，那就都被替换成<code>efbfbd</code>了，改为在json decode之前就转码试试：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">Post</span><span class="p">(</span><span class="nx">aliPayBillURL</span><span class="p">,</span> <span class="s">&quot;application/x-www-form-urlencoded&quot;</span><span class="p">,</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBufferString</span><span class="p">(</span><span class="nx">output</span><span class="p">))</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">defer</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+</span><span class='line'><span class="nx">body</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">converted</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gbkToUtf8</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">body</span><span class="p">))</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nb">string</span><span class="p">(</span><span class="nx">converted</span><span class="p">))</span>
+</span><span class='line'><span class="nx">err</span> <span class="p">=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">converted</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">queryResp</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">data</span> <span class="o">:=</span> <span class="nx">queryResp</span><span class="p">.</span><span class="nx">Data</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Code</span> <span class="o">!=</span> <span class="s">&quot;10000&quot;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;download failed: msg: %s, sub_code: %s, sub_msg: %s\n&quot;</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Msg</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubCode</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">SubMsg</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">panic</span><span class="p">(</span><span class="s">&quot;download failed&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这次没问题了。</p>
+
+<h3>反思 &amp;&amp; 教训</h3>
+
+<ul>
+<li>获取到数据后不要做任何操作，先做转码</li>
+<li>记住<code>efbfbd</code>，它是一个信号，说明源数据一定不是utf8编码的</li>
+</ul>
+
+
+<p>最后，记录一下 Golang 中如何从 GBK 转为 utf8</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'><span class="nx">golang</span><span class="p">.</span><span class="nx">org</span><span class="o">/</span><span class="nx">x</span><span class="o">/</span><span class="nx">text</span><span class="o">/</span><span class="nx">encoding</span><span class="o">/</span><span class="nx">simplifiedchinese</span>
+</span><span class='line'><span class="nx">golang</span><span class="p">.</span><span class="nx">org</span><span class="o">/</span><span class="nx">x</span><span class="o">/</span><span class="nx">text</span><span class="o">/</span><span class="nx">transform</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">gbkToUtf8</span><span class="p">(</span><span class="nx">s</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">reader</span> <span class="o">:=</span> <span class="nx">transform</span><span class="p">.</span><span class="nx">NewReader</span><span class="p">(</span><span class="nx">bytes</span><span class="p">.</span><span class="nx">NewReader</span><span class="p">(</span><span class="nx">s</span><span class="p">),</span> <span class="nx">simplifiedchinese</span><span class="p">.</span><span class="nx">GBK</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">())</span>
+</span><span class='line'>    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">reader</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">err</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">d</span><span class="p">,</span> <span class="kc">nil</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="https://liudanking.com/golang/utf-8_replacement_character/">你应该记住的一个UTF-8字符「EF BF BD」</a></li>
+<li><a href="http://mengqi.info/html/2015/201507071345-using-golang-to-convert-text-between-gbk-and-utf-8.html">Golang 中的 UTF-8 与 GBK 编码转换</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[database with sqlx in Golang]]></title>
@@ -4708,66 +4953,6 @@ i== n: 9 * 9 * 8 *…… (9-i+2)
     <updated>2015-07-12T13:04:00+08:00</updated>
     <id>http://cs50Mu.github.io/blog/2015/07/12/test-from-new-mac</id>
     <content type="html"><![CDATA[<p><strong>if you see this page, then the migration is ok!</strong></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Python的logging模块总结]]></title>
-    <link href="http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python/"/>
-    <updated>2015-02-02T10:58:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2015/02/02/logging-module-of-python</id>
-    <content type="html"><![CDATA[<p>里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、文件甚至远程主机上，还支持日志轮转，比如<code>RotatingFileHandler</code>支持按文件轮转，<code>TimedRotatingFileHandler</code>支持按时间轮转，formatter类，顾名思义，负责log信息的格式的设定。</p>
-
-<p>使用logging模块的基本流程为：先通过<code>logging.getlogger('loggername')</code>获取一个logger对象，然后根据需求为这个logger对象添加相应的handler和formatter，这样就算基本配置完了，这样就可以在你的程序里使用<code>logging.debug('debug info')</code>等类似语句来输出log信息了。</p>
-
-<p>在实际开发中一般是通过文件来进行配置的，配置信息全写在一个配置文件中，然后在脚本里读取配置信息，一个简单的示例：</p>
-
-<pre><code>import logging
-import logging.config
-
-logging.config.fileConfig('logging.conf')
-
-# create logger
-logger = logging.getLogger('simpleLogger')
-
-# use it
-logger.debug('debug info')
-logger.info('info message')
-logger.warn('warning info')
-logger.critical(''critical info')
-</code></pre>
-
-<p>配置文件如下，需要遵守一定的格式，具体要求见参考链接</p>
-
-<pre><code>[loggers]
-keys=root, simpleLogger
-
-[handlers]
-keys=consoleHandler
-
-[formatters]
-keys=simpleFormatter
-
-[logger_root]
-level=DEBUG
-handlers=consoleHandler
-...
-...
-[formatter_simpleFormatter]
-format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
-datefmt=
-</code></pre>
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="https://docs.python.org/2/howto/logging.html">Logging HOWTO</a></li>
-<li><a href="https://docs.python.org/2/library/logging.config.html#logging-config-api">Logging configuration</a>  这里详细讲了配置文件到底该怎么写</li>
-<li><a href="http://kenby.iteye.com/blog/1162698">使用python的logging模块</a></li>
-<li><a href="http://www.cnblogs.com/captain_jack/archive/2011/01/21/1941453.html">Python模块学习——logging</a></li>
-<li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
-</ul>
-
 ]]></content>
   </entry>
   
