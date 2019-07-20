@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Golang | The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/blog/categories/golang/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2019-05-19T22:49:00+08:00</updated>
+  <updated>2019-07-20T12:27:32+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,317 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[job queue in Golang]]></title>
+    <link href="http://cs50Mu.github.io/blog/2019/07/20/job-queue-in-golang/"/>
+    <updated>2019-07-20T12:16:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2019/07/20/job-queue-in-golang</id>
+    <content type="html"><![CDATA[<p>异步任务，还是蛮常见的</p>
+
+<h3>算不上 job queue的形式</h3>
+
+<p><code>go process(job)</code></p>
+
+<p>这其实算不上一个queue，但简单。同时，少了一些对并发的控制，比如控制同时执行的任务数等。</p>
+
+<h3>最简单的 job queue</h3>
+
+<p>```go
+func worker(jobChan &lt;-chan Job) {</p>
+
+<pre><code>for job := range jobChan {
+    process(job)
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// make a channel with a capacity of 100.
+jobChan := make(chan Job, 100)</p>
+
+<p>// start the worker
+go worker(jobChan)</p>
+
+<p>// enqueue a job
+jobChan &lt;&ndash; job
+```
+注释已经很清楚了，通过向channel发消息来提交任务，worker 从 channel 中取任务做。注意 jobChan 是一个固定长度的 channel，这能够实现 producer throtting，当 queue 中已经有100个 task 时，此时的 enqueue 操作会阻塞。</p>
+
+<h3>非阻塞式 enqueue</h3>
+
+<p>如果 enqueue 时不想阻塞呢？比如我想如果队列满了，就直接给 client 端返回失败，告诉它等会再试试。可以这样：</p>
+
+<p>```go
+// TryEnqueue tries to enqueue a job to the given job channel. Returns true if
+// the operation was successful, and false if enqueuing would not have been
+// possible without blocking. Job is not enqueued in the latter case.
+func TryEnqueue(job Job, jobChan &lt;-chan Job) bool {</p>
+
+<pre><code>select {
+case jobChan &lt;- job:
+    return true
+default:
+    return false
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// then you can do this
+if !TryEnqueue(job, chan) {</p>
+
+<pre><code>http.Error(w, "max capacity reached", 503)
+return
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>停止 worker</h3>
+
+<p>如果没有任务需要做了，那么可以：</p>
+
+<p><code>close(jobChan)</code></p>
+
+<p>因为 worker 是通过<code>for job := range jobChan {...}</code> 这种形式来取任务的，当 channel 被关闭后，for loop 会停止循环，继而结束 worker。</p>
+
+<p>需要注意的是：即使 channel 被 close 的时候，channel 里还有尚未被消费的 task，这些 task 照样会被正常消费完</p>
+
+<h3>等待 worker 退出</h3>
+
+<p><code>close</code> channel 只会通知 worker 当前已无更多任务，但并不会等待 worker 把任务做完，所以我们需要一种等待 worker 的机制：</p>
+
+<p>```go
+// use a WaitGroup
+var wg sync.WaitGroup</p>
+
+<p>func worker(jobChan &lt;-chan Job) {</p>
+
+<pre><code>defer wg.Done()
+
+for job := range jobChan {
+    process(job)
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// increment the WaitGroup before starting the worker
+wg.Add(1)
+go worker(jobChan)</p>
+
+<p>// to stop the worker, first close the job channel
+close(jobChan)</p>
+
+<p>// then wait using the WaitGroup
+wg.Wait()
+```</p>
+
+<h3>带超时时间的等待</h3>
+
+<p>如果 worker 的任务一直没有做完，那么<code>wg.Wait()</code> 会无休止的等待下去，如果我们无法承受一直等待怎么办呢？</p>
+
+<p>可以把<code>wg.Wait()</code>封装一下，给它增加 <code>timeout</code> 的功能</p>
+
+<p>```go
+// WaitTimeout does a Wait on a sync.WaitGroup object but with a specified
+// timeout. Returns true if the wait completed without timing out, false
+// otherwise.
+func WaitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {</p>
+
+<pre><code>ch := make(chan struct{})
+go func() {
+    wg.Wait()
+    close(ch)
+}()
+select {
+case &lt;-ch:
+        return true
+case &lt;-time.After(timeout):
+        return false
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// now use the WaitTimeout instead of wg.Wait()
+WaitTimeout(&amp;wg, 5 * time.Second)
+```</p>
+
+<h3>取消 worker</h3>
+
+<p>上面的代码中，如果我们发出退出的信号，worker 们会做完当前正在做的任务然后再退出，如果我们想让它立即退出该怎么办呢？</p>
+
+<p>可以利用<code>context.Context</code></p>
+
+<p>```go
+// create a context that can be cancelled
+ctx, cancel := context.WithCancel(context.Background())</p>
+
+<p>// start the goroutine passing it the context
+go worker(ctx, jobChan)</p>
+
+<p>func worker(ctx context.Context, jobChan &lt;-chan Job) {</p>
+
+<pre><code>for {
+    select {
+    case &lt;-ctx.Done():
+        return
+
+    case job := &lt;-jobChan:
+        process(job)
+    }
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// Invoke cancel when the worker needs to be stopped. This <em>does not</em> wait
+// for the worker to exit.
+cancel()
+```</p>
+
+<p>但这里有一个小坑，当在收到退出信号时，同时也有job可取，那么 select 会<strong>随机</strong>选择一个路径来执行，并不会优先现在退出的路径，如果你想优先退出的话，需要这样：</p>
+
+<p>```go
+var flag uint64</p>
+
+<p>func worker(ctx context.Context, jobChan &lt;-chan Job) {</p>
+
+<pre><code>for {
+    select {
+    case &lt;-ctx.Done():
+        return
+
+    case job := &lt;-jobChan:
+        process(job)
+        if atomic.LoadUint64(&amp;flag) == 1 {
+            return
+        }
+    }
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// set the flag first, before cancelling
+atomic.StoreUint64(&amp;flag, 1)
+cancel()
+```</p>
+
+<p>或者这样：</p>
+
+<p>```go
+func worker(ctx context.Context, jobChan &lt;-chan Job) {</p>
+
+<pre><code>for {
+    select {
+    case &lt;-ctx.Done():
+        return
+
+    case job := &lt;-jobChan:
+        process(job)
+        if ctx.Err() != nil {
+            return
+        }
+    }
+}
+</code></pre>
+
+<p>}</p>
+
+<p>cancel()
+```
+(译者注：我觉得这样仍然不能保证退出路径优先被执行呀）</p>
+
+<h3>不用 context 也能取消 worker</h3>
+
+<p>如下，在某些场景下可能写法还更简洁，当然原理是一样的</p>
+
+<p>```go
+// create a cancel channel
+cancelChan := make(chan struct{})</p>
+
+<p>// start the goroutine passing it the cancel channel
+go worker(jobChan, cancelChan)</p>
+
+<p>func worker(jobChan &lt;-chan Job, cancelChan &lt;-chan struct{}) {</p>
+
+<pre><code>for {
+    select {
+    case &lt;-cancelChan:
+        return
+
+    case job := &lt;-jobChan:
+        process(job)
+    }
+}
+</code></pre>
+
+<p>}</p>
+
+<p>// to cancel the worker, close the cancel channel
+close(cancelChan)
+```</p>
+
+<h3>worker 池</h3>
+
+<p>最简单的就是启动多个 worker，让它们读取同一个 channel</p>
+
+<p>```go
+for i:=0; i&lt;workerCount; i++ {</p>
+
+<pre><code>go worker(jobChan)
+</code></pre>
+
+<p>}
+```</p>
+
+<p>如果想要等待 worker 退出</p>
+
+<p>```go
+for i:=0; i&lt;workerCount; i++ {</p>
+
+<pre><code>wg.Add(1)
+go worker(jobChan)
+</code></pre>
+
+<p>}</p>
+
+<p>// wait for all workers to exit
+wg.Wait()
+```</p>
+
+<p>取消 worker</p>
+
+<p>```go
+// create cancel channel
+cancelChan := make(chan struct{})</p>
+
+<p>// pass the channel to the workers, let them wait on it
+for i:=0; i&lt;workerCount; i++ {</p>
+
+<pre><code>go worker(jobChan, cancelChan)
+</code></pre>
+
+<p>}</p>
+
+<p>// close the channel to signal the workers
+close(cancelChan)
+```</p>
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="https://disqus.com/embed/comments/?base=default&amp;f=opsdash&amp;t_u=https%3A%2F%2Fwww.opsdash.com%2Fblog%2Fjob-queues-in-go.html&amp;t_d=Job%20Queues%20in%20Go%20-%20OpsDash&amp;t_t=Job%20Queues%20in%20Go%20-%20OpsDash&amp;s_o=default#version=5c281b90be9cbae86fbebcbaed6c8c9b">JOB QUEUES IN GO</a></li>
+<li><a href="https://gist.github.com/harlow/dbcd639cf8d396a2ab73">Golang Workers / Job Queue</a></li>
+<li><a href="http://nesv.github.io/golang/2014/02/25/worker-queues-in-go.html">Writing worker queues, in Go</a></li>
+<li><a href="http://marcio.io/2015/07/handling-1-million-requests-per-minute-with-golang/">Handling 1 Million Requests per Minute with Go</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Golang 中的文字编码问题]]></title>

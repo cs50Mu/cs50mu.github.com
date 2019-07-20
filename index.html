@@ -6,9 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: May 19th, 2019 Tags: Golang 过程描述 记录一个文字编码的问题 在请求支付宝支付的接口时，发现返回的Response如果有中文的话，print出来后会有乱码。第一反应肯定是编码有问题，那就先转一下编码吧。 一开始的代码大概如下： 1
-2
-3 &hellip;">
+	<meta name="description" content="Published on: Jul 20th, 2019 Tags: Golang 异步任务，还是蛮常见的 算不上 job queue的形式 go process(job) 这其实算不上一个queue，但简单。同时，少了一些对并发的控制，比如控制同时执行的任务数等。 最简单的 job queue &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -100,6 +98,487 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2019/07/20/job-queue-in-golang/">
+		
+			Job Queue in Golang</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2019-07-20T12:16:00+08:00" pubdate data-updated="true">Jul 20<span>th</span>, 2019</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/golang/'>Golang</a>
+
+
+</div>
+    </div>
+		<p>异步任务，还是蛮常见的</p>
+
+<h3>算不上 job queue的形式</h3>
+
+<p><code>go process(job)</code></p>
+
+<p>这其实算不上一个queue，但简单。同时，少了一些对并发的控制，比如控制同时执行的任务数等。</p>
+
+<h3>最简单的 job queue</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">job</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">jobChan</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// make a channel with a capacity of 100.</span>
+</span><span class='line'><span class="nx">jobChan</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// start the worker</span>
+</span><span class='line'><span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// enqueue a job</span>
+</span><span class='line'><span class="nx">jobChan</span> <span class="o">&lt;-</span> <span class="nx">job</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注释已经很清楚了，通过向channel发消息来提交任务，worker 从 channel 中取任务做。注意 jobChan 是一个固定长度的 channel，这能够实现 producer throtting，当 queue 中已经有100个 task 时，此时的 enqueue 操作会阻塞。</p>
+
+<h3>非阻塞式 enqueue</h3>
+
+<p>如果 enqueue 时不想阻塞呢？比如我想如果队列满了，就直接给 client 端返回失败，告诉它等会再试试。可以这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// TryEnqueue tries to enqueue a job to the given job channel. Returns true if</span>
+</span><span class='line'><span class="c1">// the operation was successful, and false if enqueuing would not have been</span>
+</span><span class='line'><span class="c1">// possible without blocking. Job is not enqueued in the latter case.</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TryEnqueue</span><span class="p">(</span><span class="nx">job</span> <span class="nx">Job</span><span class="p">,</span> <span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nx">jobChan</span> <span class="o">&lt;-</span> <span class="nx">job</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="k">default</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// then you can do this</span>
+</span><span class='line'><span class="k">if</span> <span class="p">!</span><span class="nx">TryEnqueue</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="kd">chan</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">http</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;max capacity reached&quot;</span><span class="p">,</span> <span class="mi">503</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>停止 worker</h3>
+
+<p>如果没有任务需要做了，那么可以：</p>
+
+<p><code>close(jobChan)</code></p>
+
+<p>因为 worker 是通过<code>for job := range jobChan {...}</code> 这种形式来取任务的，当 channel 被关闭后，for loop 会停止循环，继而结束 worker。</p>
+
+<p>需要注意的是：即使 channel 被 close 的时候，channel 里还有尚未被消费的 task，这些 task 照样会被正常消费完</p>
+
+<h3>等待 worker 退出</h3>
+
+<p><code>close</code> channel 只会通知 worker 当前已无更多任务，但并不会等待 worker 把任务做完，所以我们需要一种等待 worker 的机制：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// use a WaitGroup </span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">job</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">jobChan</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// increment the WaitGroup before starting the worker</span>
+</span><span class='line'><span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// to stop the worker, first close the job channel</span>
+</span><span class='line'><span class="nb">close</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// then wait using the WaitGroup</span>
+</span><span class='line'><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>带超时时间的等待</h3>
+
+<p>如果 worker 的任务一直没有做完，那么<code>wg.Wait()</code> 会无休止的等待下去，如果我们无法承受一直等待怎么办呢？</p>
+
+<p>可以把<code>wg.Wait()</code>封装一下，给它增加 <code>timeout</code> 的功能</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// WaitTimeout does a Wait on a sync.WaitGroup object but with a specified</span>
+</span><span class='line'><span class="c1">// timeout. Returns true if the wait completed without timing out, false</span>
+</span><span class='line'><span class="c1">// otherwise.</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">WaitTimeout</span><span class="p">(</span><span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">,</span> <span class="nx">timeout</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
+</span><span class='line'>    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+</span><span class='line'>        <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}()</span>
+</span><span class='line'>    <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ch</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nx">After</span><span class="p">(</span><span class="nx">timeout</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// now use the WaitTimeout instead of wg.Wait()</span>
+</span><span class='line'><span class="nx">WaitTimeout</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">wg</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h3>取消 worker</h3>
+
+<p>上面的代码中，如果我们发出退出的信号，worker 们会做完当前正在做的任务然后再退出，如果我们想让它立即退出该怎么办呢？</p>
+
+<p>可以利用<code>context.Context</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// create a context that can be cancelled</span>
+</span><span class='line'><span class="nx">ctx</span><span class="p">,</span> <span class="nx">cancel</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">WithCancel</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">Background</span><span class="p">())</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// start the goroutine passing it the context</span>
+</span><span class='line'><span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Done</span><span class="p">():</span>
+</span><span class='line'>            <span class="k">return</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">case</span> <span class="nx">job</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">jobChan</span><span class="p">:</span>
+</span><span class='line'>            <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Invoke cancel when the worker needs to be stopped. This *does not* wait</span>
+</span><span class='line'><span class="c1">// for the worker to exit.</span>
+</span><span class='line'><span class="nx">cancel</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>但这里有一个小坑，当在收到退出信号时，同时也有job可取，那么 select 会<strong>随机</strong>选择一个路径来执行，并不会优先现在退出的路径，如果你想优先退出的话，需要这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">flag</span> <span class="kt">uint64</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Done</span><span class="p">():</span>
+</span><span class='line'>            <span class="k">return</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">case</span> <span class="nx">job</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">jobChan</span><span class="p">:</span>
+</span><span class='line'>            <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="nx">atomic</span><span class="p">.</span><span class="nx">LoadUint64</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">flag</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">return</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// set the flag first, before cancelling</span>
+</span><span class='line'><span class="nx">atomic</span><span class="p">.</span><span class="nx">StoreUint64</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">flag</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="nx">cancel</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>或者这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Done</span><span class="p">():</span>
+</span><span class='line'>            <span class="k">return</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">case</span> <span class="nx">job</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">jobChan</span><span class="p">:</span>
+</span><span class='line'>            <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">Err</span><span class="p">()</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">return</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">cancel</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>(译者注：我觉得这样仍然不能保证退出路径优先被执行呀）</p>
+
+<h3>不用 context 也能取消 worker</h3>
+
+<p>如下，在某些场景下可能写法还更简洁，当然原理是一样的</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// create a cancel channel</span>
+</span><span class='line'><span class="nx">cancelChan</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// start the goroutine passing it the cancel channel </span>
+</span><span class='line'><span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">,</span> <span class="nx">cancelChan</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">,</span> <span class="nx">cancelChan</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">select</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">cancelChan</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">case</span> <span class="nx">job</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">jobChan</span><span class="p">:</span>
+</span><span class='line'>            <span class="nx">process</span><span class="p">(</span><span class="nx">job</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// to cancel the worker, close the cancel channel</span>
+</span><span class='line'><span class="nb">close</span><span class="p">(</span><span class="nx">cancelChan</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>worker 池</h3>
+
+<p>最简单的就是启动多个 worker，让它们读取同一个 channel</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">i</span><span class="o">:=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="p">&lt;</span><span class="nx">workerCount</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果想要等待 worker 退出</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">i</span><span class="o">:=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="p">&lt;</span><span class="nx">workerCount</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// wait for all workers to exit</span>
+</span><span class='line'><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>取消 worker</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// create cancel channel</span>
+</span><span class='line'><span class="nx">cancelChan</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// pass the channel to the workers, let them wait on it</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">i</span><span class="o">:=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="p">&lt;</span><span class="nx">workerCount</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">go</span> <span class="nx">worker</span><span class="p">(</span><span class="nx">jobChan</span><span class="p">,</span> <span class="nx">cancelChan</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// close the channel to signal the workers</span>
+</span><span class='line'><span class="nb">close</span><span class="p">(</span><span class="nx">cancelChan</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="https://disqus.com/embed/comments/?base=default&amp;f=opsdash&amp;t_u=https%3A%2F%2Fwww.opsdash.com%2Fblog%2Fjob-queues-in-go.html&amp;t_d=Job%20Queues%20in%20Go%20-%20OpsDash&amp;t_t=Job%20Queues%20in%20Go%20-%20OpsDash&amp;s_o=default#version=5c281b90be9cbae86fbebcbaed6c8c9b">JOB QUEUES IN GO</a></li>
+<li><a href="https://gist.github.com/harlow/dbcd639cf8d396a2ab73">Golang Workers / Job Queue</a></li>
+<li><a href="http://nesv.github.io/golang/2014/02/25/worker-queues-in-go.html">Writing worker queues, in Go</a></li>
+<li><a href="http://marcio.io/2015/07/handling-1-million-requests-per-minute-with-golang/">Handling 1 Million Requests per Minute with Go</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2019/07/20/job-queue-in-golang//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -2067,149 +2546,6 @@
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2017/02/22/process-data-using-awk//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2017/01/14/thrift-server-error-caused-by-aliyun-health-check/">
-		
-			Thrift Server Error Caused by Aliyun Health Check</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2017-01-14T21:58:00+08:00" pubdate data-updated="true">Jan 14<span>th</span>, 2017</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>近期遇到一个thrift server方面的问题，记录一下。</p>
-
-<h3>Background</h3>
-
-<p>server做的事情其实很简单，就是一个图片上传服务，别人把图片传过来，服务器上传到阿里云的云上，再返回一个图片地址。</p>
-
-<p>问题暴露出来的现象是：这个服务每隔一段时间就会“挂掉”，重启服务后会好那么一段时间然后又会“挂掉”。客户端调用返回<code>TSocket: Could read 4 bytes from ....</code>，但去线上ps会发现，server进程其实是在的，
-也就是说服务器其实只是不响应了，并没有真正挂掉。</p>
-
-<h3>First guess</h3>
-
-<p>分析后台日志发现，大量重复的报错信息<code>Connection reset by peer</code>，以及偶尔的错误信息<code>too many open files</code>（其实，这个偶尔也只是猜测，因为并没有完整的确认过），当时看到这个日志后，就猜测
-原因是：请求太多，导致该程序打开的文件描述符超过限制，从而拒绝服务。由于是线上服务，出现问题时为了及时恢复服务，当时就重启了服务，因此也并没有验证这个猜测。但看了下操作系统对单个程序
-打开文件数的限制:</p>
-
-<pre><code>$ ulimit -n 
-65535
-</code></pre>
-
-<p>基于too many open files这个错误加上这个thrift server使用的ThreadPoolServer类型，google了一番，找到几个类似问题的帖子：</p>
-
-<ul>
-<li><a href="http://blog.csdn.net/heavendai/article/details/8614941">http://blog.csdn.net/heavendai/article/details/8614941</a></li>
-<li><a href="http://web.archive.org/web/20110103083546/http://blog.rushcj.com/2010/12/20/thrift-close-wait/">http://web.archive.org/web/20110103083546/http://blog.rushcj.com/2010/12/20/thrift-close-wait/</a></li>
-<li><a href="http://blog.csdn.net/hwz119/article/details/1611182">http://blog.csdn.net/hwz119/article/details/1611182</a></li>
-</ul>
-
-
-<p>里面讲到，ThreadPoolServer来说，它使用的是定长线程池来服务的，当并发太多时使得现存的线程数无法满足要求时，就会出现很多<code>CLOSE_WAIT</code>状态的连接，最终会
-把当前程序的文件描述符占满，从而出现<code>too many open files</code>的错误。正好这个服务用的线程是默认的，只有10个，当时就认为问题就在这里了。</p>
-
-<h3>Second guess</h3>
-
-<p>然后第二天又问了下服务调用方，其实这个服务的使用频率很低，只有在用户更改头像的时候才会调一下，按理说不会有太多并发量，所以这样看来，上面的猜测就不成立了。然后去线上看了下，该服务一共部署了两台机器，
-发现其中一台机器上的服务又“挂了”，抓住这个好机会，看了下这个服务的socket连接情况：</p>
-
-<pre><code># 先找到程序的进程id
-$ ps aux | grep 'xxx'
-# 然后再用lsof看
-$ lsof -i -P | grep 28719
-python  28719  www    4u  IPv4 261027973      0t0  TCP *:9455 (LISTEN)
-python  28719  www    5u  IPv4 261328458      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.0:45587 (ESTABLISHED)
-python  28719  www    6u  IPv4 261327693      0t0  TCP 10.171.20.131:9455-&gt;100.109.221.128:23814 (ESTABLISHED)
-python  28719  www    7u  IPv4 261429153      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.0:17384 (ESTABLISHED)
-python  28719  www    8u  IPv4 261717598      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.0:23881 (ESTABLISHED)
-python  28719  www    9u  IPv4 261429722      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.128:19752 (ESTABLISHED)
-python  28719  www   10u  IPv4 261470638      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.128:14370 (ESTABLISHED)
-python  28719  www   11u  IPv4 261456259      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.128:24267 (ESTABLISHED)
-python  28719  www   12u  IPv4 261714765      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.0:8860 (ESTABLISHED)
-python  28719  www   13u  IPv4 261470701      0t0  TCP 10.171.20.131:9455-&gt;100.109.221.0:42186 (ESTABLISHED)
-python  28719  www   14u  IPv4 261717599      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.0:3487 (ESTABLISHED)
-python  28719  www   98u  IPv4 261718019      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.0:37454 (ESTABLISHED)
-python  28719  www  827u  IPv4 261722045      0t0  TCP 10.171.20.131:9455-&gt;10.44.155.227:24038 (CLOSE_WAIT)
-python  28719  www  914u  IPv4 261722497      0t0  TCP 10.171.20.131:9455-&gt;10.172.224.17:35876 (CLOSE_WAIT)
-python  28719  www 1309u  IPv4 261724582      0t0  TCP 10.171.20.131:9455-&gt;10.172.142.166:52953 (CLOSE_WAIT)
-python  28719  www 1329u  IPv4 261724675      0t0  TCP 10.171.20.131:9455-&gt;10.44.155.227:52921 (CLOSE_WAIT)
-python  28719  www 1672u  IPv4 261726365      0t0  TCP 10.171.20.131:9455-&gt;10.44.191.118:7070 (CLOSE_WAIT)
-python  28719  www 1694u  IPv4 261726531      0t0  TCP 10.171.20.131:9455-&gt;10.170.210.248:39802 (CLOSE_WAIT)
-</code></pre>
-
-<p>可以看到<code>CLOSE_WAIT</code>状态的连接并不多，但此时这台机器上部署的服务已经不能用了。同时又去现在还可用的机器上看了下，发现只有状态为<code>ESTABLISHED</code>的连接，并没有状态为<code>CLOSE_WAIT</code>的连接，
-同时发现日志在不停的报错：<code>Connection reset by peer</code>。但并没人反馈服务不可用啊，看了下图片上传还是可用的，正百思不得其解中，运维哥哥说，这不会是阿里云的健康检查导致的吧！于是，
-暂停了一下健康检查，果然日志的报错停止了。</p>
-
-<p>然后我的猜测又变成了：由于阿里云的持续不断的健康检查（2秒一次）把服务检查挂了。。显然，运维是不会认可这个猜测的，他们说报这个错是正常的，别的服务也有这个问题，只要不理会它就行了。
-说实话，光看这个，确实无法断定服务挂是由于健康检查的原因。况且我也查了下阿里云所谓的健康检查，找到了如下官方资料：</p>
-
-<ul>
-<li><a href="https://help.aliyun.com/knowledge_list/39451.html?spm=5176.7739464.6.753.FE0164">https://help.aliyun.com/knowledge_list/39451.html?spm=5176.7739464.6.753.FE0164</a></li>
-<li><a href="https://help.aliyun.com/knowledge_detail/39455.html?spm=5176.7839451.2.4.KKMkQd">https://help.aliyun.com/knowledge_detail/39455.html?spm=5176.7839451.2.4.KKMkQd</a></li>
-<li><a href="https://help.aliyun.com/knowledge_detail/39464.html?spm=5176.7839451.2.13.KKMkQd">https://help.aliyun.com/knowledge_detail/39464.html?spm=5176.7839451.2.13.KKMkQd</a></li>
-</ul>
-
-
-<p>看来阿里云官方确认认为这个错误是正常的。</p>
-
-<p>第二天，又去线上看了下，发现某一台机器上的服务又“挂了”，看了下这次的“车祸现场”，注意到了一点上次没有注意的细节：</p>
-
-<ul>
-<li>有11个状态为<code>ESTABLISHED</code>的连接</li>
-<li>这个11个状态为<code>ESTABLISHED</code>的连接的另一边都是来自阿里云健康检查的网段ip</li>
-<li>此时，如果调用该服务会返回错误，而且会增加一条状态为<code>CLOSE_WAIT</code>的socket连接</li>
-<li>对于目前可用的机器上的服务，没有状态为<code>CLOSE_WAIT</code>的连接，但有几个状态为<code>ESTABLISHED</code>的连接，而且尽管没有人调用它，状态为<code>ESTABLISHED</code>的连接数在慢慢增加。</li>
-</ul>
-
-
-<p>由此，可以基本断定，罪魁祸首就是阿里云的健康检查了。健康检查把当前服务的可用连接数（10个线程只能同时服务10个连接）用完了，并且没有释放，再进来的连接只能wait了。那么现在唯一的问题
-就是：Why？阿里云的健康检查为什么会对thrift服务造成这样的结果？我还没有找到原因。从阿里云的官方文档中看到，所谓的TCP健康检查，是对指定ip的指定端口进行了三次握手然后发送了RST断开了
-连接，没有看到他们说会造成连接一直不释放的情况。</p>
-
-<p>google到一篇阿里云上部署thrift server出问题的文章，里面也提到了健康检查：</p>
-
-<ul>
-<li><a href="http://www.concurrent.work/one-java-thrift-case-caused-by-default-parameters/">http://www.concurrent.work/one-java-thrift-case-caused-by-default-parameters/</a></li>
-</ul>
-
-
-<h3>反思</h3>
-
-<ul>
-<li>不要急于下结论。先把日志完整分析下，服务的使用场景也要了解下，再下结论，而不要看到一点问题就瞎猜。</li>
-<li>需要了解下网络方面的基础知识了。</li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2017/01/14/thrift-server-error-caused-by-aliyun-health-check//index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
