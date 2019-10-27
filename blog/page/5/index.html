@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Oct 8th, 2013 Tags: octopress 终于忍不住了。 添加了disqus评论系统，还是挺简单的，Octopress内建了对disqus的支持，只要去disqus官网注册，然后在Octopress里开启一下就可以用了。具体是在_config. &hellip;">
+	<meta name="description" content="Published on: Oct 11th, 2013 Tags: cauc, ipv6 经过我将近一天的折腾后，结论是ipv6在CAUC根本不可行。 没来这个学校之前还一直期待教育网的ipv6的呢，来了后才发现，悲剧了。。不要说ipv6了，连基本的v4网络都烂的要死，还不如我本科的学校！ &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,71 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/10/11/ipv6-in-cauc/">
+		
+			Ipv6 in Cauc?</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-11T20:11:00+08:00" pubdate data-updated="true">Oct 11<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/cauc/'>cauc</a>, <a class='category' href='/blog/categories/ipv6/'>ipv6</a>
+
+
+</div>
+    </div>
+		<p>经过我将近一天的折腾后，结论是ipv6在CAUC根本不可行。</p>
+
+<p>没来这个学校之前还一直期待教育网的ipv6的呢，来了后才发现，悲剧了。。不要说ipv6了，连基本的v4网络都烂的要死，还不如我本科的学校！想重新进入学校就是想再有个机会体验下教育网的ipv6，因为本科学校没有教育网，一直觉得是个遗憾，谁知。。看来今生是与教育网无缘了。</p>
+
+<p>怎么会突然想起要玩ipv6呢？不是翻墙。缘起是一个师弟问起，学校的网能上六维空间嘛，Google了下是个ipv6的pt站，告之不能，问：我们学校不是教育网嘛？答：。。。。但是也可以连的，通过tunnel就可以。问：tunnel是神马？答：tunnel就是那个那个什么。。 是啊，tunnel到底是什么呢？</p>
+
+<p>目前，在ipv4网络下接入ipv6网络主要有三种方法：</p>
+
+<ul>
+<li>ISATAP隧道</li>
+<li>6to4隧道</li>
+<li>teredo隧道</li>
+</ul>
+
+
+<p>其中，前两种都需要pc机具有公网ipv4地址，不支持NAT后的主机访问。teredo隧道不需要pc机具有公网ipv4地址，可以穿越NAT将ipv6数据包封装在UDP中访问ipv6网络。</p>
+
+<p>一开始没有注意ISATAP隧道不支持非公网ip，白折腾了一顿ISATAP，后来尝试teredo隧道，由于我使用了vpn，还是不行。。快崩溃死了，死了的心都有了，不甘心，找到了一个第三方软件，六飞。装上注册后，看了下可以用，可是六维空间依然访问不了，上网搜索后发现可能是六维空间禁止非教育网的ipv6网络访问。。更悲催的是，我发现那些可以访问的ipv6 pt下载站基本都需要邀请注册！这尼玛不是坑爹嘛？！这样的话，就算是能访问v6网络，也没有多大意义了。</p>
+
+<p>所以，结论就是：如果你的学校不属于教育网，趁早不要折腾ipv6了，没用！</p>
+
+<p>PS: 还有学校的网络不属于教育网？！ 再次吐槽下CAUC坑爹的网络，友情提示下想要报考这个学校的童鞋们，千万不要来这里，这个学校的网络连渣都不如。。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/10/11/ipv6-in-cauc//blog/page/5/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -985,65 +1050,6 @@ def mergesort(L):
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2013/06/21/flash-openwrt-in-wr703n//blog/page/5/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/06/16/regular-expressions/">
-		
-			学习正则表达式</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-16T22:38:00+08:00" pubdate data-updated="true">Jun 16<span>th</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/regular-expression/'>regular expression</a>
-
-
-</div>
-    </div>
-		<p>正则表达式真的很强大啊！</p>
-
-<p>但我在用的过程中写的表达式总是不能达到期望的效果，今天又认真看了下，对它又有了一些新的理解。</p>
-
-<ul>
-<li>贪婪模式Vs非贪婪模式。我写的表达式没效果的原因十有八九是因为这个，缺了个?。默认情况下，正则表达式的匹配都是贪婪的，也就是匹配尽可能多的字符，比如妄图用<code>&lt;img.*&gt;</code>来匹配所有的图片标签是不可行的，因为在贪婪模式下这会一直匹配到文末的<code>&gt;</code>处。正确的方法是使用非贪婪模式，即最小匹配，<code>&lt;img.*?&gt;</code>，保险起见，最好写成<code>&lt;img[^&gt;]*?&gt;</code>，表示在<code>&lt;img</code>标签后跟任意个非<code>&gt;</code>的字符然后再跟一个<code>&gt;</code>。</li>
-<li>组与捕获。在实际应用中，通常需要匹配两个或更多方案中的任意一种正则表达式，通常还需要捕获匹配的内容以备进一步处理，所有这些都可以通过<code>()</code>来实现，在多种方案中选取一个的情况则使用交替字符<code>|</code>。比如，<code>(air(craft|plane)|jet)</code>可表示aircraft airplane jet，这里<code>()</code>有两个作用：对表达式进行组合，捕获匹配某个表达式的文本。如果匹配的是前半部分的话（aircraft或airplane），会有两次捕获：aircraft或airplane作为第一次捕获，craft或plane作为第二次捕获；如果匹配的是后半部分的话（jet），就只有一次捕获。可以通过在左括号后面跟随一个<code>?:</code>来关闭捕获，比如，<code>(air(?:craft|plane)jet)</code>，这样的话，如果前半部分匹配，也只会有一次捕获了，即aircraft和airplane，通过关闭一些不需要的捕获，能方便后面对它的引用。 <br/>
-对前面的捕获，可以通过反向引用对其进行引用，有两种方法可以实现引用：一种是使用<code>\i</code>，这里的i指的是前面捕获号。每次捕获都会有一个编号，从1开始，从左到右，每次遇到一个新的左圆括号时进行一次新的捕获编号。比如，为匹配重复单词，使用<code>(\w+)\s+\1</code>，表示匹配开始一个单词，之后至少一个空白字符，再之后是与捕获的单词相同的单词。方法二，在较长的或复杂的正则表达式中，为维护方便，通常对捕获进行命名而不是使用编号。为对捕获进行命名，须在左圆括号后跟随<code>?P&lt;name&gt;</code>，后面进行反向引用的语法是<code>(?P=name)</code>，比如，<code>(?P&lt;word&gt;\w+)\s+(?P=word)</code></li>
-<li>反义。有时候需要查找不属于某个字符类的字符，比如除了数字其他字符都可以的情况，这时需要用到反义。比如，<code>\S</code>匹配任意不是空白符的字符，<code>\D</code>匹配任意非数字的字符；还有一种描述反义的方式是使用<code>[]</code>，比如，<code>[^x]</code>表示除了x外的任意字符。</li>
-<li>断言。断言不会匹配任何文本，而是对断言所在的文本施加某些规定和约束，如果不使用断言的话可能会匹配到一些我们不需要的文本，使用断言可以提高正则表达式的清晰度。比如用正则表达式<code>jet</code>来匹配文本&#8221;the jet and jetski are noisy&#8221;会出现两次匹配，即jet和jetski中的jet，这可能不是我们想要的结果，但是使用正则表达式<code>\bjet\b</code>将只匹配一次，即单词jet。</li>
-</ul>
-
-
-<p>UPDATE:</p>
-
-<p>今天(2014.03.08)改了下自动发天气预报的脚本，终于知道自己之前用正则各种不顺手的原因了！！尼玛不是人家电脑不听话啊！是你自己没有搞懂好不好！！之前只知道用<code>.+?</code>来代表任意多个字符，可你仔细看看<code>.</code>是能代表任意字符吗？！人家不是说了<strong>换行符除外</strong>嘛？！然后加上re.S的编译标签后就可以了有木有！！还有就是使用多个括号捕获时，findall函数是以元组的形式返回捕获结果的。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/06/16/regular-expressions//blog/page/5/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
