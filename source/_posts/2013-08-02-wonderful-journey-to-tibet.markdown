@@ -3,6 +3,7 @@ layout: post
 title: "西藏，最接近天堂的地方"
 date: 2013-08-02 10:54
 comments: true
+published: false
 categories:
 - 青海
 - 西藏
