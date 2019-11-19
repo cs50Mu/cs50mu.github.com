@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Oct 11th, 2013 Tags: cauc, ipv6 经过我将近一天的折腾后，结论是ipv6在CAUC根本不可行。 没来这个学校之前还一直期待教育网的ipv6的呢，来了后才发现，悲剧了。。不要说ipv6了，连基本的v4网络都烂的要死，还不如我本科的学校！ &hellip;">
+	<meta name="description" content="Published on: Oct 13th, 2013 Tags: jekyll, octopress 好奇害死猫。 一开始是想着给现在的博客主题添加一个sidebar，再后来就想着搞清楚Octopress的原理，仔细一研究，原来里面用到了好多好玩的新技术啊（对我而言的新技术， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,75 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2013/10/13/understand-octopress/">
+		
+			Understand Octopress</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-13T17:42:00+08:00" pubdate data-updated="true">Oct 13<span>th</span>, 2013</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/jekyll/'>jekyll</a>, <a class='category' href='/blog/categories/octopress/'>octopress</a>
+
+
+</div>
+    </div>
+		<p>好奇害死猫。</p>
+
+<p>一开始是想着给现在的博客主题添加一个sidebar，再后来就想着搞清楚Octopress的原理，仔细一研究，原来里面用到了好多好玩的新技术啊（对我而言的新技术，我对网页的认识还停留在html css php等），下面就盘点下我从Octopress/Jekyll里了解到的“新”技术。</p>
+
+<ul>
+<li>Octopress是Jekyll的一个wrapper程序，Jekyll transform your plain text into static websites and blogs. Jekyll是一个静态博客编译器，负责把你写的代码编译成一个完整的博客网站。这样生成的网站属于静态网站，它是想对于wordpress这样的带数据库的动态网站而言的。很显然，静态网站的一大优点就是响应速度比动态网站相对要快，因为所有页面一旦生成就不再改变了嘛，不需要跟跟数据库交互；缺点就是每次更新都需要重新编译。</li>
+<li><p>Sass &amp;&amp; Compass。这年头写CSS是用Sass和Compass了，我已经OUT了太久了。CSS不是一种编程语言，没有变量，没有条件语句，只是一行行的描述，写起来很费事，于是程序员童鞋忍不住了，Sass诞生了！Sass是一种CSS的开发工具，提供了很多便利的写法，可大大节省设计者的时间，使得CSS的开发变得简单。Compass是Sass的工具库(toolkit)，Sass本身只是一个编译器，Compass在它的基础上，封装了一系列有用的模板，使得CSS的开发更加便利！它们之间的关系，类似Javascript和jQuery、python和Django的关系。  <br/>
+<strong>说到这里我可以自我鄙视下嘛？人家其实连CSS都不会。。</strong> 唉，各种标签、类一会儿就被转晕了。。</p></li>
+<li><p>YAML。递归的名字是YAML Ain&rsquo;t Markup Language，官方给出的定义：YAML is a human friendly data serialization
+standard for all programming languages.也就是说它是一种数据表示的标准，类似于xml，实际上是将来可能会取代xml的数据标准，YAML试图用一种比XML更敏捷的方式，来完成XML所完成的任务。我的感觉是，YAML确实比xml和jason更容易阅读，看起来结构比较清楚，容易理解一点。</p></li>
+<li>Liquid。Ruby library for rendering safe templates which cannot affect the security of the server they are rendered on.所谓的templating language，模板语言。可以嵌入在web页面中来形成模板页面，后期根据不同的页面参数会编译成不同的页面，甚至还支持使用if for等类编程语句，非常灵活。Jekyll在它的模板文件中大量使用了liquid语言。</li>
+<li>FontAwesome。The iconic font designed for Bootstrap.Font Awesome gives you scalable vector icons that can instantly be customized — size, color, drop shadow, and anything that can be done with the power of CSS.Font Awesome是一种出色的免费iconic font，别让字面意思误导了，这货其实不是字体，是网站上用的一些小图标，可能你都没有注意到，但也确实会给网站增色不少。看到一篇介绍iconic font的文章，<a href="http://lepture.com/work/iconic-fonts">Iconic Fonts 簡介</a>，讲的非常不错！我目前用的主题fabric的header里用的字体就是来自google font的Slackey。</li>
+<li>Animate.css。animate.css is a bunch of cool, fun, and cross-browser animations for you to use in your projects. Great for emphasis, home pages, sliders, and general just-add-water-awesomeness.用纯CSS实现的动画效果集合，非常酷！ <br/>
+How to use it?  <br/>
+To use animate.css in your website,simply drop the stylesheet into your document&rsquo;s <code>&lt;head&gt;</code>, and add the class <code>animated</code> to an element, along with any of the animation names.That&rsquo;s it! You&rsquo;ve got a CSS animated element.Super!
+关于怎么用CSS3实现动画效果，看<a href="http://www.w3schools.com/css3/css3_animations.asp">这里</a></li>
+<li>google web font。顾名思义，是Google提供的网上免费字体。使用方法之一是，首先在<code>&lt;header&gt;</code>里添加对网上字体的引用，比如<code>&lt;link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Tangerine"&gt;</code>，然后就可以在CSS里指定了。</li>
+<li><p>fancybox。FancyBox is a tool for displaying images, html content and multi-media in a Mac-style &ldquo;lightbox&rdquo; that floats overtop of web page. It was built using the jQuery library.</p></li>
+<li><p>两个html5新标签。通过这番折腾知道了两个新标签<code>&lt;header&gt;</code>和<code>&lt;article&gt;</code></p></li>
+<li>Octopress/Jekyll的layouts</li>
+</ul>
+
+
+<p>其实很容易理解的东西，不知为什么搞了很久才弄明白，layouts文件夹里放的是博客的模板文件，顾名思义就是一个框架，相当于人的骨骼，把具体的博客内容填进去后就成了最终的博客。通常为了不同的用途，会有多个模板文件，为了简化代码，这几个模板文件之间通常有继承关系。比如，default.html里放的是所有页面都会有的东西，比如页面开始的引用、head、footer等，post.html在default.html的基础上再做进一步的修改，思想有点类似类的继承，不过在这里只能在原有的基础上继续添加，不能覆盖原来的“方法”。</p>
+
+<p>另外，在某个模板中还可以include进别的模板，比如在default.html中include进foot.html，这样做有利于管理代码，否则所有的代码都在一个文件里，看着混乱，也不容易管理。所有include的模板都在<code>source/_include</code>文件夹里。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2013/10/13/understand-octopress//blog/page/5/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -943,113 +1012,6 @@ def mergesort(L):
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2013/06/30/fuck-gfw//blog/page/5/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2013/06/21/flash-openwrt-in-wr703n/">
-		
-			在WR703N上刷openwrt</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-21T21:16:00+08:00" pubdate data-updated="true">Jun 21<span>st</span>, 2013</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/wr703n/'>WR703N</a>, <a class='category' href='/blog/categories/crontab/'>crontab</a>, <a class='category' href='/blog/categories/openwrt/'>openwrt</a>, <a class='category' href='/blog/categories/lu-you-qi/'>路由器</a>
-
-
-</div>
-    </div>
-		<p>买这个传说中很牛逼的路由器已经很久了，直到现在才想起来刷。。当初买它是因为一直用的一个无线路由老是罢工，一开始以为是学校网络的问题，后来发现不是，是路由器的问题，于是想刷个开源固件玩玩，可惜上网一搜发现这个路由器刷不了开源固件。。于是一番搜索后发现大家对现在这款（WR703N）路由的评价不错，好多用它来刷开源固件的，看得心痒痒啊，特别是这篇：<a href="http://zihua.li/2012/03/about-tl-wr703n/">入手神器TL-WR703N一日谈</a>，害我直接又多买了个8G U盘！</p>
-
-<p>刷机教程看了很多篇，不过最后主要是参照这篇来的：<a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a>，写得很不错，我基本是按着他的步骤来的，一开始有一步没照着他的来，结果最后从USB启动后连接不上无线了。。。然后，晚上睡觉的时候突然想到会不会是因为没有做这一步导致的呢？于是早上起来后重新弄，因为无线和有线都连接不上了，所以一开始又折腾了好久，还好openwrt有安全模式，进入方式在上面的帖子里也有介绍，他说的这个方法是正确的，我一开始用的是openwrt文档里说的方法，说开机后要先等个2秒钟什么的，然后按住reset键，等指示灯快速闪烁后就ok了。可是我试了下根本不管用，还是那个帖子里说的靠谱些，正确的做法是：<strong>开机后立即持续的按reset键，不要按住就不放了，要不停的按住松开，间隔时间要短。</strong></p>
-
-<p>然后就是配置U盘扩展了，这真是一个绝佳的workaround，把系统装在U盘里，这真是太妙了啊！因为路由器的内存和flash都很低，可能刚刚够装开源固件的（这算好的，一些路由器没法装就是因为flash太小，装不下！），但要想玩点别的，比如装个vpn支持，装个python啥的就别想了。但一旦把系统装在U盘里就没有空间限制了，可以随便折腾。安装过程帖子里写的很详细了，有几点不明白：</p>
-
-<ul>
-<li><code>mount -o bind / /tmp/root</code>的含义，我知道是把根目录绑定到/tmp/root下，但我想深入了解下，为什么需要先绑定再复制？为什么不直接复制呢？ <br/>
-解答：bind参数的意思是将已挂载的文件系统挂载到目录树的另一个位置，所以我猜这么做的原因是若直接<code>cp /* /mnt/usb -a</code>会引起歧义，因为<code>/*</code>也包括<code>/mnt/usb</code></li>
-<li><p><code>/etc/config/fstab</code>中的配置如何理解？为何需要1G的交换空间？有必要分这么多吗？ <br/>
-解答：<a href="http://wiki.openwrt.org/doc/techref/flash.layout">The OpenWrt Flash Layout</a>，这篇wiki详细讲了openwrt对存储结构的定义，特别是讲到了<code>/</code> <code>/rom</code> <code>/overlay</code>三个文件夹的作用。 <br/>
-根据这篇wiki<a href="http://wiki.openwrt.org/doc/uci/fstab">Fstab Configuration</a>，swap没必要设置这么大，内存512M以下设置为内存的2倍就可以了，所以重新分了区，把原来的1G swap分区删掉合并到原来的数据分区里，建了个64M的swap文件：</p>
-
-<pre><code>  $ dd if=/dev/zero of=/swapfile bs=1M count=64
-  $ mkswap /swapfile
-  $ swapon /swapfile
-</code></pre>
-
-<p>但是这样需要手动激活swap空间，想了下，在<code>/etc/rc.local</code>里添加<code>swapon /swapfile</code>解决！</p></li>
-<li><p>我没有照做的一步是设置/etc/config/network时，没有更改lan的ip地址为192.168.20.1（默认是192.168.1.1），虽然改了后重新配置后问题就解决了，但我还是不理解为什么。</p></li>
-<li><p>最后一个问题是pptp client的问题，安装很容易，按照官方文档很轻松设置完成后，ssh到路由器上ping外网已经可以ping通了，问题是在我的笔记本上ping外网却不行，总是提示network unreachable。。根据官方文档设置最后需要指定一下路由，之前都没有太关注过路由的概念，所以现在还是很迷糊。。不知道该怎么设置路由，按说路由器上能访问外网，那不用做什么设置客户端就应该能访问外网啊！折腾了好久也没搞明白，最后按照网上搜到的一个方法莫名其妙的搞定了。。不过，依然不太明白原理。具体做法如下，在<code>/etc/config/network</code>里添加：</p>
-
-<pre><code>  config 'zone'
-      option 'name'      'wan'
-      option 'network'   'wan vpn'
-      option 'input'     'REJECT'
-      option 'forward'   'REJECT'
-      option 'output'    'ACCEPT'
-      option 'masq'      '1' 
-</code></pre></li>
-</ul>
-
-
-<p>不过，按上面设置后还是不起作用的，又到web界面的<code>network--&gt;firewall</code>里设置了下才ok的，就改了下covered network选项，原来就只有wan选上了，我看到上面的配置文件里network选项里有两个（wan和vpn），所以我把vpn也勾选上了，然后重启firewall后就ok了。。。</p>
-
-<h4>Crontab定时任务</h4>
-
-<p><code>crontab -l</code> 显示定时任务 <br/>
-<code>crontab -e</code> 编辑定时任务 <br/>
-<code>crontab -r</code> 删除定时任务</p>
-
-<h5>格式说明：</h5>
-
-<p><code>* * * * * /command path</code>  前5个字段分别表示分钟（0-59），小时（1-23），日期（1-31），月份（1-12），星期（0-6，0表示周日）</p>
-
-<h5>特殊符号：</h5>
-
-<p><code>*</code>表示任意时刻 <br/>
-<code>,</code>表示分割 <br/>
-<code>-</code>表示一个时间段 <br/>
-<code>/n</code>表示每n单位执行一次 <br/>
-如果不想让定时任务的执行信息打印到屏幕上的话，可以这样<code>0 2 * * * /u01/test.sh &gt;/dev/null 2&gt;&amp;1 &amp;</code>，这句话的意思就是在后台执行这条命令，并将错误输出2重定向到标准输出1，然后将标准输出1全部放到/dev/null 文件，也就是清空。</p>
-
-<h5><code>2&gt;&amp;1</code>写在后面的原因</h5>
-
-<p>首先是<code>command &gt; file</code>将标准输出重定向到file中，<code>2&gt;&amp;1</code>是标准错误拷贝了标准输出，也就是同样被重定向到file中，最终结果就是标准输出和错误都被重定向到file中。 <br/>
-如果改成： <code>command 2&gt;&amp;1 &gt;file</code>，<code>2&gt;&amp;1</code>标准错误拷贝了标准输出的行为，但此时标准输出还是在终端。<code>&gt;file</code>后输出才被重定向到file，但标准错误仍然保持在终端。</p>
-
-<h3>参考</h3>
-
-<p><a href="http://www.imtxc.com/blog/2013/02/24/install-and-configure-openwrt-on-wr703n/">在wr703n下安装配置openwrt、openvpn</a> <br/>
-<a href="http://dev.bjtu.edu.cn/ideal/2013/04/14/use-openwrt-as-bt-downloader/">使用tp-link tl-wr703n和openwrt作为bt下载机</a>  <br/>
-<a href="http://www.openwrt.org.cn/bbs/forum.php?mod=viewthread&amp;tid=1480">openwrt下pptp-vpn client的使用！！</a> <br/>
-<a href="http://blog.csdn.net/tianlesoftware/article/details/5315039">Linux Crontab 定时任务 命令详解 </a></p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2013/06/21/flash-openwrt-in-wr703n//blog/page/5/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
