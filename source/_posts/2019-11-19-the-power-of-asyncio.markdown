@@ -4,6 +4,8 @@ title: "异步IO的威力"
 date: 2019-11-19 20:12
 comments: true
 categories: 
+- Python
+- asyncio
 ---
 
 ### what
