@@ -6,8 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Oct 15th, 2017 Tags: 记录一次问题定位过程。 一天，接到业务组的同学反馈：“你们的某个服务在仿真环境不可用了”。看到报错信息后我第一反应就是，是他们传递的参数有误，因为：1. 近期代码没有改动，只是由ECS
-部署改为了Docker部署；2. &hellip;">
+	<meta name="description" content="Published on: Nov 26th, 2017 Tags: 问题的起因是想知道在Django ORM中如何处理大数据集的返回，比如怎么避免进程由于内存占用过多被kill掉。由于数据库使用的是MySQL，讨论是从MySQL开始的。 MySQL协议是半双工的，同一时间只能有一方在说话， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -99,6 +98,149 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2017/11/26/big-resultsets-handling-in-django/">
+		
+			如何处理数据库大结果集?</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-11-26T23:57:00+08:00" pubdate data-updated="true">Nov 26<span>th</span>, 2017</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>问题的起因是想知道在Django ORM中如何处理大数据集的返回，比如怎么避免进程由于内存占用过多被kill掉。由于数据库使用的是MySQL，讨论是从MySQL开始的。</p>
+
+<p>MySQL协议是半双工的，同一时间只能有一方在说话，一旦服务器开始返回数据，客户端能做的只能是把数据接收完，不存在让服务器停止这一说。。（因为还没轮到它说嘛。。）所以，写sql的时候注意加limit是很重要的！</p>
+
+<p>那么对于一次sql查询的返回，MySQL客户端有两个选择：</p>
+
+<p>1、MySQL客户端默认会一次性先把服务器返回的数据先缓存起来，再给它的客户去用。这样做的好处是，能尽快解放数据库相关线程，让它们去做更重要的事，比如服务其它请求（因为服务器通常需要等所有数据都发送完后才释放这条查询相关的资源的），坏处是如果返回的结果很大，客户端需要花费很多时间和内存来接收它，更气人的是，在这期间，做为客户端的用户，你啥也干不了，只能等。</p>
+
+<p>2、MySQL客户端还有一个选择，就是不自己先缓存啦，一边从server接收一边就返回给它的用户了~这样做的好处是，对于MySQL客户端的用户来说，它看起来反应更快了（因为没有先缓存所有数据集），而且貌似还便于做内存占用的优化？比如一边接收、处理，一边删除已处理过的数据，使得内存占用始终保持在一个很小的数量。坏处是有一个处理很慢的用户可能会拖垮数据库，并且在接收完之前客户端不能做任何其它的事情！这其实是一个Unbuffered Cursor，在MySQL客户端实现里叫SSCursor，即server side cursor，但其实它不是真正的server side cursor</p>
+
+<p>Django ORM的queryset在被使用的时候会触发对应sql查询被执行，像上面说的，默认情况下结果集会被客户端先缓存，这已经是一个内存占用，然后会被Django转成对应的model instance，这又是一个内存占用，如果内存没有被及时回收，这其实是一份数据的双倍内存占用。</p>
+
+<p>queryset的一个方法iterator能实现的一个优化是，将数据集转成model instance的过程改为generator模式，减少第二步的内存占用（注意：这只是针对MySQL来说的）</p>
+
+<p>对于会返回大数据集的查询，一个处理办法是拆分使用limit来多次接收。每次接收一定量的数据（比如1000），内存回收后再接收下一个1000，对应的Django实现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">gc</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">queryset_iterator</span><span class="p">(</span><span class="n">queryset</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+</span><span class='line'>    <span class="sd">&#39;&#39;&#39;&#39;&#39;</span>
+</span><span class='line'><span class="sd">    Iterate over a Django Queryset ordered by the primary key</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">    This method loads a maximum of chunksize (default: 1000) rows in it&#39;s</span>
+</span><span class='line'><span class="sd">    memory at the same time while django normally would load all rows in it&#39;s</span>
+</span><span class='line'><span class="sd">    memory. Using the iterator() method only causes it to not preload all the</span>
+</span><span class='line'><span class="sd">    classes.</span>
+</span><span class='line'>
+</span><span class='line'><span class="sd">    Note that the implementation of the iterator does not support ordered query sets.</span>
+</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
+</span><span class='line'>    <span class="n">pk</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="n">last_pk</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;-pk&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pk</span>
+</span><span class='line'>    <span class="n">queryset</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;pk&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">while</span> <span class="n">pk</span> <span class="o">&lt;</span> <span class="n">last_pk</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">queryset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk__gt</span><span class="o">=</span><span class="n">pk</span><span class="p">)[:</span><span class="n">chunksize</span><span class="p">]:</span>
+</span><span class='line'>            <span class="n">pk</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">pk</span>
+</span><span class='line'>            <span class="k">yield</span> <span class="n">row</span>
+</span><span class='line'>        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/4856882/limiting-memory-use-in-a-large-django-queryset?rq=1">https://stackoverflow.com/questions/4856882/limiting-memory-use-in-a-large-django-queryset?rq=1</a></li>
+<li><a href="https://stackoverflow.com/questions/14144408/memory-efficient-constant-and-speed-optimized-iteration-over-a-large-table-in?noredirect=1&amp;lq=1">https://stackoverflow.com/questions/14144408/memory-efficient-constant-and-speed-optimized-iteration-over-a-large-table-in?noredirect=1&amp;lq=1</a></li>
+<li><a href="https://djangosnippets.org/snippets/1949/">https://djangosnippets.org/snippets/1949/</a></li>
+<li><a href="https://docs.djangoproject.com/en/1.11/ref/models/querysets/#iterator">https://docs.djangoproject.com/en/1.11/ref/models/querysets/#iterator</a></li>
+</ul>
+
+
+<p>下面讲一下真正的server side cursor，postgresql支持真正意义上的server side cursor，可以给一个查询指定一个cursor，然后在这个cursor上操作，fetch多行、move(移动）cursor、更新当前cursor所在的记录等等，可参考<a href="https://www.postgresql.org/docs/9.2/static/plpgsql-cursors.html">文档</a>。看MySQL<a href="https://dev.MySQL.com/doc/refman/5.7/en/cursors.html">官方文档</a>，它也支持一个很简陋的server side cursor，而且只能在存储过程里用。</p>
+
+<p>顺便，google到一个对比Client-Side Cursors和Server-Side Cursors区别的文档，竟然来自微软。。</p>
+
+<p>Client-Side Cursors</p>
+
+<p>With a non-keyset client-side cursor, the server sends the entire result set across the network to the client machine. The client machine provides and manages the temporary resources needed by the cursor and result set. The client-side application can browse through the entire result set to determine which rows it requires.</p>
+
+<p>Static and keyset-driven client-side cursors may place a significant load on your workstation if they include too many rows. While all of the cursor libraries are capable of building cursors with thousands of rows, applications designed to fetch such large rowsets may perform poorly. There are exceptions, of course. For some applications, a large client-side cursor may be perfectly appropriate and performance may not be an issue.</p>
+
+<p>One obvious benefit of the client-side cursor is quick response. After the result set has been downloaded to the client machine, browsing through the rows is very fast. Your application is generally more scalable with client-side cursors because the cursor&rsquo;s resource requirements are placed on each separate client and not on the server.</p>
+
+<p>Server-Side Cursors</p>
+
+<p>With a server-side cursor, the server manages the result set using resources provided by the server machine. The server-side cursor returns only the requested data over the network. This type of cursor can sometimes provide better performance than the client-side cursor, especially in situations where excessive network traffic is a problem.</p>
+
+<p>Server-side cursors also permit more than one operation on the connection. That is, once you create the cursor, you can use the same connection to make changes to the rows — without having to establish an additional connection to handle the underlying update queries.</p>
+
+<p>However, it&rsquo;s important to point out that a server-side cursor is — at least temporarily — consuming precious server resources for every active client. You must plan accordingly to ensure that your server hardware is capable of managing all of the server-side cursors requested by active clients. Also, a server-side cursor can be slow because it provides only single row access — there is no batch cursor available.</p>
+
+<p>Server-side cursors are useful when inserting, updating, or deleting records. With server-side cursors, you can have multiple active statements on the same connection. With SQL Server, you can have pending results in multiple statement handles.</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://msdn.microsoft.com/en-us/library/aa266531(v=vs.60">Client-Side Cursors Versus Server-Side Cursors</a>.aspx)</li>
+<li><a href="http://thebuild.com/blog/2010/12/13/very-large-result-sets-in-django-using-postgresql/">Very Large Result Sets in Django using PostgreSQL</a></li>
+<li><a href="https://www.postgresql.org/docs/9.2/static/plpgsql-cursors.html">postgresql cursors</a></li>
+<li><a href="http://techualization.blogspot.com/2011/12/retrieving-million-of-rows-from-MySQL.html">Retrieving million of rows from MySQL</a></li>
+<li><a href="https://dev.MySQL.com/doc/refman/5.7/en/cursors.html">MySQL cursors</a></li>
+<li><a href="https://code.djangoproject.com/ticket/16614#no1">Django中对server side cursor的支持</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2017/11/26/big-resultsets-handling-in-django//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1660,683 +1802,6 @@ child : x=2
 </div>
 </article>
 
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2016/08/19/thrift-source-code-walkthrough/">
-		
-			Thrift Source Code Walkthrough</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2016-08-19T11:24:00+08:00" pubdate data-updated="true">Aug 19<span>th</span>, 2016</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>准备学习一下thrift的源码，看的是Python版的，以下所有分析都是基于0.9.0版本的thrift</p>
-
-<p>thrift整个逻辑结构是分层的，类似于网络模型的分层，从下到上依次为Transport层，它封装了底层的socket；Protocol层在Transport层的基础上实现了传输协议；</p>
-
-<h3>Transport</h3>
-
-<p>先看是如何用的，thrift client端的正确打开方式是:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Make socket</span>
-</span><span class='line'><span class="n">transport</span> <span class="o">=</span> <span class="n">TSocket</span><span class="o">.</span><span class="n">TSocket</span><span class="p">(</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">9090</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Buffering is critical. Raw sockets are very slow</span>
-</span><span class='line'><span class="n">transport</span> <span class="o">=</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">TBufferedTransport</span><span class="p">(</span><span class="n">transport</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Wrap in a protocol</span>
-</span><span class='line'><span class="n">protocol</span> <span class="o">=</span> <span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">TBinaryProtocol</span><span class="p">(</span><span class="n">transport</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Create a client to use the protocol encoder</span>
-</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="n">Calculator</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">protocol</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Connect!</span>
-</span><span class='line'><span class="n">transport</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>先看transport的初始化，其实是创建了一个socket，我们去源码里看一下到底是如何创建的，定位到<code>thrift.transport.TSocket</code>的TSocket类：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">TSocket</span><span class="p">(</span><span class="n">TSocketBase</span><span class="p">):</span>
-</span><span class='line'>  <span class="sd">&quot;&quot;&quot;Socket implementation of TTransport base.&quot;&quot;&quot;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">9090</span><span class="p">,</span> <span class="n">unix_socket</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&quot;&quot;&quot;Initialize a TSocket</span>
-</span><span class='line'>
-</span><span class='line'><span class="sd">    @param host(str)  The host to connect to.</span>
-</span><span class='line'><span class="sd">    @param port(int)  The (TCP) port to connect to.</span>
-</span><span class='line'><span class="sd">    @param unix_socket(str)  The filename of a unix socket to connect to.</span>
-</span><span class='line'><span class="sd">                             (host and port will be ignored.)</span>
-</span><span class='line'><span class="sd">    &quot;&quot;&quot;</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="bp">None</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_unix_socket</span> <span class="o">=</span> <span class="n">unix_socket</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="bp">None</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">setHandle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">h</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">isOpen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">setTimeout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">ms</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="bp">None</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">/</span> <span class="mf">1000.0</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">res0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolveAddr</span><span class="p">()</span>
-</span><span class='line'>      <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">res0</span><span class="p">:</span>       <span class="c">#   res is of structure:   (family, socktype, proto, canonname, sockaddr)</span>
-</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>    <span class="c">#  make a socket</span>
-</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>          <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>      <span class="c">#    connect</span>
-</span><span class='line'>        <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">res0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>    <span class="c">#   if it&#39;s not the last, continue; or else raise exception</span>
-</span><span class='line'>            <span class="k">continue</span>
-</span><span class='line'>          <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">raise</span> <span class="n">e</span>
-</span><span class='line'>        <span class="k">break</span>                     <span class="c">#    if there if one socket that can be connected, then we are happy</span>
-</span><span class='line'>    <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unix_socket</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">message</span> <span class="o">=</span> <span class="s">&#39;Could not connect to socket </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unix_socket</span>
-</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">message</span> <span class="o">=</span> <span class="s">&#39;Could not connect to </span><span class="si">%s</span><span class="s">:</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="n">TTransportException</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">TTransportException</span><span class="o">.</span><span class="n">NOT_OPEN</span><span class="p">,</span>
-</span><span class='line'>                                <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sz</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">buff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">ECONNRESET</span> <span class="ow">and</span>
-</span><span class='line'>          <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;darwin&#39;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;freebsd&#39;</span><span class="p">))):</span>
-</span><span class='line'>        <span class="c"># freebsd and Mach don&#39;t follow POSIX semantic of recv</span>
-</span><span class='line'>        <span class="c"># and fail with ECONNRESET if peer performed shutdown.</span>
-</span><span class='line'>        <span class="c"># See corresponding comment and code in TSocket::read()</span>
-</span><span class='line'>        <span class="c"># in lib/cpp/src/transport/TSocket.cpp.</span>
-</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class='line'>        <span class="c"># Trigger the check to raise the END_OF_FILE exception below.</span>
-</span><span class='line'>        <span class="n">buff</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-</span><span class='line'>      <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">raise</span>
-</span><span class='line'>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="n">TTransportException</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">TTransportException</span><span class="o">.</span><span class="n">END_OF_FILE</span><span class="p">,</span>
-</span><span class='line'>                                <span class="n">message</span><span class="o">=</span><span class="s">&#39;TSocket read 0 bytes&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">buff</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buff</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="n">TTransportException</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">TTransportException</span><span class="o">.</span><span class="n">NOT_OPEN</span><span class="p">,</span>
-</span><span class='line'>                                <span class="n">message</span><span class="o">=</span><span class="s">&#39;Transport not open&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">sent</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class='line'>    <span class="n">have</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">while</span> <span class="n">sent</span> <span class="o">&lt;</span> <span class="n">have</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">plus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span>
-</span><span class='line'>      <span class="k">if</span> <span class="n">plus</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">raise</span> <span class="n">TTransportException</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">TTransportException</span><span class="o">.</span><span class="n">END_OF_FILE</span><span class="p">,</span>
-</span><span class='line'>                                  <span class="n">message</span><span class="o">=</span><span class="s">&#39;TSocket sent 0 bytes&#39;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">sent</span> <span class="o">+=</span> <span class="n">plus</span>
-</span><span class='line'>      <span class="n">buff</span> <span class="o">=</span> <span class="n">buff</span><span class="p">[</span><span class="n">plus</span><span class="p">:]</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">pass</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>比较重要的方法是open、read和write。open会初始化一个socket并且connect；read和write分别封装了底层socket库的recv和send方法。</p>
-
-<p>再回到使用的角度上，注意它在初始的transport上又包了一个TBufferedTransport，这又是干嘛呢？正如注释中指出的那样，是给原始的socket接口包了一个buffer，
-这样会减少对socket的读写，效率会高些，依然看下源码，定位到thrift.transport.TTransport的TBufferedTransport类：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">TBufferedTransport</span><span class="p">(</span><span class="n">TTransportBase</span><span class="p">,</span> <span class="n">CReadableTransport</span><span class="p">):</span>
-</span><span class='line'>  <span class="sd">&quot;&quot;&quot;Class that wraps another transport and buffers its I/O.</span>
-</span><span class='line'>
-</span><span class='line'><span class="sd">  The implementation uses a (configurable) fixed-size read buffer</span>
-</span><span class='line'><span class="sd">  but buffers all writes until a flush is performed.</span>
-</span><span class='line'><span class="sd">  &quot;&quot;&quot;</span>
-</span><span class='line'>  <span class="n">DEFAULT_BUFFER</span> <span class="o">=</span> <span class="mi">4096</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">rbuf_size</span><span class="o">=</span><span class="n">DEFAULT_BUFFER</span><span class="p">):</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span> <span class="o">=</span> <span class="n">trans</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__wbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf_size</span> <span class="o">=</span> <span class="n">rbuf_size</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">isOpen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">isOpen</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sz</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>     <span class="c">#  默认从buffer读，buffer里有数据的话直接返回</span>
-</span><span class='line'>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">ret</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf_size</span><span class="p">)))</span>   <span class="c"># 否则的话就从socket读出buffer-size大小的数据缓存在buffer里</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>                                           <span class="c"># 在从buffer里返回要求大小的数据量</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__wbuf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>       <span class="c"># 写操作的话就是一直往buffer里写，并不自动flush</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wbuf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
-</span><span class='line'>    <span class="c"># reset wbuf before write/flush to preserve state on underlying failure</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__wbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c"># Implement the CReadableTransport interface.</span>
-</span><span class='line'>  <span class="nd">@property</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">cstringio_buf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">cstringio_refill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partialread</span><span class="p">,</span> <span class="n">reqlen</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">retstring</span> <span class="o">=</span> <span class="n">partialread</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">reqlen</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf_size</span><span class="p">:</span>
-</span><span class='line'>      <span class="c"># try to make a read of as much as we can.</span>
-</span><span class='line'>      <span class="n">retstring</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__rbuf_size</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c"># but make sure we do read reqlen bytes.</span>
-</span><span class='line'>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">retstring</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">reqlen</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">retstring</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trans</span><span class="o">.</span><span class="n">readAll</span><span class="p">(</span><span class="n">reqlen</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">retstring</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">retstring</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rbuf</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>再来看看给server端用的socket</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">TServerSocket</span><span class="p">(</span><span class="n">TSocketBase</span><span class="p">,</span> <span class="n">TServerTransportBase</span><span class="p">):</span>
-</span><span class='line'>  <span class="sd">&quot;&quot;&quot;Socket implementation of TServerTransport base.&quot;&quot;&quot;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">9090</span><span class="p">,</span> <span class="n">unix_socket</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_unix_socket</span> <span class="o">=</span> <span class="n">unix_socket</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="bp">None</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">listen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">res0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolveAddr</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">res0</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">socket</span><span class="o">.</span><span class="n">AF_INET6</span> <span class="ow">or</span> <span class="n">res</span> <span class="ow">is</span> <span class="n">res0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">break</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c"># We need remove the old unix socket if the file exists and</span>
-</span><span class='line'>    <span class="c"># nobody is listening on it.</span>
-</span><span class='line'>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unix_socket</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">tmp</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class='line'>      <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">tmp</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
-</span><span class='line'>      <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">eno</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">args</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">eno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">ECONNREFUSED</span><span class="p">:</span>
-</span><span class='line'>          <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_REUSEADDR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">,</span> <span class="s">&#39;settimeout&#39;</span><span class="p">):</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>     <span class="c">#  accept会把返回的socket再用TSocket包一下</span>
-</span><span class='line'>    <span class="n">client</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="n">TSocket</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">result</span><span class="o">.</span><span class="n">setHandle</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">result</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Protocol</h3>
-
-<p>这个模块定义的是传输协议，代码都放在protocol目录下。关于这一部分的作用，官网已经说的很清楚了，直接引用过来：</p>
-
-<blockquote><p>The Protocol abstraction defines a mechanism to map in-memory data structures to a wire-format. In other words, a protocol specifies how datatypes use the underlying Transport to encode/decode themselves. Thus the protocol implementation governs the encoding scheme and is responsible for (de)serialization. Some examples of protocols in this sense include JSON, XML, plain text, compact binary etc.</p></blockquote>
-
-<p>这个模块的接口如下：</p>
-
-<blockquote><p>writeMessageBegin(name, type, seq)  <br/>
-writeMessageEnd()  <br/>
-writeStructBegin(name) <br/>
-writeStructEnd() <br/>
-writeFieldBegin(name, type, id)   <br/>
-writeFieldEnd()    <br/>
-writeFieldStop()   <br/>
-writeMapBegin(ktype, vtype, size)   <br/>
-writeMapEnd()    <br/>
-writeListBegin(etype, size)   <br/>
-writeListEnd()   <br/>
-writeSetBegin(etype, size)    <br/>
-writeSetEnd()     <br/>
-writeBool(bool)     <br/>
-writeByte(byte)     <br/>
-writeI16(i16)     <br/>
-writeI32(i32)    <br/>
-writeI64(i64)    <br/>
-writeDouble(double)      <br/>
-writeString(string)</p>
-
-<p>name, type, seq = readMessageBegin()</p>
-
-<pre><code>             readMessageEnd()         
-</code></pre>
-
-<p>name = readStructBegin()</p>
-
-<pre><code>  readStructEnd()          
-</code></pre>
-
-<p>name, type, id = readFieldBegin()</p>
-
-<pre><code>            readFieldEnd()        
-</code></pre>
-
-<p>k, v, size = readMapBegin()</p>
-
-<pre><code>        readMapEnd()       
-</code></pre>
-
-<p>etype, size = readListBegin()</p>
-
-<pre><code>         readListEnd()      
-</code></pre>
-
-<p>etype, size = readSetBegin()</p>
-
-<pre><code>         readSetEnd()      
-</code></pre>
-
-<p>bool = readBool()      <br/>
-byte = readByte()    <br/>
-i16 = readI16()     <br/>
-i32 = readI32()    <br/>
-i64 = readI64()    <br/>
-double = readDouble()    <br/>
-string = readString()</p></blockquote>
-
-<p>一个可能的使用例子：</p>
-
-<p>写</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'>  <span class="k">def</span> <span class="nf">send_addPlan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">plan</span><span class="p">):</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_oprot</span><span class="o">.</span><span class="n">writeMessageBegin</span><span class="p">(</span><span class="s">&#39;addPlan&#39;</span><span class="p">,</span> <span class="n">TMessageType</span><span class="o">.</span><span class="n">CALL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqid</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">args</span> <span class="o">=</span> <span class="n">addPlan_args</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">args</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
-</span><span class='line'>    <span class="n">args</span><span class="o">.</span><span class="n">plan</span> <span class="o">=</span> <span class="n">plan</span>
-</span><span class='line'>    <span class="n">args</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_oprot</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_oprot</span><span class="o">.</span><span class="n">writeMessageEnd</span><span class="p">()</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>读</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'>  <span class="k">def</span> <span class="nf">recv_addPlan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">):</span>
-</span><span class='line'>    <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">mtype</span><span class="p">,</span> <span class="n">rseqid</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iprot</span><span class="o">.</span><span class="n">readMessageBegin</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">mtype</span> <span class="o">==</span> <span class="n">TMessageType</span><span class="o">.</span><span class="n">EXCEPTION</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">x</span> <span class="o">=</span> <span class="n">TApplicationException</span><span class="p">()</span>
-</span><span class='line'>      <span class="n">x</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iprot</span><span class="p">)</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">_iprot</span><span class="o">.</span><span class="n">readMessageEnd</span><span class="p">()</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="n">x</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="n">addPlan_result</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">result</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iprot</span><span class="p">)</span>
-</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_iprot</span><span class="o">.</span><span class="n">readMessageEnd</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">e</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="n">result</span><span class="o">.</span><span class="n">e</span>
-</span><span class='line'>    <span class="k">raise</span> <span class="n">TApplicationException</span><span class="p">(</span><span class="n">TApplicationException</span><span class="o">.</span><span class="n">MISSING_RESULT</span><span class="p">,</span> <span class="s">&quot;addPlan failed: unknown result&quot;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>先看write，它首先会调用writeMessageBegin方法，然后写入相应的内容，最后调用writeMessageEnd方法来结束写操作。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'>  <span class="k">def</span> <span class="nf">writeMessageBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">seqid</span><span class="p">):</span>
-</span><span class='line'>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strictWrite</span><span class="p">:</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">VERSION_1</span> <span class="o">|</span> <span class="nb">type</span><span class="p">)</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="n">seqid</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeByte</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
-</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="n">seqid</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>调用writeMessageBegin的时候分为两种情况，严格写和普通写。严格写的时候需要先写入版本号和消息的类型，然后是消息名称、消息序列号。普通写只要依次写入消息名称、消息类型
-和消息序列号即可。这其实只是相当于把header信息（也就是元信息）写进去了，写完这些以后才会写具体的数据，最后调用一下writeMessageEnd表示写消息结束（这个方法根据各个具体的协议会有不同的
-实现，像在TBinaryProtocol里这个方法其实是空的，什么都不做）。</p>
-
-<p>再看read，与写的过程类似，不过是反的，会先调用readMessageBegin，它会返回一个(name, type, seqid)的三元组，标识了收到的这条消息的名称、类型和序列号。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'>  <span class="k">def</span> <span class="nf">readMessageBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">sz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">sz</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>      <span class="n">version</span> <span class="o">=</span> <span class="n">sz</span> <span class="o">&amp;</span> <span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">VERSION_MASK</span>
-</span><span class='line'>      <span class="k">if</span> <span class="n">version</span> <span class="o">!=</span> <span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">VERSION_1</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span>
-</span><span class='line'>          <span class="nb">type</span><span class="o">=</span><span class="n">TProtocolException</span><span class="o">.</span><span class="n">BAD_VERSION</span><span class="p">,</span>
-</span><span class='line'>          <span class="n">message</span><span class="o">=</span><span class="s">&#39;Bad version in readMessageBegin: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sz</span><span class="p">))</span>
-</span><span class='line'>      <span class="nb">type</span> <span class="o">=</span> <span class="n">sz</span> <span class="o">&amp;</span> <span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">TYPE_MASK</span>
-</span><span class='line'>      <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span>
-</span><span class='line'>      <span class="n">seqid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strictRead</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">TProtocolException</span><span class="o">.</span><span class="n">BAD_VERSION</span><span class="p">,</span>
-</span><span class='line'>                                 <span class="n">message</span><span class="o">=</span><span class="s">&#39;No protocol version header&#39;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">readAll</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
-</span><span class='line'>      <span class="nb">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readByte</span><span class="p">()</span>
-</span><span class='line'>      <span class="n">seqid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">seqid</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>类似的，读出header信息后，会继续读出具体的返回数据，视情况决定是否返回exception。</p>
-
-<p>这一部分的分析有一个巨牛的资源，写的非常清楚： <br/>
-<a href="http://houjixin.blog.163.com/blog/static/35628410201501654039437/">由浅入深了解Thrift（二）——Thrift的工作原理</a></p>
-
-<h3>Processor</h3>
-
-<p>这一块儿的代码是由thrift compiler自动生成的</p>
-
-<h3>Server</h3>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2016/08/19/thrift-source-code-walkthrough//blog/page/2/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
 <nav id="pagenavi">
     
         <a href="/" class="prev">Prev</a>
@@ -2350,7 +1815,7 @@ string = readString()</p></blockquote>
     </div>
     <footer id="footer">
     <div style="display:inline">
-    Copyright &copy; 2019
+    Copyright &copy; 2020
 
     linuxfish
 . Powered by <a href="http://octopress.org">Octopress</a> | 

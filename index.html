@@ -6,8 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Nov 19th, 2019 Tags: what so, what&rsquo;s the problem? 压测目标有提升
-之前的压测没有考虑三方服务慢返回(通常为200ms左右)的问题，如果当前的压测仍用同步worker会死的佷惨 how 结合项目的实际情况， &hellip;">
+	<meta name="description" content="Published on: Jan 6th, 2020 Tags: Python, asyncio, translation 翻译一篇 SQLAlchemy 作者的博文，原文：Asynchronous Python and Databases 这篇文章给异步IO泼了点冷水， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -104,6 +103,556 @@
     <article class="post">
 	<h2 class="title">
 		
+		<a href="/blog/2020/01/06/asynchronous-python-and-databases/">
+		
+			「译」Asynchronous Python and Databases</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2020-01-06T15:33:00+08:00" pubdate data-updated="true">Jan 6<span>th</span>, 2020</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/python/'>Python</a>, <a class='category' href='/blog/categories/asyncio/'>asyncio</a>, <a class='category' href='/blog/categories/translation/'>translation</a>
+
+
+</div>
+    </div>
+		<p>翻译一篇 SQLAlchemy 作者的博文，原文：<a href="https://techspot.zzzeek.org/2015/02/15/asynchronous-python-and-databases/">Asynchronous Python and Databases</a></p>
+
+<p>这篇文章给异步IO泼了点冷水，引导我们用正确的态度来看待这个技术(其实是任何技术)，不要过度“神化”它，我受益匪浅。</p>
+
+<p>===================== 译文开始 =======================</p>
+
+<p>异步编程的话题很难用几句话来说清。这些年来，这个话题也越来越复杂，而我基本也没有涉猎这个领域。但由于我在Python领域做了很多与关系型数据库交互相关的工作，经常要回答很多有关异步IO和数据库编程的问题，比如跟SQLAlchemy或者Openstack相关的。</p>
+
+<p>不想看长篇大论的，我先简单说一下我的想法：我认为Python的asyncio库设计的非常巧妙、很有前途、使用起来也很有意思。它的代码组织的也足够好，让SQLAlchemy在一定程度上兼容它是可行的。鉴于asyncio已经进入Python标准库，我有兴趣在未来将它引入SQLAlchemy。</p>
+
+<p>尽管我上面说的，我还是认为异步编程只是一种潜在的可用途径，我们不应该把它当成一种万能药，遇到问题就想通过它来解决，除非我们正在写一个HTTP或者聊天服务器（在这种情况下，你需要同时维持大量的慢请求或者空闲TCP连接）。在标准的CRUD模式下的数据库交互代码，从来都没必要使用asyncio，而且若使用的话几乎一定会影响性能（相对于同步io和threading模式）。那些为了所谓的“正确”而对asyncio的吹捧论断是经不起推敲的。</p>
+
+<p>把我的观点说清楚后，让我们开始具体阐述吧</p>
+
+<h3>什么是Asynchronous IO？</h3>
+
+<p>Asynchronous IO是一种获取并发效果的方式，它通过允许进程/线程在IO期间可以继续执行（而不是等待IO完成）来实现。为了实现这种效果，IO函数需要被设置成非阻塞模式（socket的默认模式是阻塞的），因而这些IO函数可以在真正的IO操作完成之前就立即返回。它的实现原理是这样的：通常在一个循环中不断调用一个轮询系统（通常依赖操作系统不同而不同，比如linux下的epoll）来查询当前关注的一批文件描述符是否有数据可读、可写的，若有，则处理它们，当处理完成后，执行权又回到了这个事件循环中来查询下一批可读可写的文件描述符，以此往复。</p>
+
+<p>当一堆线程都在等待一个socket返回结果时是很没有效率的，这时候非阻塞IO就发挥出了它的优势。当你需要监听非常多的TCP socket，并且这些socket大部分时间都在“睡觉”或者是很慢的返回 &ndash; 最好的例子就是聊天服务器或者类似的消息系统，在这种场景下，同时会有非常多的连接存在，但同一时间只有很少的连接会有数据交互，当一个连接上有数据出现时，我们称之为一个IO事件。</p>
+
+<p>近几年，asynchronous IO被成功应用于HTTP服务器和应用中。使用asynchronous IO可以让服务器只用单线程就能处理大量的HTTP连接，特别地，慢HTTP客户端再也不会影响其它正常的客户端的请求。非阻塞的web服务器，比如nginx，在实践中已被证明能很好的工作。</p>
+
+<h3>异步IO和脚本语言</h3>
+
+<p>在脚本语言中，异步io编程主要是通过事件循环来实现的，经典用法是设置一个回调函数，当对应的IO请求的数据已经准备好后会调用这个回调函数。由于事件循环可以提供进程/线程调度的功能，在脚本语言中通常没有必要使用线程。实际上，在代码里混合使用多线程阻塞IO编程和事件循环式的非阻塞IO编程会比较尴尬，因为它们使用的是不同的编程范式。</p>
+
+<p>异步io和事件循环的关系，加上它在服务器端编程因能以直观的方式来提供并发的能力，让它在Javascript语言里特别流行。Javascript是一种用于浏览器上的客户端脚本语言。浏览器，像其它图形应用一样，基本上是一个事件机，事件机做的是，对用户发起的事件（按下按钮、移动鼠标等）做出响应。因此，Javascript里使用回调函数是很平常的事情，而且，直到最近它才支持了多线程。</p>
+
+<p>前端开发者们一直以来都很习惯这些客户端的回调用法，他们开始将回调用于网络事件中，一位新的玩家即将登台，这将把已经火热的Javascript推向新的高潮&hellip;</p>
+
+<h3>服务器</h3>
+
+<p>早在Node.js<a href="https://docs.oracle.com/cd/E19957-01/816-6411-10/getstart.htm#1015788">之前</a>就有尝试想将Javascript用于服务端编程。不过，Node.js成功的一个关键原因在于在它发布之时已经有大量的经验丰富的Javascript程序员，并且它也完全拥抱了客户端Javascript开发者已非常熟悉的事件驱动编程范式。</p>
+
+<p>为了推广，Node.js遵循了一个原则：非阻塞IO模式不仅仅应当被用在大量睡眠或慢请求这样的场景上，更应当做为一个事实上的服务器端编程的<a href="https://www.youtube.com/watch?v=bzkRVzciAZg">标准</a>来推行。这意味着任何类型的网络IO都应该使用非阻塞IO的方式，这当然包括数据库连接了 —— 每个进程通常只维持了少量的(10 &ndash; 50)这种连接，而且已经被&#8221;池化&#8221;，因此因TCP创建连接带来的开销影响会很小，而且，对于一个设计良好的数据库来说，一次数据库请求的时间通常是非常快和可预测的 —— 无论从哪个方面来看，数据库连接的场景都不是一开始引入非阻塞IO所要解决的问题，或者说这个场景跟非阻塞IO所要解决的是恰恰相反的。Postgresql数据库在libpq里支持一个异步命令行API，不过这个API主要是为<a href="http://www.postgresql.org/docs/8.3/static/libpq-async.html">图形应用</a>准备的。</p>
+
+<p>node.js已经受益于一个高性能的<a href="https://code.google.com/p/v8/">JIT引擎</a>了，因此尽管在数据库连接的场景中使用非阻塞IO并不“合适”，但用起来效果还可以。</p>
+
+<h3>线程幽灵</h3>
+
+<p>早在node.js将大量的客户端Javascript开发者转变为服务端异步开发者之前，多线程编程模型已经受到一些<a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.html">学术理论家</a>的抱怨：多线程编程容易产生非确定性的程序，而异步编程，由于使用了一种新的编程范式（事件驱动），迅速被用来攻击多线程编程模型的缺点，主要有两点：一个是由于线程的创建和维持的代价比较大，使得它非常不适合需要同时维持成千上万连接的场景；另一个是多线程的代码很难写，且运行结果是非确定性的。在Python世界中，由于GIL一直以来的问题，async模型做为一个“救世主”的形象，相对于其它地方更容易在这里生根发芽。</p>
+
+<h3>How do you like your Spaghetti? / 你有多喜欢你的意大利面？</h3>
+
+<p>node.js的回调风格的代码以及其它异步风格的范式被认为是有问题的，稍微复杂一点的逻辑如果使用回调风格来组织的话会让代码变得非常繁琐和晦涩难懂，这种代码通常被称为回调面条(<a href="https://www.google.com/search?q=node.js+spaghetti+code&amp;ie=utf-8&amp;oe=utf-8#q=node.js+spaghetti">callback spaghetti</a>)。回调风格的代码到底是一坨屎还是一朵花，这个问题曾经是21世纪最大的争论之一，不过很庆幸我不需要参与其中，因为异步社区已一致确认回调风格的代码是前者并且已经采取措施来改进它这方面的问题。</p>
+
+<p>在Python中，有一种方法可以让你在不使用回调的情况下使用异步IO编程模型，那就是由<a href="http://eventlet.net/">eventlet</a>和<a href="http://www.gevent.org/">gevent</a>提供的所谓“隐式异步IO”。它们通过将IO函数设置为非阻塞模式，启动一批并发的协程（<a href="http://en.wikipedia.org/wiki/Green_threads">green threads</a>），然后依赖底层的事件驱动库（比如<a href="http://libev.schmorp.de/">libev</a>）来根据IO事件的触发来调度这批协程工作。“隐式异步IO”的好处是你原来的同步代码基本是不用动的，只需稍微改动几行代码就可以将你的程序切换到异步模式（当然，肯定是有一些特殊情况造成的小坑，这个另当别论）</p>
+
+<p>与隐式异步IO相对的是，非常有前途的由Python官方提供的异步库<a href="https://www.python.org/dev/peps/pep-3156/">asyncio</a>（本文一开始提到过），现在已进入Python 3标准库了。asyncio库给Python带来了标准的“futures”和<a href="http://en.wikipedia.org/wiki/Coroutine">协程</a>的概念，通过它们我们可以写出跟传统的阻塞代码类似的非阻塞的代码，而在那些需要非阻塞IO操作时会明显区分出来（而不是像gevent/eventlet一样无法区分）。</p>
+
+<h3>SQLAlchemy? Asyncio? 确定吗？</h3>
+
+<p>现在既然asyncio已经进入Python标准库了，是该整合一下之前的老代码了。因为asyncio依旧兼容着之前的返回值和异常机制，跑起来一个asyncio版本的SQLAlchemy没那么难，可能需要几个外部模块使用async results重新实现一下SQLAlchemy Core和ORM的关键方法，大部分代码都不用动。这不再意味着SQLAlchemy的完全重写，并且关于异步的模块可能会独立于主逻辑（并不会污染主逻辑）。整个过程会比较麻烦但 是可行的。</p>
+
+<p>不过，你真的想要一个异步模式的SQLAlchemy吗？</p>
+
+<h3>Taking Async Web Scale</h3>
+
+<p>下面让我们来具体说说，nodejs和asyncio到底哪里做错了，尤其是在与数据库交互时所犯的错误</p>
+
+<h4>问题一 —— 作为性能上魔术仙尘的异步范式</h4>
+
+<p>许多（当然不是全部）node.js社区和Python社区的人声称异步编程范式在几乎所有场景下的并发性能都是很好的。特别地，有一种声音认为显式异步的模式，比如asyncio，的“上下文切换”的代价非常小，再加上Python的那个”臭名昭著“的GIL，他们认为asyncio一定会比使用线程并发的模式更快 —— 至少不会慢。因此，所有的web应用应当尽快换成异步的模式，而且是所有的地方都换，从HTTP请求到数据库请求，这样的话没有任何代价就能提升服务器性能。</p>
+
+<p>我下面仅仅针对数据库请求的情况来阐述，对于HTTP server或者 chat server，使用asyncio可能效果会很好，因为它可以同时维持很多慢连接，但对于本地数据库请求，情况不是这样的。</p>
+
+<h5>1. Python相对于你的数据库来说，非常、<del>非常</del>慢</h5>
+
+<p>更新：Reddit上的Riddlerforce发现了这一节的论述有点问题，即：我不是基于网络连接来测试的，我已经基于网络连接重新做了测试并将结果做了更新，结论是一样的，只是不像一开始那样夸张。</p>
+
+<p>让我们先看一下异步编程有很大<a href="http://blog.kgriffs.com/2012/09/18/demystifying-async-io.html">优势</a>的场景，<a href="http://en.wikipedia.org/wiki/I/O_bound">I/O密集型</a>应用：</p>
+
+<blockquote><p>I/O密集指的是这样一种场景，在这种场景下，由于等待输入输出操作完成所耗费的时间占了整个计算时间的大部分。</p></blockquote>
+
+<p>经常遇到的一个很大的误解是：在一个主要与数据库交互的Python应用中，大部分时间是花费在了它跟数据库的通信上。这个观点在编译型语言上，比如C甚至Java，或许成立，但在Python里不成立。Python 相对于上述编译语言非常慢，尽管PyPy的速度是一个很大的进步了，在简单的CRUD场景（意思是非OLAP类型的重查询，并且网络延迟也很低的情况）下，Python的速度仍然无法跟数据库相提并论。在我为Openstack所做的针对PyMySQL的<a href="https://wiki.openstack.org/wiki/PyMySQL_evaluation">评估</a>中可以看到，纯C写的数据库驱动和纯Python写的驱动，它们的速度相差很大，仅仅考虑驱动的话，Python写的驱动比C写的慢一个数量级。尽管在网络上的耗费会使得CPU和IO的比例更平均，但由Python数据库驱动所耗费的CPU时间仍然比网络IO要多一倍，这还是在没有任何其它数据库抽象层、业务逻辑和呈现逻辑的情况下。</p>
+
+<p>这个<a href="https://techspot.zzzeek.org/files/2015/mysql_speed_test.py">脚本</a>，由Openstack的入口代码改造而来，发起了一堆INSERT和SELECT请求数据库驱动，除此之外基本没有别的Python代码</p>
+
+<p>MySQL-Python，一个纯C写的数据库驱动，在走网络的情况下，有如下表现：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>DBAPI (cProfile):  &lt;module 'MySQLdb'&gt;
+</span><span class='line'>     47503 function calls in 14.863 seconds
+</span><span class='line'>DBAPI (straight time):  &lt;module 'MySQLdb'&gt;, total seconds 12.962214</span></code></pre></td></tr></table></div></figure>
+
+
+<p>PyMySQL，一个纯Python写的数据库驱动，大概要慢30%：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>DBAPI (cProfile):  &lt;module 'pymysql'&gt;
+</span><span class='line'>     23807673 function calls in 21.269 seconds
+</span><span class='line'>DBAPI (straight time):  &lt;module 'pymysql'&gt;, total seconds 17.699732</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果不走网络的话（本地直连），PyMySQL要比MySQLdb慢一个数量级：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>DBAPI:  &lt;module 'pymysql'&gt;, total seconds 9.121727
+</span><span class='line'>
+</span><span class='line'>DBAPI:  &lt;module 'MySQLdb'&gt;, total seconds 1.025674</span></code></pre></td></tr></table></div></figure>
+
+
+<p>为了看清楚IO操作在整个过程中占多大比例，我们使用<a href="http://www.vrplumber.com/programming/runsnakerun/">RunSnakeRun</a>生成了两张PyMySQL的图，一张是直接请求本地数据库，另一张是走网络请求数据库。这个比例在走网络的时候没本地直连那么夸张，但即使走网络的情况下IO操作也仅占总时间的三分之一，其它三分之二的时间都花在Python处理sql执行返回的结果上。而且，请记住，这仅仅是数据库驱动，一个真实的应用还会有数据库抽象层、业务逻辑和其它展示逻辑。</p>
+
+<p><img src="https://i.imgur.com/arlwrwD.png" alt="" /></p>
+
+<p>本地连接 &ndash; 明显不是IO密集的</p>
+
+<p><img src="https://i.imgur.com/rqoSRP4.png" alt="" /></p>
+
+<p>走网络 &ndash; 没走本地连接时那么夸张，但仍然不是IO密集的（24秒的总执行时间中，操作socket的时间只占8.7秒）</p>
+
+<p>让我们总结一下，在Python里，请求数据库的操作不是一个IO密集型操作（除非你在做大量复杂的查询或者查询会返回很大的数据量，而在高性能应用中肯定要避免这种情况；又或者除非你的应用处在一个很慢的网络环境中）。当我们跟数据库交互时，几乎总是会使用某种类型的连接池，所以创建连接的额外开销已经大大缓解。在正常的网络环境下，数据库的写入和查询速度是很快的。Python本身的开销，仅仅是通过网络封送消息并生成结果集，就给CPU带来了很多工作量，这抵消了非阻塞IO所具有的任何独特的吞吐量优势。 真实应用围绕数据库操作还有大量其它操作，花在CPU上的比例只会增加。</p>
+
+<h5>2. AsyncIO使用了吸引人的但相对来说低效的Python范式</h5>
+
+<p>asyncio的亮点是引入了<code>@asyncio.coroutine</code>这个装饰器，它的作用是将看似同步的代码逻辑推迟到其它协程中执行。这个实现的关键之处是引入了一个新的语法形式：<code>yield from</code>，它的作用是会暂时将函数的执行停止在那一点，将执行权交给其它协程执行，直到事件循环再次将执行权交给它后再次<strong>继续执行</strong>。这是一个很棒的创意，而且它其实用Python已有的<code>yield</code>语句也可以做到，不过用<code>yield from</code>可以让你继续写return语句，这样可以跟之前的非协程代码保持相对的一致。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@asyncio.coroutine</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">some_coroutine</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">conn</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">db</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">conn</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个语法非常好，我很喜欢，不过它增加了函数调用的额外开销，我曾在twitter上<a href="https://twitter.com/zzzeek/status/563865362996133889">发过</a>一个简单的demo来说明这个问题，下面就是这段demo：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="sd">&quot;&quot;&quot;One function calls another normal function, which returns a value.&quot;&quot;&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">5</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">bar</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">f1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">f1</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">return</span> <span class="n">bar</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">return_with_generator</span><span class="p">():</span>
+</span><span class='line'><span class="sd">&quot;&quot;&quot;One function calls another coroutine-like function,</span>
+</span><span class='line'><span class="sd">which returns a value.&quot;&quot;&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">decorate_to_return</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">decorate</span><span class="p">():</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">fn</span><span class="p">()</span>
+</span><span class='line'>        <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">x</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">y</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">y</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">decorate</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@decorate_to_return</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">yield from</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">5</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">bar</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">f1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">f1</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">return</span> <span class="n">bar</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">return_with_normal</span> <span class="o">=</span> <span class="n">return_with_normal</span><span class="p">()</span>
+</span><span class='line'><span class="n">return_with_generator</span> <span class="o">=</span> <span class="n">return_with_generator</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">timeit</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="s">&quot;return_with_generator()&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&quot;from __main__ import return_with_generator&quot;</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">10000000</span><span class="p">))</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="s">&quot;return_with_normal()&quot;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&quot;from __main__ import return_with_normal&quot;</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">10000000</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>结果如下，<code>yield from + StopIteration</code>的版本的耗时是正常的函数调用的6倍左右</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">yield from</span><span class="p">:</span> <span class="mf">12.52761328802444</span>
+</span><span class='line'><span class="n">normal</span><span class="p">:</span> <span class="mf">2.110536064952612</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>针对这个结果，许多人反驳我说，“那又怎么样呢？你的数据库请求的操作占用的时间更多”。但请注意，我们现在不是在讨论一种优化现有代码的方案，而是如何避免将已经很好的代码变得更慢.. PyMySQL的例子应该能说明仅仅在纯Python驱动内，Python自身的额外开销就增加得很快。不过，这个回答可能还是不那么令人信服。</p>
+
+<p>所以，我准备了一个详尽的测试用例，通过这个测试用例我们可以看到Python中的传统线程、asyncio以及gevent形式的异步io这三者之间的对比。我们会使用<a href="http://initd.org/psycopg/"><code>psycopg2</code></a>、<a href="https://github.com/aio-libs/aiopg"><code>aiopg</code></a>和<a href="https://bitbucket.org/dvarrazzo/psycogreen"><code>psycogreen</code></a>。</p>
+
+<p>这个测试用例具体做的是，将几百万条记录尽可能快地插入到Postgresql数据库中，使用上述的三种方式，当然三种方式使用的SQL是完全一样的，这样在保持其它变量一样的情况下，我们就能看出是否是GIL拖慢了我们的程序，又或者asyncio是否能大幅提升我们程序的性能。在这个测试用例中，我没有限制可以同时使用的数据库连接数，在我的测试中，最高曾用到过350个并发连接，如果在实际应用中你这么做的话，相信我，你会被DBA骂死的。</p>
+
+<p>测试的结果放在这个<a href="https://bitbucket.org/zzzeek/bigdata/">README</a>的最后了，包含了在不同的机器、不同的条件下的测试结果。在所有的场景下，性能最好的是当一台机器运行测试代码，去请求运行在另一个机器上的Postgresql数据库时，不过几乎在我运行的每个场景中，不管是在Mac只启动15个线程/协程还是在Linux上启动350个线程/协程，使用线程的代码都比用asyncio要快的多（甚至包括启动350个线程的场景，这挺令我吃惊的），而且使用线程的代码通常也会比使用gevent要快一些（虽然没有asyncio那么夸张）。以下是在我的Linux笔记本上运行120个线程/协程/数据库连接请求另一台Mac笔记本上的Postgresql数据库的测试结果：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">Python2</span><span class="o">.</span><span class="mf">7.8</span> <span class="n">threads</span> <span class="p">(</span><span class="mi">22</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">,</span> <span class="mi">22</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">)</span>
+</span><span class='line'><span class="n">Python3</span><span class="o">.</span><span class="mf">4.1</span> <span class="n">threads</span> <span class="p">(</span><span class="mi">10</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">,</span> <span class="mi">21</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">)</span>
+</span><span class='line'><span class="n">Python2</span><span class="o">.</span><span class="mf">7.8</span> <span class="n">gevent</span> <span class="p">(</span><span class="mi">18</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">,</span> <span class="mi">19</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">)</span>
+</span><span class='line'><span class="n">Python3</span><span class="o">.</span><span class="mf">4.1</span> <span class="n">asyncio</span> <span class="p">(</span><span class="mi">8</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">,</span> <span class="mi">10</span><span class="n">k</span> <span class="n">r</span><span class="o">/</span><span class="n">sec</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>从上面的数据可以看出，对于第一个测试项（第一列）使用asyncio的代码比其它方式要慢多了（Python 3.4 在线程和协程似乎都有点问题），对于第二个测试项（第二列），asyncio的方式也比Python 2.7和Python 3.4下的线程方式要慢一倍。甚至当启动350个并发连接时（通常我们不会在一个单核CPU上启动这么多线程）asyncio的效率也不如线程。即使是使用非常快的、纯C写的psycopg2驱动，仅aiopg库的额外开销以及使用psycopg2的异步库在Python中接收轮询结果的动作，都足以拖慢脚本运行速度。</p>
+
+<p>记住，我甚至没有试图要证明asyncio要比线程慢很多，而只是想说明asyncio并没有（像某些人说的）那样比线程快。跑出来的这个测试结果展示出来的差异比我预期的要大的多。我们也看到了，gevent作为一种相当高效的异步io的方式，还是比线程要慢一些（但没慢太多），这也证实了异步IO范式在这种场景中并不是必然比线程快的，而且从asyncio要比gevent慢很多这个结果可以看出，正是由于asyncio以及其它Python结构的开销再加上本来效率就不高的基于IO的上下文切换机制拖慢了asyncio的性能。</p>
+
+<h4>问题二 —— “异步范式会让写代码更简单”</h4>
+
+<p>这是“魔术仙尘”硬币的另一面。这一论断在“线程是不好”的断言之上更进一步，它指出，如果一个程序用到了线程，比如，你写了一个WSGI web应用，而碰巧又使用线程池的形式运行在<code>mod_wsgi</code>下，那你就是在做“多线程编程”，危险程度不亚于这个<a href="http://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html#PITFALLS">多线程编程练习</a>，完全无视了这个事实：你的WSGI应用根本不应该有一点进程共享的逻辑。但不不，你就是在做多线程编程，线程是不好的，你应该立马停止。</p>
+
+<p>“线程是不好的”的论断有一个有趣的转折（哈！），它被显式异步的拥护者用来批判隐式异步技术（比如gevent）。Glyph的这篇<a href="https://glyph.twistedmatrix.com/2014/02/unyielding.html">帖子</a>很好的印证了这一点。他们的论证思路是这样的，如果同意“多线程编程是不好的”这一观点，那么使用隐式模式的异步编程同样也是不好的，因为不管怎么说，隐式模式异步的代码看起来跟多线程编程一样，而且因为IO操作可能发生在代码的任何地方，这种模式跟多线程编程一样是非确定性的。我碰巧也同意这一点，是的，gevent类的协程并发机制并没有比多线程好，不比它差就不错了。一个原因是，Python多线程编程中出现的并发问题比较“轻微”，因为有GIL（尽管我们非常不喜欢它），它让各种非常危险的操作，比如向列表中添加元素，变得安全。但用协程的话，你可以很容易地启动成百上千的协程，也很容易遇到通常在有GIL保护下多线程编程碰不到的<a href="https://github.com/PyMySQL/PyMySQL/issues/275">奇怪问题</a>。</p>
+
+<p>顺便说一句，Glyph给了“魔术仙尘”派一巴掌：</p>
+
+<blockquote><p>不幸的是，经常有人在安利“异步系统”时过分强调异步系统因某种可疑的优化因而能获得相对于多线程模式更好的并发能力，却忽略了我上面谈到的多线程编程模型本身存在的问题。这么来看待“异步”的话，也就不难理解他们会把所有4个选项都放在一起了。</p>
+
+<p>这些年来我一直很内疚，内疚在之前说过的一些话，比如之前我说：一个系统如果使用Twisted实现会比使用线程的性能更好。在很多方面，这个话没错，不过：</p>
+
+<ol>
+<li><p>上面只是一个理解猜测，现实中优化性能是一个复杂的工程，涉及到方方面面，</p></li>
+<li><p>在真实应用中，“上下文切换”基本不会成为瓶颈，</p></li>
+<li><p>上面的话“避重就轻”，其实事件驱动编程的最大优势提现在写更大体量的应用程序上，这个“体量”既指的是项目的代码量大，也指并发使用的用户量大。</p></li>
+</ol>
+</blockquote>
+
+<p>人们在说到使用asyncio会让你的程序里的bug更少时会援引Glyph的这篇帖子，但同时又会承诺使用asyncio也会带来更高的性能（因“某种原因”选择性忽视Glyph这篇帖子中的某些内容）</p>
+
+<p>Glyph对他的两个观点做了清晰、完美的阐述，即我们既应该用非阻塞IO而且应该用显式地使用它。不过，他的论证过程跟异步IO最初想解决的问题（处理大量并发慢连接的场景）没有一点关系，相反，他说的是事件循环的本质以及这一新的并发模型（避免了把系统级的上下文切换直接暴露给用户）是如何出现的。</p>
+
+<p>我们写了那么久的回调代码，现在使用asyncio终于又可以写正常一点的代码了，这种方式应当仍然需要程序员在代码中明确指出哪些函数会发生IO操作，让我们举一个例子：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">,</span> <span class="n">server</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">if</span> <span class="ow">not</span> <span class="n">payer</span><span class="o">.</span><span class="n">sufficient_funds_for_withdrawal</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">raise</span> <span class="n">InsufficientFunds</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} has sufficient funds.&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">payee</span><span class="o">.</span><span class="n">deposit</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payee} received payment&quot;</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">payer</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} made payment&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">server</span><span class="o">.</span><span class="n">update_balances</span><span class="p">([</span><span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>从多线程的角度来看，这段代码存在并发的问题：当两个线程同时执行<code>transfer</code>函数时，它们可能都从付款人账户扣款成功而不会报错，从而造成多扣的问题</p>
+
+<p>对应的显式异步的版本如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@coroutine</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">,</span> <span class="n">server</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">if</span> <span class="ow">not</span> <span class="n">payer</span><span class="o">.</span><span class="n">sufficient_funds_for_withdrawal</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">raise</span> <span class="n">InsufficientFunds</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} has sufficient funds.&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">payee</span><span class="o">.</span><span class="n">deposit</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payee} received payment&quot;</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">payer</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} made payment&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">yield from</span> <span class="n">server</span><span class="o">.</span><span class="n">update_balances</span><span class="p">([</span><span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>现在，在最后有一个<code>yield from</code>，那我们知道只有执行到最后那一句的时候程序的执行权才会切换到其它协程，并发执行<code>payer.withdraw()</code>的两个协程，一个协程在执行到最后一句之前，另一个协程没有机会执行。</p>
+
+<p>然后他据此提出为啥隐式异步的模式（gevent）也是不够的，从上面的代码我们可以看出，因为<code>payee.deposit()</code>和<code>payer.withdraw()</code>没有做<code>yield from</code>，因此我们确定在未来的迭代中这两个函数中不会出现IO操作，因而也不会出现并发调用<code>transfer()</code>的情况。</p>
+
+<p>（说个题外话，其实我不太明白，从“我们必须写下<code>yield from</code>，这样我们才知道我们正在干什么”这个角度来说，为什么我们非得需要一个真正的、结构上的程序语言结构（<code>yield from</code>），而不是，比如，一个代码注释，然后这个注释可以被一个兼容gevent/eventlet协程的语法检查器(linter)所识别，然后这个<code>yield from</code>的事情就可以通过语法检查器来完成，而不用新增一个语法，这样的话，既不会对周边的三方库造成影响，也不会产生因显式异步而带来的额外开销。当然，这是另一个话题了。）</p>
+
+<p>抛开显式异步的风格问题，它还有以下两个缺点：</p>
+
+<p>一个是，asyncio让你可以很容易的写<code>yield from</code>语句，这使得它所声称的“可以让你少犯错”的好处大打折扣。Hacker News上的一个读者针对“显式异步的代码更容易debug”的论断做了如下评论：</p>
+
+<blockquote><p>这话的意思基本上是，“我需要在代码中显式表示出上下文切换来，如果不能的话，那这个代码的可读性就非常差”</p>
+
+<p>我认为这是典型的稻草人论证，作者所列举的多线程代码的那些问题是所有重入代码都会出现的问题，不管它是多线程还是单线程。如果你的函数不小心调用了另一个函数，而这个函数又调用了最初的那个函数，那就会出现一样的问题</p>
+
+<p>但是，你猜怎么样，这种情况发生的概率很低，大部分代码不是可重入的，大部分状态不是共享的。</p>
+
+<p>对于那些并发的、有相互调用关系的代码，你必须得认真仔细考虑一下才行，到处写满<code>yield from</code>并不会解决问题。</p>
+
+<p>在实际中，最终你会在你的代码中写满<code>yield from</code>，结果就是你会认为“哈，看起来在哪个地方都有可能切到别的协程执行了”，而这正是你一开始想解决的问题。</p></blockquote>
+
+<p>从我的压测代码中可以看到，这最后一点说的真是没错！下面的代码片段来自多线程版本：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>    <span class="s">&quot;select id from geo_record where fileid=</span><span class="si">%s</span><span class="s"> and logrecno=</span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;fileid&#39;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;logrecno&#39;</span><span class="p">])</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'><span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+</span><span class='line'><span class="n">geo_record_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>    <span class="s">&quot;select d.id, d.index from dictionary_item as d &quot;</span>
+</span><span class='line'>    <span class="s">&quot;join matrix as m on d.matrix_id=m.id where m.segment_id=</span><span class="si">%s</span><span class="s"> &quot;</span>
+</span><span class='line'>    <span class="s">&quot;order by m.sortkey, d.index&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;cifsn&#39;</span><span class="p">],)</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'><span class="n">dictionary_ids</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span>
+</span><span class='line'><span class="p">]</span>
+</span><span class='line'><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">for</span> <span class="n">dictionary_id</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dictionary_ids</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]):</span>
+</span><span class='line'>    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;insert into data_element &quot;</span>
+</span><span class='line'>        <span class="s">&quot;(geo_record_id, dictionary_item_id, value) &quot;</span>
+</span><span class='line'>        <span class="s">&quot;values (</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">)&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">geo_record_id</span><span class="p">,</span> <span class="n">dictionary_id</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下代码来自asyncio版本：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">yield from</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>    <span class="s">&quot;select id from geo_record where fileid=</span><span class="si">%s</span><span class="s"> and logrecno=</span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;fileid&#39;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;logrecno&#39;</span><span class="p">])</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'><span class="n">row</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+</span><span class='line'><span class="n">geo_record_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">yield from</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>    <span class="s">&quot;select d.id, d.index from dictionary_item as d &quot;</span>
+</span><span class='line'>    <span class="s">&quot;join matrix as m on d.matrix_id=m.id where m.segment_id=</span><span class="si">%s</span><span class="s"> &quot;</span>
+</span><span class='line'>    <span class="s">&quot;order by m.sortkey, d.index&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;cifsn&#39;</span><span class="p">],)</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'><span class="n">rows</span> <span class="o">=</span> <span class="k">yield from</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+</span><span class='line'><span class="n">dictionary_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">for</span> <span class="n">dictionary_id</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dictionary_ids</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]):</span>
+</span><span class='line'>    <span class="k">yield from</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;insert into data_element &quot;</span>
+</span><span class='line'>        <span class="s">&quot;(geo_record_id, dictionary_item_id, value) &quot;</span>
+</span><span class='line'>        <span class="s">&quot;values (</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">)&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">geo_record_id</span><span class="p">,</span> <span class="n">dictionary_id</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注意到它们看起来基本是一样的吗？代码中有没有<code>yield from</code>并没有改变我的代码要表达的意图 —— 这是因为在无聊的与数据库交互的代码中，我们基本上都是在做一些顺序查询。</p>
+
+<p>不管这个想法是否吸引人，实际上它并没多大意义 —— 在程序中使用async或者互斥锁等其它方式来控制并发在任何场景下都是不够的。相反，在真实的无聊的数据库交互代码中，有一个流程是我们绝对总是要做的，那就是：</p>
+
+<h3>通过数据库的ACID来控制并发，而不是通过进程同步机制</h3>
+
+<p>如果我们正在操作的对象是关系型数据库，那不管我们是使用多线程，或是隐式协程，或是显式协程并且用类似<code>yield from</code>标识出了所有可能产生并发竟态的地方，关系都不大。特别是在当今世界，几乎所有的东西都是运行在分布式集群中，那些学院理论学家关于多线程的非确定性的论断只是冰山一角，在分布式集群中并发的情况会发生在完全不同的进程中，非确定性是一定存在的。</p>
+
+<p>在与数据库交互的代码中，你只有一种技术可以用来确保正确的并发，那就是通过数据库提供的事务特性（ACID）。不幸的是，它们并不是“开箱即用”的，尽管有许多出色的工具可以帮助你指引正确的方向。</p>
+
+<p>从数据库角度来说，上面所有的<code>transfer()</code>例子都是错误的。下面是一个正确的版本：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">,</span> <span class="n">server</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">begin</span><span class="p">():</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">payer</span><span class="o">.</span><span class="n">sufficient_funds_for_withdrawal</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">raise</span> <span class="n">InsufficientFunds</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} has sufficient funds.&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">payee</span><span class="o">.</span><span class="n">deposit</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payee} received payment&quot;</span><span class="p">,</span> <span class="n">payee</span><span class="o">=</span><span class="n">payee</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">payer</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">log</span><span class="p">(</span><span class="s">&quot;{payer} made payment&quot;</span><span class="p">,</span> <span class="n">payer</span><span class="o">=</span><span class="n">payer</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">server</span><span class="o">.</span><span class="n">update_balances</span><span class="p">([</span><span class="n">payer</span><span class="p">,</span> <span class="n">payee</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看到区别了吗？在上面的代码中，我们使用了事务。先通过<code>SELECT</code>查询付款人的账户余额然后再使用自动提交来修改他们的余额的做法是完全错误的。我们必须确保我们使用了某种锁机制来获取这个值，因而从我们读取这个值到我们修改它这期间，其它进程不可能基于一个“旧”值来做修改。我们可能使用<code>SELECT .. FOR UPDATE</code>来锁住我们想要修改的这一行记录；或者我们可能使用“读提交”的隔离级别结合一个版本计数器来做一个乐观锁的方案。但无论我们采取哪种方案，这都跟我们要采取的单进程的并发机制（多线程、协程等）都没有关系，因为我们这里说的并发问题涉及的是完全独立的进程之间的交互。</p>
+
+<h3>总结！</h3>
+
+<p>请注意，我说这些不是为了让你不要用asyncio。我认为这个库写的很好，也非常好用，也非常有兴趣把它整合进SQLAlchemy，因为我相信不管别人怎么说大家还是想要asyncio版本的SQLAlchemy&hellip;</p>
+
+<p>我的观点是，当与数据库交互时，使用asyncio相对于传统的多线程范式并没有优势，而且你可能还会观察到一个小到中量的性能上的下降（而不是提升）。这是我的许多同事所熟知的，但是最近我仍然不得不争论这一点。</p>
+
+<p>如果既想在接收web请求时利用非阻塞io的优势，又不想在业务逻辑里写满显式的<code>yield from</code>，那么可以考虑结合使用nginx和uWsgi。</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2020/01/06/asynchronous-python-and-databases//index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
 		<a href="/blog/2019/11/19/the-power-of-asyncio/">
 		
 			异步IO的威力</a>
@@ -124,6 +673,10 @@
 
 <time datetime="2019-11-19T20:12:00+08:00" pubdate data-updated="true">Nov 19<span>th</span>, 2019</time></div>
       <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/python/'>Python</a>, <a class='category' href='/blog/categories/asyncio/'>asyncio</a>
+
 
 </div>
     </div>
@@ -6326,149 +6879,6 @@
 </div>
 </article>
 
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2017/11/26/big-resultsets-handling-in-django/">
-		
-			如何处理数据库大结果集?</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2017-11-26T23:57:00+08:00" pubdate data-updated="true">Nov 26<span>th</span>, 2017</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>问题的起因是想知道在Django ORM中如何处理大数据集的返回，比如怎么避免进程由于内存占用过多被kill掉。由于数据库使用的是MySQL，讨论是从MySQL开始的。</p>
-
-<p>MySQL协议是半双工的，同一时间只能有一方在说话，一旦服务器开始返回数据，客户端能做的只能是把数据接收完，不存在让服务器停止这一说。。（因为还没轮到它说嘛。。）所以，写sql的时候注意加limit是很重要的！</p>
-
-<p>那么对于一次sql查询的返回，MySQL客户端有两个选择：</p>
-
-<p>1、MySQL客户端默认会一次性先把服务器返回的数据先缓存起来，再给它的客户去用。这样做的好处是，能尽快解放数据库相关线程，让它们去做更重要的事，比如服务其它请求（因为服务器通常需要等所有数据都发送完后才释放这条查询相关的资源的），坏处是如果返回的结果很大，客户端需要花费很多时间和内存来接收它，更气人的是，在这期间，做为客户端的用户，你啥也干不了，只能等。</p>
-
-<p>2、MySQL客户端还有一个选择，就是不自己先缓存啦，一边从server接收一边就返回给它的用户了~这样做的好处是，对于MySQL客户端的用户来说，它看起来反应更快了（因为没有先缓存所有数据集），而且貌似还便于做内存占用的优化？比如一边接收、处理，一边删除已处理过的数据，使得内存占用始终保持在一个很小的数量。坏处是有一个处理很慢的用户可能会拖垮数据库，并且在接收完之前客户端不能做任何其它的事情！这其实是一个Unbuffered Cursor，在MySQL客户端实现里叫SSCursor，即server side cursor，但其实它不是真正的server side cursor</p>
-
-<p>Django ORM的queryset在被使用的时候会触发对应sql查询被执行，像上面说的，默认情况下结果集会被客户端先缓存，这已经是一个内存占用，然后会被Django转成对应的model instance，这又是一个内存占用，如果内存没有被及时回收，这其实是一份数据的双倍内存占用。</p>
-
-<p>queryset的一个方法iterator能实现的一个优化是，将数据集转成model instance的过程改为generator模式，减少第二步的内存占用（注意：这只是针对MySQL来说的）</p>
-
-<p>对于会返回大数据集的查询，一个处理办法是拆分使用limit来多次接收。每次接收一定量的数据（比如1000），内存回收后再接收下一个1000，对应的Django实现：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">gc</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">queryset_iterator</span><span class="p">(</span><span class="n">queryset</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
-</span><span class='line'>    <span class="sd">&#39;&#39;&#39;&#39;&#39;</span>
-</span><span class='line'><span class="sd">    Iterate over a Django Queryset ordered by the primary key</span>
-</span><span class='line'>
-</span><span class='line'><span class="sd">    This method loads a maximum of chunksize (default: 1000) rows in it&#39;s</span>
-</span><span class='line'><span class="sd">    memory at the same time while django normally would load all rows in it&#39;s</span>
-</span><span class='line'><span class="sd">    memory. Using the iterator() method only causes it to not preload all the</span>
-</span><span class='line'><span class="sd">    classes.</span>
-</span><span class='line'>
-</span><span class='line'><span class="sd">    Note that the implementation of the iterator does not support ordered query sets.</span>
-</span><span class='line'><span class="sd">    &#39;&#39;&#39;</span>
-</span><span class='line'>    <span class="n">pk</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class='line'>    <span class="n">last_pk</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;-pk&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pk</span>
-</span><span class='line'>    <span class="n">queryset</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;pk&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">while</span> <span class="n">pk</span> <span class="o">&lt;</span> <span class="n">last_pk</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">queryset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk__gt</span><span class="o">=</span><span class="n">pk</span><span class="p">)[:</span><span class="n">chunksize</span><span class="p">]:</span>
-</span><span class='line'>            <span class="n">pk</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">pk</span>
-</span><span class='line'>            <span class="k">yield</span> <span class="n">row</span>
-</span><span class='line'>        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>参考：</p>
-
-<ul>
-<li><a href="https://stackoverflow.com/questions/4856882/limiting-memory-use-in-a-large-django-queryset?rq=1">https://stackoverflow.com/questions/4856882/limiting-memory-use-in-a-large-django-queryset?rq=1</a></li>
-<li><a href="https://stackoverflow.com/questions/14144408/memory-efficient-constant-and-speed-optimized-iteration-over-a-large-table-in?noredirect=1&amp;lq=1">https://stackoverflow.com/questions/14144408/memory-efficient-constant-and-speed-optimized-iteration-over-a-large-table-in?noredirect=1&amp;lq=1</a></li>
-<li><a href="https://djangosnippets.org/snippets/1949/">https://djangosnippets.org/snippets/1949/</a></li>
-<li><a href="https://docs.djangoproject.com/en/1.11/ref/models/querysets/#iterator">https://docs.djangoproject.com/en/1.11/ref/models/querysets/#iterator</a></li>
-</ul>
-
-
-<p>下面讲一下真正的server side cursor，postgresql支持真正意义上的server side cursor，可以给一个查询指定一个cursor，然后在这个cursor上操作，fetch多行、move(移动）cursor、更新当前cursor所在的记录等等，可参考<a href="https://www.postgresql.org/docs/9.2/static/plpgsql-cursors.html">文档</a>。看MySQL<a href="https://dev.MySQL.com/doc/refman/5.7/en/cursors.html">官方文档</a>，它也支持一个很简陋的server side cursor，而且只能在存储过程里用。</p>
-
-<p>顺便，google到一个对比Client-Side Cursors和Server-Side Cursors区别的文档，竟然来自微软。。</p>
-
-<p>Client-Side Cursors</p>
-
-<p>With a non-keyset client-side cursor, the server sends the entire result set across the network to the client machine. The client machine provides and manages the temporary resources needed by the cursor and result set. The client-side application can browse through the entire result set to determine which rows it requires.</p>
-
-<p>Static and keyset-driven client-side cursors may place a significant load on your workstation if they include too many rows. While all of the cursor libraries are capable of building cursors with thousands of rows, applications designed to fetch such large rowsets may perform poorly. There are exceptions, of course. For some applications, a large client-side cursor may be perfectly appropriate and performance may not be an issue.</p>
-
-<p>One obvious benefit of the client-side cursor is quick response. After the result set has been downloaded to the client machine, browsing through the rows is very fast. Your application is generally more scalable with client-side cursors because the cursor&rsquo;s resource requirements are placed on each separate client and not on the server.</p>
-
-<p>Server-Side Cursors</p>
-
-<p>With a server-side cursor, the server manages the result set using resources provided by the server machine. The server-side cursor returns only the requested data over the network. This type of cursor can sometimes provide better performance than the client-side cursor, especially in situations where excessive network traffic is a problem.</p>
-
-<p>Server-side cursors also permit more than one operation on the connection. That is, once you create the cursor, you can use the same connection to make changes to the rows — without having to establish an additional connection to handle the underlying update queries.</p>
-
-<p>However, it&rsquo;s important to point out that a server-side cursor is — at least temporarily — consuming precious server resources for every active client. You must plan accordingly to ensure that your server hardware is capable of managing all of the server-side cursors requested by active clients. Also, a server-side cursor can be slow because it provides only single row access — there is no batch cursor available.</p>
-
-<p>Server-side cursors are useful when inserting, updating, or deleting records. With server-side cursors, you can have multiple active statements on the same connection. With SQL Server, you can have pending results in multiple statement handles.</p>
-
-<p>参考：</p>
-
-<ul>
-<li><a href="https://msdn.microsoft.com/en-us/library/aa266531(v=vs.60">Client-Side Cursors Versus Server-Side Cursors</a>.aspx)</li>
-<li><a href="http://thebuild.com/blog/2010/12/13/very-large-result-sets-in-django-using-postgresql/">Very Large Result Sets in Django using PostgreSQL</a></li>
-<li><a href="https://www.postgresql.org/docs/9.2/static/plpgsql-cursors.html">postgresql cursors</a></li>
-<li><a href="http://techualization.blogspot.com/2011/12/retrieving-million-of-rows-from-MySQL.html">Retrieving million of rows from MySQL</a></li>
-<li><a href="https://dev.MySQL.com/doc/refman/5.7/en/cursors.html">MySQL cursors</a></li>
-<li><a href="https://code.djangoproject.com/ticket/16614#no1">Django中对server side cursor的支持</a></li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2017/11/26/big-resultsets-handling-in-django//index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
 <nav id="pagenavi">
     
     
@@ -6480,7 +6890,7 @@
     </div>
     <footer id="footer">
     <div style="display:inline">
-    Copyright &copy; 2019
+    Copyright &copy; 2020
 
     linuxfish
 . Powered by <a href="http://octopress.org">Octopress</a> | 
