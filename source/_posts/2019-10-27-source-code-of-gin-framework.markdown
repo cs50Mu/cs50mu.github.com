@@ -513,7 +513,61 @@ func decodeJSON(r io.Reader, obj interface{}) error {
 可以看到，`BindXXX` --> `MustBindWith` --> `ShouldBindWith` --> `b.Bind`，所有支持的格式都是一样的模式，后续如果想增加一个新的格式，只需要按照`Binding`
 这个接口来实现一下那两个方法就可以用了。
 
-TODO：对参数的校验用到了validator这个包，具体分析一下
+对参数的校验用到了[validator](https://github.com/go-playground/validator)这个包，下面具体分析一下
+
+以 bindJSON 为例，最终会调用到`decodeJSON`：
+
+```go
+func decodeJSON(r io.Reader, obj interface{}) error {
+	decoder := json.NewDecoder(r)
+	if EnableDecoderUseNumber {
+		decoder.UseNumber()
+	}
+	if EnableDecoderDisallowUnknownFields {
+		decoder.DisallowUnknownFields()
+	}
+	if err := decoder.Decode(obj); err != nil {
+		return err
+	}
+	return validate(obj)
+}
+
+var Validator StructValidator = &defaultValidator{}
+
+// validate的定义在此
+// 位于binding/binding.go
+func validate(obj interface{}) error {
+	if Validator == nil {
+		return nil
+	}
+	return Validator.ValidateStruct(obj)
+}
+
+// 位于binding/default_validator.go
+func (v *defaultValidator) ValidateStruct(obj interface{}) error {
+	value := reflect.ValueOf(obj)
+	valueType := value.Kind()
+	if valueType == reflect.Ptr {
+		valueType = value.Elem().Kind()
+	}
+	if valueType == reflect.Struct {
+	   // 懒加载
+		v.lazyinit()
+		if err := v.validate.Struct(obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *defaultValidator) lazyinit() {
+	v.once.Do(func() {
+		v.validate = validator.New()
+		v.validate.SetTagName("binding")
+	})
+}
+```
+
 
 下面分析下处理完的结果是如何返回http response的（包括http status、header、resp body等）：
 
