@@ -2171,7 +2171,108 @@
 <p>可以看到，<code>BindXXX</code> &mdash;> <code>MustBindWith</code> &mdash;> <code>ShouldBindWith</code> &mdash;> <code>b.Bind</code>，所有支持的格式都是一样的模式，后续如果想增加一个新的格式，只需要按照<code>Binding</code>
 这个接口来实现一下那两个方法就可以用了。</p>
 
-<p>TODO：对参数的校验用到了validator这个包，具体分析一下</p>
+<p>对参数的校验用到了<a href="https://github.com/go-playground/validator">validator</a>这个包，下面具体分析一下</p>
+
+<p>以 bindJSON 为例，最终会调用到<code>decodeJSON</code>：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">decodeJSON</span><span class="p">(</span><span class="nx">r</span> <span class="nx">io</span><span class="p">.</span><span class="nx">Reader</span><span class="p">,</span> <span class="nx">obj</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">EnableDecoderUseNumber</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">decoder</span><span class="p">.</span><span class="nx">UseNumber</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">EnableDecoderDisallowUnknownFields</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">decoder</span><span class="p">.</span><span class="nx">DisallowUnknownFields</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">validate</span><span class="p">(</span><span class="nx">obj</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Validator</span> <span class="nx">StructValidator</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nx">defaultValidator</span><span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// validate的定义在此</span>
+</span><span class='line'><span class="c1">// 位于binding/binding.go</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">validate</span><span class="p">(</span><span class="nx">obj</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">Validator</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Validator</span><span class="p">.</span><span class="nx">ValidateStruct</span><span class="p">(</span><span class="nx">obj</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 位于binding/default_validator.go</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">defaultValidator</span><span class="p">)</span> <span class="nx">ValidateStruct</span><span class="p">(</span><span class="nx">obj</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">value</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">obj</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">valueType</span> <span class="o">:=</span> <span class="nx">value</span><span class="p">.</span><span class="nx">Kind</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">valueType</span> <span class="o">==</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Ptr</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">valueType</span> <span class="p">=</span> <span class="nx">value</span><span class="p">.</span><span class="nx">Elem</span><span class="p">().</span><span class="nx">Kind</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">valueType</span> <span class="o">==</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Struct</span> <span class="p">{</span>
+</span><span class='line'>     <span class="c1">// 懒加载</span>
+</span><span class='line'>      <span class="nx">v</span><span class="p">.</span><span class="nx">lazyinit</span><span class="p">()</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">v</span><span class="p">.</span><span class="nx">validate</span><span class="p">.</span><span class="nx">Struct</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">defaultValidator</span><span class="p">)</span> <span class="nx">lazyinit</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">v</span><span class="p">.</span><span class="nx">once</span><span class="p">.</span><span class="nx">Do</span><span class="p">(</span><span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">v</span><span class="p">.</span><span class="nx">validate</span> <span class="p">=</span> <span class="nx">validator</span><span class="p">.</span><span class="nx">New</span><span class="p">()</span>
+</span><span class='line'>      <span class="nx">v</span><span class="p">.</span><span class="nx">validate</span><span class="p">.</span><span class="nx">SetTagName</span><span class="p">(</span><span class="s">&quot;binding&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>下面分析下处理完的结果是如何返回http response的（包括http status、header、resp body等）：</p>
 
