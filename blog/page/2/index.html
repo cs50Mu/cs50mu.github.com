@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Nov 26th, 2017 Tags: 问题的起因是想知道在Django ORM中如何处理大数据集的返回，比如怎么避免进程由于内存占用过多被kill掉。由于数据库使用的是MySQL，讨论是从MySQL开始的。 MySQL协议是半双工的，同一时间只能有一方在说话， &hellip;">
+	<meta name="description" content="Published on: Feb 1st, 2019 Tags: 这几天看了下Golang FAQ，解了不少困惑，我相信有人会有同样的困惑，挑选了一些有意思的问题翻译了一下。 Design Does Go have a runtime? / Go有运行时吗？ Go确实有一个runtime库( &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,438 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2019/02/01/golang-faq/">
+		
+			Golang FAQ</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2019-02-01T22:37:00+08:00" pubdate data-updated="true">Feb 1<span>st</span>, 2019</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>这几天看了下Golang FAQ，解了不少困惑，我相信有人会有同样的困惑，挑选了一些有意思的问题翻译了一下。</p>
+
+<h3>Design</h3>
+
+<blockquote><p>Does Go have a runtime? / Go有运行时吗？</p></blockquote>
+
+<p>Go确实有一个runtime库(runtime library)。这个runtime库主要实现了垃圾回收、并发管理、堆栈管理等其它Go语言的关键特性。这个所谓的runtime可以类比于c语言的标准库(libc)</p>
+
+<p>但很重要的一点是要理解，Go的这个所谓的runtime并没有带虚拟机（比如，像Java一样）。所以，尽管runtime这个词一般用来指某些语言带的虚拟机实现，但在Golang的语境下，它仅仅指代标准库。</p>
+
+<blockquote><p>Why does Go not have generic types? / 为什么没有泛型？</p></blockquote>
+
+<p>泛型在将来的某个时候可能会被加上。但我们并不着急加它，虽然我们理解有些程序员可能不认同。</p>
+
+<p>Go的目的是用于服务端程序开发，它的设计的目标在于增强程序的可扩展性、并发能力以及代码的可读性。泛型对于这些设计目标并没有多大帮助，所以为了实现的简单，当时并没有支持泛型。</p>
+
+<p>现在Go语言已经越来越成熟了，可以考虑加上泛型的支持，但是对于泛型我还是想多说几句。</p>
+
+<p>泛型很方便，但是它大大增加了语言的类型系统(type system)和运行时的实现复杂度，我们还没有找到一种能很好平衡两者的设计方案。目前大家先用<code>interface{}</code>来顶一顶吧。</p>
+
+<blockquote><p>Why does Go not have exceptions? / 为什么没有异常？</p></blockquote>
+
+<p>我们认为把exception耦合进正常逻辑中（比如其它语言中常见的<code>try-catch-finally</code>惯用法）会导致混乱的代码。使用exception的方式也倾向于鼓励程序员把很多普通的错误（比如无法打开文件）当成异常来处理。</p>
+
+<p>对于普通的错误，需要在函数调用后立即处理。</p>
+
+<p>Go也提供了一组内置函数用来处理真正的异常情况（panic和recovery）。</p>
+
+<p>linuxfish注：我个人理解，关键是要区分普通错误和真正的异常。</p>
+
+<h3>Types</h3>
+
+<blockquote><p>Why does Go not support overloading of methods and operators? / 为何不支持方法和运算符重载？</p></blockquote>
+
+<p>在其它语言上的经验告诉我们，搞一堆名字一样，签名不同的方法，只是偶尔有点用处，更多的会带来理解上的混乱。相反，不支持重载大大简化了Go语言的类型系统的设计。</p>
+
+<p>至于运算符重载，在我们看来它可以带来一定的便利性，但并非必须。按照我们的惯例，宁缺毋滥。</p>
+
+<blockquote><p>Why doesn&rsquo;t Go have &ldquo;implements&rdquo; declarations? / 为何不用<code>implements</code>显示声明？</p></blockquote>
+
+<p>一个Go的类型如果实现了某个interface的方法，那它就隐式的“声明”为这个interface类型了（即可以当成这个interface类型来用了）。</p>
+
+<p>好处是实现了接口和实现的真正解耦，允许在不更改现有代码的前提下定义和使用接口。</p>
+
+<blockquote><p>Can I convert a []T to an []interface{}?</p></blockquote>
+
+<p>不能直接转，因为它们在内存中的表示并不一样，需要这样做：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">t</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">}</span>
+</span><span class='line'><span class="nx">s</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nb">len</span><span class="p">(</span><span class="nx">t</span><span class="p">))</span>
+</span><span class='line'><span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">t</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">s</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">v</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一个更通用但也更慢的函数：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">InterfaceSlice</span><span class="p">(</span><span class="nx">slice</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">s</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">slice</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">s</span><span class="p">.</span><span class="nx">Kind</span><span class="p">()</span> <span class="o">!=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Slice</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">panic</span><span class="p">(</span><span class="s">&quot;InterfaceSlice() given a non-slice type&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">ret</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nx">s</span><span class="p">.</span><span class="nx">Len</span><span class="p">())</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span><span class="o">:=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="p">&lt;</span><span class="nx">s</span><span class="p">.</span><span class="nx">Len</span><span class="p">();</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">ret</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">Index</span><span class="p">(</span><span class="nx">i</span><span class="p">).</span><span class="nx">Interface</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">ret</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>参考：<a href="https://stackoverflow.com/questions/12753805/type-converting-slices-of-interfaces-in-go">Type converting slices of interfaces in go</a></p>
+
+<blockquote><p>Can I convert []T1 to []T2 if T1 and T2 have the same underlying type?</p></blockquote>
+
+<p>不可以，只能一个一个转。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">T1</span> <span class="kt">int</span>
+</span><span class='line'><span class="kd">type</span> <span class="nx">T2</span> <span class="kt">int</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">t1</span> <span class="nx">T1</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">x</span> <span class="p">=</span> <span class="nx">T2</span><span class="p">(</span><span class="nx">t1</span><span class="p">)</span> <span class="c1">// OK</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">st1</span> <span class="p">[]</span><span class="nx">T1</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">sx</span> <span class="p">=</span> <span class="p">([]</span><span class="nx">T2</span><span class="p">)(</span><span class="nx">st1</span><span class="p">)</span> <span class="c1">// NOT OK</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Why is my nil error value not equal to nil?</p></blockquote>
+
+<p>首先，interface类型的底层实现是一个二元组（一个类型T和一个值V），V就是具体的值，T就是这个值的类型。比如，我们存了一个int 3在接口里，那么用字符简单的表示，这个接口值现在就等于<code>(T=int, V=3)</code>。</p>
+
+<p>一个接口值当且仅当V和T都未设置时（T=nil, V未设置）才为nil。特别地，一个值为nil的接口的底层T永远都是nil。那么，如果把一个值为nil类型为<code>*int</code>存入一个接口中，此时这个接口值的底层表示为<code>(T=*int, V=nil)</code>，按照定义，这个接口值不等于nil。</p>
+
+<p>但这跟我们的日常认知相悖，明明是个空指针嘛！这种情况在从函数中返回error时更容易使人困惑：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">returnsError</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">p</span> <span class="o">*</span><span class="nx">MyError</span> <span class="p">=</span> <span class="kc">nil</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">bad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">p</span> <span class="p">=</span> <span class="nx">ErrBad</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">p</span> <span class="c1">// Will always return a non-nil error.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上面的写法的错误之处在于，不管有没有错误发生，函数返回的error永远都是non-nil的，所以当无错误发生时，应当显式地返回nil：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">returnsError</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">bad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">ErrBad</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Values</h3>
+
+<blockquote><p>Why does Go not provide implicit numeric conversions? / 为何不提供隐式数字类型转换？</p></blockquote>
+
+<p>c语言中的自动数值类型转换带来的那点便利性跟它引起的困惑相比根本不值得一提。表达式的结果什么时候是无符号的？它的值有多大？是不是溢出了？结果是不是可移植的（执行结果跟程序所在的机器无关）？考虑到移植性的问题，我们要求在进行类型转换时必须进行显式的转换，尽管有些麻烦。</p>
+
+<p>一个相关的细节是，就算<code>int</code>实质上是一个<code>int64</code>（当在64位机器上时），<code>int</code>和<code>int64</code>也是两个不同的类型。如果你真的关心一个应该用多少位来表示一个整数，我们鼓励你显式地声明它（用int32或者int64，而不是int）。</p>
+
+<blockquote><p>How do constants work in Go?</p></blockquote>
+
+<p>尽管Go要求不同的数值类型必须进行显式的转换，它对常数值的要求比较灵活。因为常数值默认是无类型的（untyped），所以不必这么写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">sqrt2</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>你可以直接写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">sqrt2</span> <span class="o">:=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>想了解Go中的常数值的具体实现的可以参考<a href="https://blog.golang.org/constants">这篇Blog</a></p>
+
+<blockquote><p>Should I define methods on values or pointers? / 方法定义在值上还是指针上？</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">MyStruct</span><span class="p">)</span> <span class="nx">pointerMethod</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// method on pointer</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="nx">MyStruct</span><span class="p">)</span>  <span class="nx">valueMethod</span><span class="p">()</span>   <span class="p">{</span> <span class="p">}</span> <span class="c1">// method on value</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接收者是要定义成值还是指针本质上跟函数的参数是定义成值还是指针是一个问题。</p>
+
+<p>我们在回答这个问题时通常有以下考虑：</p>
+
+<ul>
+<li>方法是否需要修改这个接收者？如果需要修改，那没有什么纠结的，必须用指针（slice 和 map 本身就是引用类型，需要单独讨论）。</li>
+<li>效率上的考虑。如果接收者是一个大结构体，那么很显然用指针更合适</li>
+<li>一致性。如果有些方法必须用指针做为接收者，那么为了使用上的一致，其它的方法也应该用指针</li>
+<li>除非必须，一般情况下使用值就可以了</li>
+</ul>
+
+
+<blockquote><p>What&rsquo;s the difference between new and make? / new 和 make 的区别？</p></blockquote>
+
+<p>简而言之，new 用来分配内存，而 make 用来初始化slice，map 和 channel。</p>
+
+<p>具体解释可参考 Effective Go 中的<a href="https://golang.org/doc/effective_go.html#allocation_new">相关章节</a></p>
+
+<h3>Concurrency</h3>
+
+<blockquote><p>Why doesn&rsquo;t my program run faster with more CPUs?</p></blockquote>
+
+<p>一个程序是否会因为有更多的CPU资源而运行更快取决于这个程序所要解决的问题。Go语言提供了基本的并发原语，比如 goroutine 和 channel，但只有当要解决的问题存在并行执行的可能性时才会发挥它们的作用。本质上是串行的问题，仅仅通过增加更多的CPU资源无法获得更高的执行效率。</p>
+
+<h3>Functions and Methods</h3>
+
+<blockquote><p>What happens with closures running as goroutines? / 闭包的坑</p></blockquote>
+
+<p>在并发中使用闭包时，可能会出现一些令人困惑的现象，考虑以下代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">values</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'>            <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>        <span class="p">}()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// wait for all goroutines to complete before exiting</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">_</span> <span class="p">=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>        <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们可能错误的认为输出结果应该是<code>a,b,c</code>，但实际上你看到的结果可能是<code>c,c,c</code>。这是因为所有的闭包都共享了一个变量v，而v在循环中被不断的更新，当闭包中的程序真正在另一个goroutine中运行时，v的值已经变了。使用<code>go vet</code>可以在运行程序前提前检测这种情况。</p>
+
+<p>针对这个“坑”，有两个解决方案：</p>
+
+<p>要么，把v显式传入闭包中</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">u</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">u</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="p">}(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>或者这样写：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">v</span> <span class="o">:=</span> <span class="nx">v</span> <span class="c1">// create a new &#39;v&#39;.</span>
+</span><span class='line'>    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="p">}()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Control flow</h3>
+
+<blockquote><p>Why does Go not have the ?: operator? / 为何没有<code>?:</code>操作符？</p></blockquote>
+
+<p>可以使用以下代码实现类似的效果：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">if</span> <span class="nx">expr</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">n</span> <span class="p">=</span> <span class="nx">trueVal</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">n</span> <span class="p">=</span> <span class="nx">falseVal</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Go中不存在这个三元操作符的原因是Go语言的设计者认为这个三元操作符经常被用来写出晦涩难懂的表达式。<code>if-else</code>的模式，虽然写起来更长一些，但毫无疑问表达的更清楚。一门语言只需要一种条件控制结构就够了。</p>
+
+<h3>Packages and Testing</h3>
+
+<blockquote><p>Where is my favorite helper function for testing?</p></blockquote>
+
+<p>使用Go标准库中的测试包很容易写单元测试，但这个测试包缺乏一些其它测试框架中常用的功能，比如断言。之前的章节中已经解释了为啥Go不支持断言，这个解释同样适用于写测试。在进行单元测试时，正确的错误处理方式是在某个测试出错后，允许其它的测试继续进行，这样进行测试的人可以从全局看到是什么地方出了问题。举个例子，现在正在测试 isPrime 这个函数，那么与其只报告了isPrime对于2这个输入的结果是错的，然后就停止测试了，直接报告 isPrime 对于输入（2，3，5，7）的结果都是错的明显更有用处。运行测试代码的人可能对被测试的代码并不熟悉，那么在写测试代码时，好好写一个错误提示信息就很有必要了，能帮助后面测试出现错误定位问题时省不少力气。</p>
+
+<p>还有一点是测试框架都喜欢定义自己的一套用来表示条件、控制语句和打印等固定模式的DSL，但问题是Go本身就能实现这些功能，为什么还要重复造轮子呢？可以少学一门语言，何乐而不为呢？</p>
+
+<p>如果你觉得用Go的测试包来写测试太啰嗦了，会有很多重复的代码，那么你可以考虑用驱动表的方式来写测试，这样的话，重复的代码会大大减少。Go标准库中有大量的测试代码可供你参考。</p>
+
+<h3>Implementation</h3>
+
+<blockquote><p>Why is my trivial program such a large binary? / 为啥那么点代码就编译出这么大一个二进制文件？</p></blockquote>
+
+<p>gc 工具链中的链接器(linker)默认创建静态链接的二进制文件。 因此所有的 Go 二进制文件包含了Go的运行时，同时还有执行动态类型检测、反射甚至崩溃时的堆栈信息的运行时</p>
+
+<p>一个简单的 hello world 版 c 程序，用 gcc 在 linux 上静态编译后，体积大约是750KB。同样的 Go 程序，体积大概有几M，但功能也更强大，因为它有 run time 支持，还有动态类型检查和 debug 信息。</p>
+
+<p>Go程序在用 gc 编译时可以带上<code>-ldflags=-w</code>参数来关闭 debug 信息的生成，这不会影响程序的正常功能，但会很大程度地减少程序的体积。</p>
+
+<blockquote><p>Can I stop these complaints about my unused variable/import? / 能不能别老提示我未用的变量和引入库？</p></blockquote>
+
+<p>代码中存在未使用的变量可能意味着潜在的 bug，而未使用的引用库只会增大编译时间，而且随着代码量的增长，这个问题会越来越严重。基于以上原因 Go 拒绝编译存在未使用变量和未使用的引用库的代码，短期来看，这个决定带来了很多麻烦，但从长远来看，它利于提升程序的编译速度和代码的整洁性。</p>
+
+<p>当然了，在写代码的时候，创建一堆临时变量是常见的，每次都必须要先处理一下这些用不上的临时变量才能编译确实是挺烦的。</p>
+
+<p>有人提议加一个编译器的参数可以关闭这个傻X的检查，或者至少编译能通过，比如只是发个警告信息提示用户。但我们没有加这个参数，一是因为我们认为编译器的参数不应该影响语言的语义；二是 Go 编译器没有警告，它只报告错误。</p>
+
+<p>Go编译器没有警告，原因有二：一是，如果一个问题需要报警提示，那它就应该被改正（相反，如果它不值得被修正，那也根本无需发警告提示）；第二，有时候太多警告反而会掩盖了真实的问题。</p>
+
+<p>使用空白标识符<code>_</code>可以一定程度的缓解这个问题。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">import</span> <span class="s">&quot;unused&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// This declaration marks the import as used by referencing an</span>
+</span><span class='line'><span class="c1">// item from the package.</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">_</span> <span class="p">=</span> <span class="nx">unused</span><span class="p">.</span><span class="nx">Item</span>  <span class="c1">// TODO: Delete before committing!</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">debugData</span> <span class="o">:=</span> <span class="nx">debug</span><span class="p">.</span><span class="nx">Profile</span><span class="p">()</span>
+</span><span class='line'>    <span class="nx">_</span> <span class="p">=</span> <span class="nx">debugData</span> <span class="c1">// Used only during debugging.</span>
+</span><span class='line'>    <span class="o">...</span><span class="p">.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当然了，现在大部分Go程序员都知道有这个神器，goimports，它能分析你的源文件，自动清理掉未用到的变量，在你保存文件的时候自动重写源文件，大部分的编辑器都支持它。</p>
+
+<h3>Changes from C</h3>
+
+<blockquote><p>Why is there no pointer arithmetic? / 为啥不支持指针运算？</p></blockquote>
+
+<p>安全。不支持指针运算能避免很多诡异的问题。编译器和硬件技术发展到现在，用数组索引和用指针来遍历一个数组，在效率上已经没有什么区别。另外，不支持指针运算使得垃圾回收也更好实现了。</p>
+
+<blockquote><p>Why are ++ and &mdash; statements and not expressions? And why postfix, not prefix?</p></blockquote>
+
+<p>不支持指针运算的话，那么对<code>++</code>和<code>--</code>的需求就没那么大了。通过把<code>++</code>和<code>--</code>限制为 statement，而不是表达式(expression)，我们可以避免类似以下写法的出现：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">f</span><span class="p">(</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+</span><span class='line'><span class="nx">p</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">q</span><span class="p">[</span><span class="o">++</span><span class="nx">i</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2019/02/01/golang-faq//blog/page/2/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1530,274 +1962,6 @@ Send packet CA-&gt;Netherlands-&gt;CA     150,000,000 ns
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2016/08/28/csapp-system-level-io//blog/page/2/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2016/08/26/csapp-exceptional-control-flow/">
-		
-			Csapp Exceptional Control Flow</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2016-08-26T12:08:00+08:00" pubdate data-updated="true">Aug 26<span>th</span>, 2016</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<h3>Chapter 8 Exceptional Control Flow</h3>
-
-<p>从一上电开始，CPU就在不停得执行指令，从第k个指令转到k+1个指令执行，叫做指令转移(control transfer)，一堆指令转移的集合就叫控制流(flow of control or control flow of the process)。</p>
-
-<p>最简单的控制流就是一条接着一条的执行，只要执行的指令在内存中都是毗邻的，不需要跳转。当然，由于程序逻辑上的一些需求（比如分支、函数调用、调用返回）不可避免的会产生跳转。</p>
-
-<p>但还有其它一些跳转需求，是跟程序内部执行逻辑无关的，比如硬件时钟、磁盘IO、创建子进程等(a hardware timer goes off at regular intervals and must be dealt with. Packets arrive at the network adapter and must be stored in memory. Programs request data from a disk and then sleep until they are notified that the data are ready. Parent processes that create child processes must be notified when their children terminate.) 对于这些情形，现代操作系统也是通过跳转来应对的。这些跳转被统称为exceptional control flow (ECF). ECF可以发生在一个计算机系统的各个层面，比如硬件层面、操作系统层面、应用程序层面等。(Exceptional control flow occurs at all levels of a computer system. For example, at the hardware level, events detected by the hardware trigger abrupt control transfers to exception handlers. At the operating systems level, the kernel transfers control from one user process to another via context switches. At the application level, a process can send a signal to another process that abruptly transfers control to a signal handler in the recipient. An individual program can react to errors by sidestepping the usual stack discipline and making nonlocal jumps to arbitrary locations in other functions)</p>
-
-<p>那为什么要理解ECF呢？</p>
-
-<ul>
-<li>有助于理解重要的操作系统概念。ECF is the basic mechanism that operating systems use to implement I/O, processes, and virtual memory. Before you can really understand these important ideas, you need to understand ECF.</li>
-<li>有助于理解应用程序是如何跟操作系统交互的。Applications request services from the operating system by using a form of ECF known as a trap or system call. For example, writing data to a disk, reading data from a network, creating a new process, and terminating the current process are all accomplished by application programs invoking system calls. Understanding the basic system call mechanism will help you understand how these services are provided to applications.</li>
-<li>有助于理解并发(concurrency)。ECF is a basic mechanism for implementing concurrency in computer systems. An exception handler that interrupts the execution of an application program, processes and threads whose execution overlap in time, and a signal handler that interrupts the execution of an application program are all examples of concurrency in action. Understanding ECF is a first step to understanding concurrency.
-有助于理解软件层面的异常(software exceptions)是如何工作的。Languages such as C++ and Java provide software exception mechanisms via try, catch, and throw statements. Software exceptions allow the program to make nonlocal jumps (i.e., jumps that violate the usual call/return stack discipline) in response to error conditions. Nonlocal jumps are a form of application-level ECF, and are provided in C via the setjmp and longjmp functions. Understanding these low-level functions will help you understand how higher-level software exceptions can be implemented.</li>
-</ul>
-
-
-<h4>8.1 Exceptions</h4>
-
-<p>异常部分是由硬件实现的，部分是由操作系统实现的(Exceptions are a form of exceptional control flow that are implemented partly by the hardware and partly by the operating system.)。</p>
-
-<p>An exception is an abrupt change in the control flow in response to some change in the processor’s state. The change in state is known as an event. The event might be directly related to the execution of the current instruction. For example, a virtual memory page fault occurs, an arithmetic overflow occurs, or an instruction attempts a divide by zero. On the other hand, the event might be unrelated to the execution of the current instruction. For example, a system timer goes off or an I/O request completes.（状态的改变我们称之为事件，事件可能跟正在执行的指令相关，比如内存页错误；也可能与当前执行的指令不相干，比如CPU时间到了。）</p>
-
-<p>不管是哪种情况，都会跳到对应的异常处理程序那里执行。(In any case, when the processor detects that the event has occurred, it makes an indirect procedure call (the exception), through a jump table called an exception table, to an operating system subroutine (the exception handler) that is specifically designed to process this particular kind of event.)</p>
-
-<p>异常处理程序处理完以后，可能会发生以下三种情况的一种：</p>
-
-<ul>
-<li>The handler returns control to the current instruction Icurr, the instruction that was executing when the event occurred.</li>
-<li>The handler returns control to Inext, the instruction that would have executed next had the exception not occurred.</li>
-<li>The handler aborts the interrupted program.</li>
-</ul>
-
-
-<h5>Classes of Exceptions</h5>
-
-<p>异常可以被分为4类：interrupts, traps, faults, and aborts.
-&ndash; Interrupts</p>
-
-<p>Interrupts occur asynchronously as a result of signals from I/O devices that are external to the processor. Hardware interrupts are asynchronous in the sense that they are not caused by the execution of any particular instruction. Exception handlers for hardware interrupts are often called interrupt handlers.</p>
-
-<p>这里讲到的asynchronous和synchronous的意思：Asynchronous exceptions occur as a result of events in I/O devices that are external to the processor. Synchronous exceptions occur as a direct result of executing an instruction.</p>
-
-<p>interrupt的处理过程：</p>
-
-<p>I/O devices such as network adapters, disk controllers, and timer chips trigger interrupts by signaling a pin on the processor chip and placing onto the system bus the exception number that identifies the device that caused the interrupt.</p>
-
-<p>After the current instruction finishes executing, the processor notices that the interrupt pin has gone high, reads the exception number from the system bus, and then calls the appropriate interrupt handler. When the handler returns, it returns control to the next instruction (i.e., the instruction that would have followed the current instruction in the control flow had the interrupt not occurred). The effect is that the program continues executing as though the interrupt had never happened.</p>
-
-<ul>
-<li>Traps and System Calls</li>
-</ul>
-
-
-<p>Traps</p>
-
-<p>Traps are intentional exceptions that occur as a result of executing an instruction. Like interrupt handlers, trap handlers return control to the next instruction. The most important use of traps is to provide a procedure-like interface between user programs and the kernel known as a system call.</p>
-
-<p>User programs often need to request services from the kernel such as reading a file (read), creating a new process (fork), loading a new program (execve), or terminating the current process (exit). To allow controlled access to such kernel services, processors provide a special “syscall n” instruction that user programs can execute when they want to request service n. Executing the syscall instruction causes a trap to an exception handler that decodes the argument and calls the appropriate kernel routine.</p>
-
-<p>From a programmer’s perspective, a system call is identical to a regular function call. However, their implementations are quite different. Regular functions run in user mode, which restricts the types of instructions they can execute, and they access the same stack as the calling function. A system call runs in kernel mode, which allows it to execute instructions, and accesses a stack defined in the kernel.</p>
-
-<p>Faults</p>
-
-<p>Faults result from error conditions that a handler might be able to correct. When a fault occurs, the processor transfers control to the fault handler. If the handler is able to correct the error condition, it returns control to the faulting instruction, thereby reexecuting it. Otherwise, the handler returns to an abort routine in the kernel that terminates the application program that caused the fault. 出现Fault后，要么经Fault handler处理后，原来的指令重新跑；要么直接Abort程序。</p>
-
-<p>A classic example of a fault is the page fault exception, which occurs when an instruction references a virtual address whose corresponding physical page is not resident in memory and must therefore be retrieved from disk. As we will see in Chapter 9, a page is a contiguous block (typically 4 KB) of virtual memory. The page fault handler loads the appropriate page from disk and then returns control to the instruction that caused the fault. When the instruction executes again, the appropriate physical page is resident in memory and the instruction is able to run to completion without faulting.</p>
-
-<p>Aborts</p>
-
-<p>Aborts result from unrecoverable fatal errors, typically hardware errors such as parity errors that occur when DRAM or SRAM bits are corrupted. Abort handlers never return control to the application program. The handler returns control to an abort routine that terminates the application program. Abort handler不会把控制权返回给应用程序了。</p>
-
-<h4>Processes 进程</h4>
-
-<p>Exceptions are the basic building blocks that allow the operating system to provide the notion of a process, one of the most profound and successful ideas in computer science. 有了异常才能谈进程，异常机制是操作系统实现进程的基础。</p>
-
-<p>When we run a program on a modern system, we are presented with the illusion that our program is the only one currently running in the system. Our program appears to have exclusive use of both the processor and the memory. The processor appears to execute the instructions in our program, one after the other, without interruption. Finally, the code and data of our program appear to be the only objects in the system’s memory. These illusions are provided to us by the notion of a process. 进程是个抽象概念。</p>
-
-<p>Each program in the system runs in the context of some process. The context consists of the state that the program needs to run correctly. This state includes <strong>the program’s code and data stored in memory, its stack, the contents of its general- purpose registers, its program counter, environment variables, and the set of open file descriptors.</strong> 解释了进程上下文都包括哪些东西。</p>
-
-<p>进程给应用程序提供了两个关键抽象：</p>
-
-<blockquote><p>An independent logical control flow that provides the illusion that our pro- gram has exclusive use of the processor.</p>
-
-<p>A private address space that provides the illusion that our program has exclu- sive use of the memory system.</p></blockquote>
-
-<p>Logical Control Flow</p>
-
-<p>The single physical control flow of the processor is partitioned into logical flows, one for each process.</p>
-
-<p>Concurrent Flows</p>
-
-<p>A logical flow whose execution overlaps in time with another flow is called a concurrent flow, and the two flows are said to run concurrently. More precisely, flows X and Y are concurrent with respect to each other if and only if X begins after Y begins and before Y finishes, or Y begins after X begins and before X finishes.  并发并不是我们平常理解的那个意思，只要两个进程的逻辑流的执行时间有重叠，就算并发了。</p>
-
-<p>Notice that the idea of concurrent flows is independent of the number of processor cores or computers that the flows are running on. If two flows overlap in time, then they are concurrent, even if they are running on the same processor. However, we will sometimes find it useful to identify a proper subset of concurrent flows known as parallel flows. If two flows are running concurrently on different processor cores or computers, then we say that they are parallel flows, that they are running in parallel, and have parallel execution. 解了我许久的一个困惑，那就是并发和并行到底是什么意思？？这里讲的就很清楚了，并发(concurrency)跟CPU核数是无关的，它只跟逻辑流的执行时间有关系，只要两个进程逻辑流的执行时间有重叠，那么他们就是并发的，即使它们是运行在同一个核上。并行(parallel)是并发的子集了，就是说，如果两个进程已经是并发了，而且还是运行在不同的核上或计算机上，那它们就是并行的了。</p>
-
-<p>Private Address Space 私有内存空间</p>
-
-<p>A process provides each program with its own private address space. This space is private in the sense that a byte of memory associated with a particular address in the space cannot in general be read or written by any other process.</p>
-
-<p>User and Kernel Modes 用户模式和内核模式</p>
-
-<p>In order for the operating system kernel to provide an airtight process abstraction, the processor must provide a mechanism that restricts the instructions that an application can execute, as well as the portions of the address space that it can access.</p>
-
-<p>Processors typically provide this capability with a mode bit in some control register that characterizes the privileges that the process currently enjoys. When the mode bit is set, the process is running in kernel mode (sometimes called supervisor mode). A process running in kernel mode can execute any instruction in the instruction set and access any memory location in the system.</p>
-
-<p>When the mode bit is not set, the process is running in user mode. A process in user mode is not allowed to execute privileged instructions that do things such as halt the processor, change the mode bit, or initiate an I/O operation. Nor is it allowed to directly reference code or data in the kernel area of the address space. Any such attempt results in a fatal protection fault. User programs must instead access kernel code and data indirectly via the system call interface.</p>
-
-<p>A process running application code is initially in user mode. The only way for the process to change from user mode to kernel mode is via an exception such as an interrupt, a fault, or a trapping system call. When the exception occurs, and control passes to the exception handler, the processor changes the mode from user mode to kernel mode. The handler runs in kernel mode. When it returns to the application code, the processor changes the mode from kernel mode back to user mode.</p>
-
-<p>Context Switches 上下文切换</p>
-
-<p>The operating system kernel implements multitasking using a higher-level form of exceptional control flow known as a context switch. The context switch mecha- nism is built on top of the lower-level exception mechanism. 上下文切换也是基于异常做的。</p>
-
-<p>The kernel maintains a context for each process. The context is the state that the kernel needs to restart a preempted process. It consists of the values of objects such as the general purpose registers, the floating-point registers, the program counter, user’s stack, status registers, kernel’s stack, and various kernel data structures such as a page table that characterizes the address space, a process table that contains information about the current process, and a file table that contains information about the files that the process has opened.</p>
-
-<p>At certain points during the execution of a process, the kernel can decide to preempt the current process and restart a previously preempted process. This decision is known as scheduling, and is handled by code in the kernel called the scheduler. When the kernel selects a new process to run, we say that the kernel has scheduled that process. After the kernel has scheduled a new process to run, it preempts the current process and transfers control to the new process using a mechanism called a context switch that (1) saves the context of the current process, (2) restores the saved context of some previously preempted process, and (3) passes control to this newly restored process.</p>
-
-<p>A context switch can occur while the kernel is executing a system call on behalf of the user. If the system call blocks because it is waiting for some event to occur, then the kernel can put the current process to sleep and switch to another process. For example, if a read system call requires a disk access, the kernel can opt to perform a context switch and run another process instead of waiting for the data to arrive from the disk. Another example is the sleep system call, which is an explicit request to put the calling process to sleep. In general, even if a system call does not block, the kernel can decide to perform a context switch rather than return control to the calling process.</p>
-
-<p>A context switch can also occur as a result of an interrupt. For example, all systems have some mechanism for generating periodic timer interrupts, typically every 1 ms or 10 ms. Each time a timer interrupt occurs, the kernel can decide that the current process has run long enough and switch to a new process.</p>
-
-<p>Creating and Terminating Processes 进程的创建和销毁</p>
-
-<p>From a programmer’s perspective, we can think of a process as being in one of three states，进程的三种状态：</p>
-
-<blockquote><p>Running. The process is either executing on the CPU or is waiting to be executed and will eventually be scheduled by the kernel. 注意这个running不一定是说正在跑，只是一个可调度的状态，叫ready更好一点。</p>
-
-<p>Stopped. The execution of the process is suspended and will not be scheduled. A process stops as a result of receiving a SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal, and it remains stopped until it receives a SIGCONT signal, at which point it can begin running again. 不可调度状态，暂停了，但还能恢复</p>
-
-<p>Terminated. The process is stopped permanently. A process becomes termi- nated for one of three reasons: (1) receiving a signal whose default action is to terminate the process, (2) returning from the main routine, or (3) calling the exit function  永久结束了</p></blockquote>
-
-<p>Fork</p>
-
-<p>A parent process creates a new running child process by calling the fork function. fork有以下特点：</p>
-
-<pre><code>#include "csapp.h"
-
-int main()
-{
-    pid_t pid;
-    int x = 1;
-
-    pid = Fork(); if(pid==0){ /*Child*/
-        printf("child : x=%d\n", ++x);
-        exit(0); }
-    /* Parent */
-    printf("parent: x=%d\n", --x);
-    exit(0); }
-}
-
-output:
-unix&gt; ./fork 
-parent: x=0 
-child : x=2
-</code></pre>
-
-<blockquote><p>Call once, return twice. The fork function is called once by the parent, but it returns twice: once to the parent and once to the newly created child. This is fairly straightforward for programs that create a single child. But programs with multiple instances of fork can be confusing and need to be reasoned about carefully.</p>
-
-<p>Concurrent execution. The parent and the child are separate processes that run concurrently. The instructions in their logical control flows can be inter- leaved by the kernel in an arbitrary way. When we run the program on our system, the parent process completes its printf statement first, followed by the child. However, on another system the reverse might be true. In general, as programmers we can never make assumptions about the interleaving of the instructions in different processes.</p>
-
-<p>Duplicate but separate address spaces. If we could halt both the parent and the child immediately after the fork function returned in each process, we would see that the address space of each process is identical. Each process has the same user stack, the same local variable values, the same heap, the same global variable values, and the same code. Thus, in our example program, local variable x has a value of 1 in both the parent and the child when the fork function returns in line 8. However, since the parent and the child are separate processes, they each have their own private address spaces. Any subsequent changes that a parent or child makes to x are private and are not reflected in the memory of the other process. This is why the variable x has different values in the parent and child when they call their respective printf statements.</p>
-
-<p>Shared files. When we run the example program, we notice that both parent and child print their output on the screen. The reason is that the child inherits all of the parent’s open files. When the parent calls fork, the stdout file is open and directed to the screen. The child inherits this file and thus its output is also directed to the screen.</p></blockquote>
-
-<p>Reaping Child Processes</p>
-
-<p>When a process terminates for any reason, the kernel does not remove it from the system immediately. Instead, the process is kept around in a terminated state until it is reaped by its parent. When the parent reaps the terminated child, the kernel passes the child’s exit status to the parent, and then discards the terminated process, at which point it ceases to exist. A terminated process that has not yet been reaped is called a zombie. 已经是terminated状态但还没有被reaped的process叫僵尸程序</p>
-
-<p>If the parent process terminates without reaping its zombie children, the kernel arranges for the init process to reap them. The init process has a PID of 1 and is created by the kernel during system initialization. Long-running programs such as shells or servers should always reap their zombie children. Even though zombies are not running, they still consume system memory resources. 父进程没收割的僵尸process会被init进程代为收割。</p>
-
-<h4>Signals 信号</h4>
-
-<p>A signal is a small message that notifies a process that an event of some type has occurred in the system.</p>
-
-<p>Each signal type corresponds to some kind of system event. <strong>Low-level hard-ware exceptions are processed by the kernel’s exception handlers and would not normally be visible to user processes. Signals provide a mechanism for exposing the occurrence of such exceptions to user processes.</strong> For example, if a process attempts to divide by zero, then the kernel sends it a SIGFPE signal (number 8). If a process executes an illegal instruction, the kernel sends it a SIGILL signal (number 4). If a process makes an illegal memory reference, the kernel sends it a SIGSEGV signal (number 11). Other signals correspond to higher-level soft- ware events in the kernel or in other user processes. For example, if you type a ctrl-c (i.e., press the ctrl key and the c key at the same time) while a process is running in the foreground, then the kernel sends a SIGINT (number 2) to the foreground process. A process can forcibly terminate another process by sending it a SIGKILL signal (number 9). When a child process terminates or stops, the kernel sends a SIGCHLD signal (number 17) to the parent. 信号为底层硬件异常与应用程序之间搭了一座桥梁。</p>
-
-<p>信号的发和收</p>
-
-<blockquote><p>Sending a signal. The kernel sends (delivers) a signal to a destination process by updating some state in the context of the destination process. The signal is delivered for one of two reasons: (1) The kernel has detected a system event such as a divide-by-zero error or the termination of a child process. (2) A process has invoked the kill function (discussed in the next section) to explicitly request the kernel to send a signal to the destination process. A process can send a signal to itself.</p>
-
-<p>Receiving a signal. A destination process receives a signal when it is forced by the kernel to react in some way to the delivery of the signal. The process can either ignore the signal, terminate, or catch the signal by executing a user-level function called a signal handler. Receipt of a signal triggers a control transfer to a signal handler. After it finishes processing, the handler returns control to the interrupted program. 接收信号也会打断正常的逻辑流。</p></blockquote>
-
-<p>A signal that has been sent but not yet received is called a pending signal. At any point in time, there can be <strong>at most one pending signal of a particular type.</strong> If a process has a pending signal of type k, then any subsequent signals of type k sent to that process are not queued; <strong>they are simply discarded.</strong></p>
-
-<p>A process can selectively <strong>block the receipt of certain signals.</strong> When a signal is blocked, it can be delivered, but the resulting pending signal will not be received until the process unblocks the signal. For each process, the kernel maintains the set of pending signals in the <strong>pending bit vector</strong>, and the set of blocked signals in the <strong>blocked bit vector</strong>. The kernel sets bit k in pending whenever a sig- nal of type k is delivered and clears bit k in pending whenever a signal of type k is received.</p>
-
-<p>进程接收信号的流程</p>
-
-<p>When the kernel is returning from an exception handler and is ready to pass control to process p, it checks the set of unblocked pending signals (pending &amp; ~blocked) for process p. If this set is empty (the usual case), then the kernel passes control to the next instruction (Inext) in the logical control flow of p.</p>
-
-<p>However, if the set is nonempty, then the kernel chooses some signal k in the set (typically the smallest k) and forces p to receive signal k. The receipt of the signal triggers some action by the process. Once the process completes the action, then control passes back to the next instruction (Inext ) in the logical control flow of p. Each signal type has a predefined default action, which is one of the following: 1) The process terminates. 2) The process terminates and dumps core. 3) The process stops until restarted by a SIGCONT signal. 4) The process ignores the signal. 一般收到信号后的默认行为是可以改的，但SIGSTOP和SIGKILL是不允许改的。</p>
-
-<p>Signal Handling Issues 信号处理存在的问题</p>
-
-<blockquote><p>Pending signals are blocked. Unix signal handlers typically block pending signals of the type currently being processed by the handler. For example, suppose a process has caught a SIGINT signal and is currently running its SIGINT handler. If another SIGINT signal is sent to the process, then the SIGINT will become pending, but will not be received until after the handler returns. 在等待的信号会被阻塞住，要等前面的信号处理完才能处理它。</p>
-
-<p>Pending signals are not queued. There can be at most one pending signal of any particular type. Thus, if two signals of type k are sent to a destination process while signal k is blocked because the destination process is currently executing a handler for signal k, then the second signal is simply discarded; it is not queued. The key idea is that the existence of a pending signal merely indicates that at least one signal has arrived. 最多只能pending一个信号，再多的信号就直接被抛弃了。</p>
-
-<p>System calls can be interrupted. System calls such as read, wait, and accept that can potentially block the process for a long period of time are called slow system calls. On some systems, slow system calls that are interrupted when a handler catches a signal do not resume when the signal handler returns, but instead return immediately to the user with an error condition and errno set to EINTR. 当收到信号后，就算系统调用也会被打断，关键是在某些系统上被打断的系统调用在signal handler返回后不会自动重启。</p></blockquote>
-
-<p>Explicitly Blocking and Unblocking Signals  显式block和unblock信号</p>
-
-<p>Applications can explicitly block and unblock selected signals using the sigproc- mask function, The sigprocmask function changes the set of currently blocked signals.</p>
-
-<p>Synchronizing Flows to Avoid Nasty Concurrency Bugs</p>
-
-<p>并发容易引发bug, 并且很难定位。</p>
-
-<p>The problem of how to program concurrent flows that read and write the same storage locations has challenged generations of computer scientists. In general,<strong>the number of potential interleavings of the flows is exponential in the number of instructions. Some of those interleavings will produce correct answers, and others will not.</strong> The fundamental problem is to somehow synchronize the concurrent flows so as to allow the largest set of feasible interleavings such that each of the feasible interleavings produces a correct answer.</p>
-
-<p>Such errors are enormously difficult to debug because it is often impossible to test every interleaving. You may run the code a billion times without a problem, but then the next test results in an interleaving that triggers the race.</p>
-
-<h4>Nonlocal Jumps</h4>
-
-<p>C provides a form of user-level exceptional control flow, called a nonlocal jump, that transfers control directly from one function to another currently executing function without having to go through the normal call-and-return sequence. Non- local jumps are provided by the setjmp and longjmp functions.</p>
-
-<p>The setjmp function saves the current calling environment in the env buffer, for later use by longjmp, and returns a 0. The calling environment includes the program counter, stack pointer, and general purpose registers.</p>
-
-<p>The longjmp function restores the calling environment from the env buffer and then triggers a return from the most recent setjmp call that initialized env. The setjmp then returns with the nonzero return value retval.</p>
-
-<p>The interactions between setjmp and longjmp can be confusing at first glance. The setjmp function is called once, but returns multiple times: once when the setjmp is first called and the calling environment is stored in the env buffer, and once for each corresponding longjmp call. On the other hand, the longjmp function is called once, but never returns.  调用关系确实有点乱啊。</p>
-
-<p>An important application of nonlocal jumps is to permit an immediate return from a deeply nested function call, usually as a result of detecting some error condition. If an error condition is detected deep in a nested function call, we can use a nonlocal jump to return directly to a common localized error handler instead of laboriously unwinding the call stack.  应用之一：从很深的调用嵌套中直接跳到表层，而不是一层一层的解嵌套跳出(unwind the entire stack)。</p>
-
-<p>Another important application of nonlocal jumps is to branch out of a signal handler to a specific code location, rather than returning to the instruction that was interrupted by the arrival of the signal. 应用之一：从signal handler里跳出来。</p>
-
-<p>The exception mechanisms provided by C++ and Java are higher-level, more-structured versions of the C setjmp and longjmp functions. You can think of a catch clause inside a try statement as being akin to a setjmp function. Similarly, a throw statement is similar to a longjmp function. C++和Java中的exception是基于setjmp和longjmp实现的。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2016/08/26/csapp-exceptional-control-flow//blog/page/2/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
