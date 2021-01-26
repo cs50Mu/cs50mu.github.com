@@ -262,7 +262,7 @@
 </ul>
 
 
-<p><img src="../images/post/b-tree.jpg" alt="" /></p>
+<p><img src="/images/post/b-tree.jpg" alt="" /></p>
 
 <p>The number of references to child pages in one page of the B-tree is called <strong>the branching factor</strong>. For example, in Figure 3-6 the branching factor is six. In practice, the branching factor depends on the amount of space required to store the page references and the range boundaries, but typically it is <strong>several hundred.</strong> 其实就是这个棵树的某个节点有多少个分叉</p>
 
@@ -339,7 +339,7 @@
 
 <p>However, databases also started being increasingly used for data analytics, which has very different access patterns. Usually an analytic query needs to <strong>scan over a huge number of records, only reading a few columns per record</strong>, and calculates aggregate statistics (such as count, sum, or average) rather than returning the raw data to the user.</p>
 
-<p><img src="../images/post/oltp-olap.jpg" alt="" /></p>
+<p><img src="/images/post/oltp-olap.jpg" alt="" /></p>
 
 <p>These OLTP systems are usually expected to be <strong>highly available</strong> and to process transactions with <strong>low latency</strong>, since they are often critical to the operation of the business. Database administrators therefore closely guard their OLTP databases. They are usually reluctant to let business analysts run ad hoc analytic queries on an OLTP database, since those queries are often expensive, scanning large parts of the dataset, which can harm the performance of concurrently executing transactions. 分析型查询不要在业务库上做</p>
 
