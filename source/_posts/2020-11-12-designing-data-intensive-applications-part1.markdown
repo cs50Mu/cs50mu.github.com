@@ -150,7 +150,7 @@ Even though there are many subtleties, the basic idea of LSM-trees—keeping a c
 - B-trees break the database down into **fixed-size blocks or pages**, traditionally 4 KB in size (sometimes bigger), and read or write one page at a time. This design corresponds more closely to the underlying hardware, as disks are also arranged in fixed-size blocks.
 - The basic underlying write operation of a B-tree is to overwrite a page on disk with new data. This is in stark contrast to log-structured indexes such as LSM-trees, which only append to files (and eventually delete obsolete files) but never modify files in place. B-tree 会 in-place update，而 LSM-tree只会 append（这是函数式编程的风格）
 
-![](../images/post/b-tree.jpg) 
+![](/images/post/b-tree.jpg) 
 
 The number of references to child pages in one page of the B-tree is called **the branching factor**. For example, in Figure 3-6 the branching factor is six. In practice, the branching factor depends on the amount of space required to store the page references and the range boundaries, but typically it is **several hundred.** 其实就是这个棵树的某个节点有多少个分叉
 
@@ -221,7 +221,7 @@ OLAP的使用场景如下：
 
 However, databases also started being increasingly used for data analytics, which has very different access patterns. Usually an analytic query needs to **scan over a huge number of records, only reading a few columns per record**, and calculates aggregate statistics (such as count, sum, or average) rather than returning the raw data to the user. 
 
-![](../images/post/oltp-olap.jpg)
+![](/images/post/oltp-olap.jpg)
 
 These OLTP systems are usually expected to be **highly available** and to process transactions with **low latency**, since they are often critical to the operation of the business. Database administrators therefore closely guard their OLTP databases. They are usually reluctant to let business analysts run ad hoc analytic queries on an OLTP database, since those queries are often expensive, scanning large parts of the dataset, which can harm the performance of concurrently executing transactions. 分析型查询不要在业务库上做
 
