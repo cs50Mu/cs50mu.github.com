@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2021-01-26T17:54:45+08:00</updated>
+  <updated>2021-01-26T18:25:30+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,532 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Golang工程最佳实践]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/01/26/golang-best-practice/"/>
+    <updated>2021-01-26T18:20:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/01/26/golang-best-practice</id>
+    <content type="html"><![CDATA[<h3>examples</h3>
+
+<ul>
+<li><a href="https://semaphoreci.com/community/tutorials/building-go-web-applications-and-microservices-using-gin">Building Go Web Applications and Microservices Using Gin</a> 有实现，有测试，有重构</li>
+</ul>
+
+
+<h3>项目分层</h3>
+
+<ul>
+<li>model
+
+<ul>
+<li>所有的数据模型，被其它层所依赖</li>
+</ul>
+</li>
+<li>repo
+
+<ul>
+<li>数据层，屏蔽所有数据存取的细节</li>
+<li>它的底层可以是数据库，也可以是<strong>其它服务</strong></li>
+</ul>
+</li>
+<li>business
+
+<ul>
+<li>业务逻辑层，依赖数据层</li>
+</ul>
+</li>
+<li>controller
+
+<ul>
+<li>负责参数输入的验证、统一返回结果，依赖业务逻辑层</li>
+</ul>
+</li>
+</ul>
+
+
+<p>思考：</p>
+
+<p>理想情况下，一个项目应该有上面几层，但又想到，其实应该按照一个项目的复杂度来决定它的分层，当项目的复杂度不高时，非要分成上述这么多层，反而会比较繁琐（毕竟，逻辑写在一个文件里最清楚了。。）。</p>
+
+<p>还有一个问题值得思考，就是我们是否应该将每层都定义成接口，然后层与层之间只是接口依赖，不依赖于具体的实现？这样做，</p>
+
+<ul>
+<li>好处：
+
+<ul>
+<li>更灵活，每一层的实现都是可随便替换的；</li>
+<li>更容易写单元测试，基于接口可以很容易写一个测试专用的mock实现。</li>
+</ul>
+</li>
+<li>坏处：
+
+<ul>
+<li>如果不需要写单元测试（写针对接口的集成测试），上面的好处也没多大意义了</li>
+<li>如果实现（比如MySQL &mdash;> PG）基本不可能换，上面的好处也没多大意义</li>
+</ul>
+</li>
+</ul>
+
+
+<p>单纯从易于测试这个问题来说，基于接口的集成测试所需的时间肯定比mock依赖的单元测试要长，但感觉目前遇到的项目的复杂度并不高，执行一次集成测试的时间也还可以接受，因此暂且仅仅使用针对接口的集成测试看看效果，后续如果感觉需要加单元测试再慢慢迭代吧，随着认知的成长，越来越认识到，任何事物（项目、个人、公司等）的发展都有一个过程，迭代是个美妙的词，我不应该苛求每次工作刚开始做就要达到一个很高的标准，应该慢慢迭代，第一期达到基本可用，第二期增加xx功能，等等等等。</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://deliveroo.engineering/2019/05/17/testing-go-services-using-interfaces.html">Testing Go services using interfaces</a></li>
+<li><a href="https://itnext.io/beautify-your-golang-project-f795b4b453aa">一个例子</a></li>
+<li><a href="https://hackernoon.com/golang-clean-archithecture-efd6d7c43047">Trying Clean Architecture on Golang</a>  非常好的一个示例，典范，应当时不时回过头来看看</li>
+<li><a href="https://github.com/bxcodec/go-clean-arch">go-clean-arch</a>  上面帖子对应的代码</li>
+<li><a href="https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html">The Clean Architecture</a> Uncle Bob</li>
+</ul>
+
+
+<h4>repo / 数据层如何支持数据库事务？</h4>
+
+<p>想了好久，参考了一些别人的做法，总算有了一个相对完美的方案。关键点如下：</p>
+
+<ul>
+<li>需要抽象一个接口<code>queryUpdater</code>来代表<code>sql.DB</code>和<code>sql.TX</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// queryer make sql query</span>
+</span><span class='line'><span class="kd">type</span> <span class="nx">queryer</span> <span class="kd">interface</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">NamedExec</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Result</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">Get</span><span class="p">(</span><span class="kd">interface</span><span class="p">{},</span> <span class="kt">string</span><span class="p">,</span> <span class="o">...</span><span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span>
+</span><span class='line'>    <span class="nx">Select</span><span class="p">(</span><span class="kd">interface</span><span class="p">{},</span> <span class="kt">string</span><span class="p">,</span> <span class="o">...</span><span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// execer execute a sql</span>
+</span><span class='line'><span class="kd">type</span> <span class="nx">execer</span> <span class="kd">interface</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">Exec</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="o">...</span><span class="kd">interface</span><span class="p">{})</span> <span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Result</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">queryExecer</span> <span class="kd">interface</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">queryer</span>
+</span><span class='line'>    <span class="nx">execer</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>dao对象里既有底层的sql.DB也有这个抽象的接口</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// DAO dao</span>
+</span><span class='line'><span class="kd">type</span> <span class="nx">DAO</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">db</span>     <span class="o">*</span><span class="nx">sqlx</span><span class="p">.</span><span class="nx">DB</span>
+</span><span class='line'>    <span class="nx">dbConn</span> <span class="nx">queryExecer</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// NewDAO new DAO</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">NewDAO</span><span class="p">()</span> <span class="o">*</span><span class="nx">DAO</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">DAO</span><span class="p">{</span>
+</span><span class='line'>        <span class="nx">db</span><span class="p">:</span>     <span class="nx">db</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">dbConn</span><span class="p">:</span> <span class="nx">db</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>提供一个<code>WithTx</code> wrapper函数，只要是包在这个函数里的都是在一个数据库事务里执行</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// WithTx wrap txFunc in a db transaction</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">dao</span> <span class="o">*</span><span class="nx">DAO</span><span class="p">)</span> <span class="nx">WithTx</span><span class="p">(</span><span class="nx">txFunc</span> <span class="kd">func</span><span class="p">(</span><span class="nx">dao</span> <span class="o">*</span><span class="nx">DAO</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">tx</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">Beginx</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">txDAO</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">DAO</span><span class="p">{</span>
+</span><span class='line'>        <span class="nx">dbConn</span><span class="p">:</span> <span class="nx">tx</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// TODO: what if err in defer?</span>
+</span><span class='line'>        <span class="c1">// eg, tx.Rollback returns error</span>
+</span><span class='line'>        <span class="k">if</span> <span class="nx">r</span> <span class="o">:=</span> <span class="nb">recover</span><span class="p">();</span> <span class="nx">r</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">err</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;%v&quot;</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
+</span><span class='line'>            <span class="c1">// err := r.(error)</span>
+</span><span class='line'>            <span class="nx">txErr</span> <span class="o">:=</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">Rollback</span><span class="p">()</span>
+</span><span class='line'>            <span class="k">if</span> <span class="nx">txErr</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;tx rollback failed: %+v\n&quot;</span><span class="p">,</span> <span class="nx">txErr</span><span class="p">)</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;tx rollback&quot;</span><span class="p">)</span>
+</span><span class='line'>            <span class="c1">// re-panic</span>
+</span><span class='line'>            <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">tx</span><span class="p">.</span><span class="nx">Commit</span><span class="p">()</span>
+</span><span class='line'>            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;tx committed&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">txFunc</span><span class="p">(</span><span class="nx">txDAO</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>事务的用法如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">jccoinDAO</span> <span class="o">:=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">NewDAO</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">topup</span> <span class="o">*</span><span class="nx">model</span><span class="p">.</span><span class="nx">TopUp</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">jccoinDAO</span><span class="p">.</span><span class="nx">WithTx</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">dao</span> <span class="o">*</span><span class="nx">dao</span><span class="p">.</span><span class="nx">DAO</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// https://stackoverflow.com/questions/31981592/assign-struct-with-another-struct</span>
+</span><span class='line'>    <span class="nx">topup</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nx">model</span><span class="p">.</span><span class="nx">TopUp</span><span class="p">{</span>
+</span><span class='line'>        <span class="nx">BaseTopUp</span><span class="p">:</span>   <span class="nx">req</span><span class="p">.</span><span class="nx">BaseTopUp</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">PaidTotal</span><span class="p">:</span>   <span class="nx">req</span><span class="p">.</span><span class="nx">TopUpAmount</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">TimeCreated</span><span class="p">:</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">(),</span>
+</span><span class='line'>        <span class="nx">Remark</span><span class="p">:</span>      <span class="nx">req</span><span class="p">.</span><span class="nx">Remark</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// new topup</span>
+</span><span class='line'>    <span class="c1">// idempotence support</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">isDup</span> <span class="o">:=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">NewTopUp</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">topup</span><span class="p">);</span> <span class="nx">isDup</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">topup</span> <span class="p">=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">GetTopUpByOrderNo</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">topup</span><span class="p">.</span><span class="nx">TopUpNo</span><span class="p">,</span> <span class="nx">topup</span><span class="p">.</span><span class="nx">Channel</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// get buyer_account, update balance</span>
+</span><span class='line'>    <span class="nx">buyerAccount</span> <span class="o">:=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">Account</span><span class="p">{</span>
+</span><span class='line'>        <span class="nx">UserID</span><span class="p">:</span>            <span class="nx">topup</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">AccountType</span><span class="p">:</span>       <span class="s">&quot;BUYER&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">DeviceType</span><span class="p">:</span>        <span class="nx">topup</span><span class="p">.</span><span class="nx">DeviceType</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">SystemCode</span><span class="p">:</span>        <span class="nx">topup</span><span class="p">.</span><span class="nx">SysCode</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">IsPlatformAccount</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">AccountNumber</span><span class="p">:</span>     <span class="s">&quot;&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">Status</span><span class="p">:</span>            <span class="s">&quot;OPEN&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">Currency</span><span class="p">:</span>          <span class="s">&quot;JCC&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">TimeCreated</span><span class="p">:</span>       <span class="nx">nowFunc</span><span class="p">(),</span>
+</span><span class='line'>        <span class="nx">TimeUpdated</span><span class="p">:</span>       <span class="nx">nowFunc</span><span class="p">(),</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nx">buyerGiftAccount</span> <span class="o">:=</span> <span class="nx">buyerAccount</span>
+</span><span class='line'>    <span class="nx">buyerGiftAccount</span><span class="p">.</span><span class="nx">AccountType</span> <span class="p">=</span> <span class="s">&quot;BUYERGIFT&quot;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;buyerAccount: %+v\n&quot;</span><span class="p">,</span> <span class="nx">buyerAccount</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">ba</span> <span class="o">:=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">GetOrCreateBuyerAccount</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">buyerAccount</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">!</span><span class="nx">topup</span><span class="p">.</span><span class="nx">TopUpAmount</span><span class="p">.</span><span class="nx">IsZero</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">buyerBalance</span> <span class="o">:=</span> <span class="nx">ba</span><span class="p">.</span><span class="nx">Balance</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nx">topup</span><span class="p">.</span><span class="nx">TopUpAmount</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">dao</span><span class="p">.</span><span class="nx">UpdateAccountBalance</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">ba</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="nx">buyerBalance</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// get buyer_gift_account, update balance</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;giftAccount: %+v\n&quot;</span><span class="p">,</span> <span class="nx">buyerGiftAccount</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">ga</span> <span class="o">:=</span> <span class="nx">dao</span><span class="p">.</span><span class="nx">GetOrCreateBuyerAccount</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">buyerGiftAccount</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">!</span><span class="nx">topup</span><span class="p">.</span><span class="nx">GiftAmount</span><span class="p">.</span><span class="nx">IsZero</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">giftBalance</span> <span class="o">:=</span> <span class="nx">ga</span><span class="p">.</span><span class="nx">Balance</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nx">topup</span><span class="p">.</span><span class="nx">GiftAmount</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">dao</span><span class="p">.</span><span class="nx">UpdateAccountBalance</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">ga</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="nx">giftBalance</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>非事务的查询就是直接在dao上查就行：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">buyerBalance</span> <span class="o">:=</span> <span class="nx">jccoinDAO</span><span class="p">.</span><span class="nx">GetBuyerTotalBalance</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">DeviceType</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">req</span><span class="p">.</span><span class="nx">CoinsAmount</span><span class="p">.</span><span class="nx">GreaterThan</span><span class="p">(</span><span class="nx">buyerBalance</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">err</span> <span class="p">=</span> <span class="nx">ErrInsufficientBalance</span>
+</span><span class='line'>    <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>完美实现了代码的复用，如果不这样的话，使用事务和不使用事务时同样的查询函数要写两遍。。或者需要在参数里把<code>sql.DB</code>和<code>sql.Tx</code>都带上</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://medium.com/@jfeng45/go-microservice-with-clean-architecture-transaction-support-61eb0f886a36">Go Microservice with Clean Architecture: Transaction Support</a>  这也是个完整的方案，但感觉太复杂了。。</li>
+<li><a href="https://stackoverflow.com/questions/26593867/db-transaction-in-golang">db transaction in golang</a></li>
+<li><a href="https://stackoverflow.com/questions/16184238/database-sql-tx-detecting-commit-or-rollback/23502629#23502629">database/sql Tx &ndash; detecting Commit or Rollback</a></li>
+<li><a href="https://github.com/agungdwiprasetyo/agungdpcms/blob/master/src/resume/usecase/usecase_impl.go#L77">agungdwiprasetyo/agungdpcms</a> 起初是这位大哥的代码给了我希望</li>
+<li><a href="https://github.com/bxcodec/go-clean-arch/issues/27">Transaction #27</a> 而起初是在go-clean-arch的这个issue里看到他的回复的</li>
+</ul>
+
+
+<h4>cache / 缓存层？</h4>
+
+<p>利用 <a href="https://github.com/tmrts/go-patterns/blob/master/structural/proxy.md">Proxy Pattern</a>，cache 层也实现repo层的接口，把repo包在里面，具体参考这个<a href="https://github.com/bxcodec/go-clean-arch/issues/11#issuecomment-594679205">回答</a></p>
+
+<h3>代码Lint</h3>
+
+<p>当前使用了<a href="https://github.com/mgechev/revive">revive</a>，号称 drop-in replacement for golint，确实名副其实，比golint强大多了~ 支持lint指定文件（夹）、排除文件夹等，支持lint参数定制化。当前支持的lint项在<a href="https://revive.run/r#redefines-builtin-id">这里</a>能看到，而且它还暴露了接口让你能自定义lint项</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://remy.io/blog/simple-tools-to-improve-your-go-code/">Simple tools to improve your Go code</a></li>
+<li><a href="https://github.com/golangci/awesome-go-linters">awesome-go-linters</a></li>
+<li><a href="https://github.com/mgechev/revive">revive</a>  当前使用的，非常不错</li>
+</ul>
+
+
+<h3>go design patterns</h3>
+
+<p>Curated list of Go design patterns, recipes and idioms</p>
+
+<p><a href="https://github.com/tmrts/go-patterns">go-patterns</a></p>
+
+<h3>cmd / 临时脚本？</h3>
+
+<p>常常有这样的需求，有一些脚本性质的任务，偶尔需要临时执行一下，这种需求在Golang项目中该怎么做呢？</p>
+
+<p>参考了几个大型项目，比如 k8s，可以这么来做，此类任务统统放在<code>cmd</code>目录下，这个目录下可以继续建子目录，脚本就写在子目录中，但注意脚本里声明的<code>package</code>需要是<code>main</code>，如果需要执行脚本的话，可以直接执行<code>go run &lt;脚本路径&gt;</code>即可（或者把它build成一个可执行文件）</p>
+
+<p>比如在项目中我有如下脚本：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">cmd</span>
+</span><span class='line'><span class="err">└──</span> <span class="nx">kafka</span>
+</span><span class='line'>    <span class="err">└──</span> <span class="nx">kafka_consume</span><span class="p">.</span><span class="k">go</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那么，可以直接这样来执行它：</p>
+
+<p><code>go run cmd/kafka/kafka_consume.go</code></p>
+
+<blockquote><p>学到的</p></blockquote>
+
+<p><code>package</code>的名字可以跟包含它的文件夹的名字不一样</p>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://github.com/golang-standards/project-layout/tree/master/cmd">golang-standards / project-layout</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/tree/master/cmd">kubernetes/cmd</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[error code vs exception]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/01/26/error-code-vs-exception/"/>
+    <updated>2021-01-26T18:14:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/01/26/error-code-vs-exception</id>
+    <content type="html"><![CDATA[<p>error-code OR exception, it&rsquo;s a question.</p>
+
+<p>然而答案是，you should use both，难点在于确定在什么场景下用什么</p>
+
+<h3>适合用 exception 的情况</h3>
+
+<ul>
+<li>发生的错误无法处理时</li>
+</ul>
+
+
+<p>In some situations <strong>you can&rsquo;t do anything with the error code</strong>, and you just need to handle it in an upper level in the call stack, usually just log the error, display something to the user or close the program. In these cases, error codes would require you to bubble up the error codes manually level by level which is obviously much easier to do with exceptions. The point is that this is for unexpected and unhandleable situations. 与其将错误一层一层的 bubble up，不如将它一次性抛到最顶层</p>
+
+<ul>
+<li>In some situations you have a sequence of commands, and if any of them fail you should cleanup/dispose resources. 当有一堆调用要执行，而且每一个调用都有可能报错时，很明显用 exception 更方便，而不是每次调用后都要 handle 一次可能的error。</li>
+<li>In constructors you can only throw exceptions. 在初始化时若出错一律直接抛 exception，遵循速错原则</li>
+</ul>
+
+
+<h3>适合用 error-code 的情况</h3>
+
+<p>一般来说，除了上面适合使用 exception 的情况，其它任何时候都应该使用 error-code。</p>
+
+<p>in all other situations where you&rsquo;re returning some information on which the caller CAN/SHOULD take some action, using return codes is probably a better alternative. This includes all expected &ldquo;errors&rdquo;, because probably they should be handled by the immediate caller, and will hardly need to be bubbled up too many levels up in the stack.</p>
+
+<h3>sum up</h3>
+
+<p>To sum it up:</p>
+
+<ul>
+<li><p>I like to use exceptions when I have an unexpected situation, in which there&rsquo;s not much to do, and usually we want to abort a large block of code or even the whole operation or program. This is like the old &ldquo;on error goto&rdquo;.</p></li>
+<li><p>I like to use return codes when I have expected situations in which the caller code can/should take some action. This includes most business methods, APIs, validations, and so on.</p></li>
+</ul>
+
+
+<h3>Unchecked Exceptions 的问题</h3>
+
+<p>首先，啥是 unchecked exception？</p>
+
+<p>A quick recap. In an unchecked exceptions model, <strong>you throw and catch exceptions, without it being part of the type system or a function’s signature</strong>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// Foo throws an unhandled exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="o">(...);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Bar calls Foo, and handles that exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Bar</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Foo</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// Handle the error.</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Baz also calls Foo, but does not handle that exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Baz</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">Foo</span><span class="o">();</span> <span class="c1">// Let the error escape to our callers.</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>问题在哪？</p>
+
+<p>In this model, <strong>any function call – and sometimes any statement – can throw an exception, transferring control non-locally somewhere else. Where? Who knows.</strong> There are no annotations or type system artifacts to guide your analysis. As a result, it’s difficult for anyone to reason about a program’s state at the time of the throw, the state changes that occur while that exception is propagated up the call stack – and possibly across threads in a concurrent program – and the resulting state by the time it gets caught or goes unhandled. 任何地方都有可能抛出exception，使得对于代码的分析变得非常困难。（我理解，这是因为没有限制，所以大家可以随心所欲的写，因而也非常难于理解。若大家在写的时候都遵循一定的规则，理论上也是可以写出易懂的代码，但每个人的水平不一样，对待代码的态度也不一样，在工程上没有限制的情况下，必然会造成“百花齐放”的现象）</p>
+
+<p>非常经典的分析：为什么 exception 在业界如此流行？</p>
+
+<blockquote><p>It’s of course possible to try. Doing so requires reading API documentation, doing manual audits of the code, leaning heavily on code reviews, and a healthy dose of luck. The language isn’t helping you out one bit here. Because failures are rare, this tends not to be as utterly disastrous as it sounds. My conclusion is that’s why many people in the industry think unchecked exceptions are “good enough.” They stay out of your way for the common success paths and, because most people don’t write robust error handling code in non-systems programs, throwing an exception usually gets you out of a pickle fast. Catching and then proceeding often works too. No harm, no foul. Statistically speaking, programs “work.”</p></blockquote>
+
+<p>exception 的通病（不管是checked还是unchecked）</p>
+
+<blockquote><p>Another thing most exception systems get wrong is encouraging too coarse a granularity of handling errors. Proponents of return codes love that error handling is localized to a specific function call. (I do too!) In exception handling systems, it’s all too easy to slap a coarse-grained try/catch block around some huge hunk of code, without carefully reacting to individual failures. That produces brittle code that’s almost certainly wrong; if not today, then after the inevitable refactoring that will occur down the road. A lot of this has to do with having the right syntaxes. 一般人通常做法是一个<code>try ... catch</code> wrap 住一大段代码，简单是简单，但一般会埋坑</p></blockquote>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/253314/conventions-for-exceptions-or-error-codes">Conventions for exceptions or error codes</a></li>
+<li><a href="http://joeduffyblog.com/2016/02/07/the-error-model/">The Error Model</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[sarama源码分析Part I]]></title>
@@ -8951,251 +9477,6 @@ python  28719  www 1694u  IPv4 261726531      0t0  TCP 10.171.20.131:9455-&gt;10
 
 <ul>
 <li><a href="https://docs.djangoproject.com/en/dev/ref/contrib/admin/#modeladmin-methods">https://docs.djangoproject.com/en/dev/ref/contrib/admin/#modeladmin-methods</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[csapp concurrent programming]]></title>
-    <link href="http://cs50Mu.github.io/blog/2016/08/29/csapp-concurrent-programming/"/>
-    <updated>2016-08-29T14:12:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2016/08/29/csapp-concurrent-programming</id>
-    <content type="html"><![CDATA[<p>Applications that use application-level concurrency are known as concurrent programs. Modern operating systems provide three basic approaches for building concurrent programs:</p>
-
-<ul>
-<li><p>Processes. With this approach, each logical control flow is a process that is scheduled and maintained by the kernel. Since processes have separate virtual address spaces, flows that want to communicate with each other must use some kind of explicit interprocess communication (IPC) mechanism.</p></li>
-<li><p>I/O multiplexing.This is a form of concurrent programming where <strong>applications explicitly schedule their own logical flows in the context of a single process</strong>. Logical flows are modeled as state machines that the main program explicitly transitions from state to state as a result of data arriving on file descriptors. Since the program is a single process, all flows share the same address space.</p></li>
-<li><p>Threads. Threads are logical flows that run in the context of a single process and are scheduled by the kernel. You can think of threads as a hybrid of the other two approaches, scheduled by the kernel like process flows, and sharing the same virtual address space like I/O multiplexing flows.</p></li>
-</ul>
-
-
-<h3>IO之殇</h3>
-
-<p>Access to the filesystem or the network are really long operations from the perspective of the CPU. See the numbers from Jeffrey Dean’s talk Stanford CS295 class lecture, Spring, 2007.</p>
-
-<pre><code>Operation     Latency
-L1 cache reference     0.5 ns
-Branch mispredict     5 ns
-L2 cache reference     7 ns
-Mutex lock/unlock     25 ns
-Main memory reference     100 ns
-Compress 1K bytes with Zippy     3,000 ns
-Send 2K bytes over 1 Gbps network     20,000 ns
-Read 1 MB sequentially from memory     250,000 ns
-Round trip within same datacenter     500,000 ns
-Disk seek     10,000,000 ns
-Read 1 MB sequentially from disk     20,000,000 ns
-Send packet CA-&gt;Netherlands-&gt;CA     150,000,000 ns
-</code></pre>
-
-<p>Blocking I/Os (or synchronous I/Os) will tie up the system resources as the waiting processes/threads cannot be used for something else. And from the CPU perspective, any I/O which is not done from/to memory takes ages. Fortunately the system itself is not stuck while I/Os are happening. The OS is going to preempt (i.e. interrupt) the process waiting for an I/O, allowing the CPU to be used by another process. But <strong>this costs another context switch and meanwhile I/O intensive applications will spend most of their time… waiting!</strong></p>
-
-<p>对于multi-process/threading来说</p>
-
-<p>So, the more processes there are, the more they will compete for the CPU. <strong>The more I/Os the application is doing, the more context switches there are, amplified by the number of process/threads the application is made of.</strong> At some point, no matter how good the operating system is, it is going to become overwhelmed. It will spend most of its time switching contexts and have many processes/threads waiting either for I/O or to acquire the CPU. This basically means that <strong>in such a model, the scalability is not at all linear to the number of processes/threads up to the CPU limit. The capacity gain of adding a process/thread significantly decreases with the number of active processes/threads.</strong></p>
-
-<h3>Concurrent Programming with Processes</h3>
-
-<p>Pros and Cons of Processes</p>
-
-<p>Processes have a clean model for sharing state information between parents and children: file tables are shared and user address spaces are not. Having separate address spaces for processes is both an advantage and a disadvantage. It is im- possible for one process to accidentally overwrite the virtual memory of another process, which eliminates a lot of confusing failures—an obvious advantage.</p>
-
-<p>On the other hand, separate address spaces make it more difficult for pro- cesses to share state information. To share information, they must use explicit IPC (interprocess communications) mechanisms. (See Aside.) Another disadvan- tage of process-based designs is that they tend to be slower because the overhead for process control and IPC is high.</p>
-
-<h3>Concurrent Programming with I/O Multiplexing</h3>
-
-<p>The select function manipulates sets of type <code>fd_set</code>, which are known as descriptor sets. Logically, we think of a descriptor set as a bit vector of size n: bn−1,&hellip;,b1,b0</p>
-
-<p>Each bit bk corresponds to descriptor k. Descriptor k is a member of the descriptor set if and only if bk = 1.</p>
-
-<p>the select function takes two inputs: a descriptor set (fdset) called the read set, and the cardinality (n) of the read set (actually the maximum cardinality of any descriptor set). <strong>The select function blocks until at least one descriptor in the read set is ready for reading. A descriptor k is ready for reading if and only if a request to read 1 byte from that descriptor would not block.</strong>select函数也是会阻塞的。</p>
-
-<p>Question: IO多路复用是如何实现并发的效果的？</p>
-
-<p>本质上是Event Driven Model来实现并发的，I/O Multiplexing只是必不可少的一环，有了它，使用Event Driven Model才成为可能。</p>
-
-<p>我是这样理解的：在一个事件循环（event loop）中，不断的调用select来返回当前可读、可写的descriptor，然后做相应的处理，一直循环往复。在这个过程中的一个关键是，只有select操作是阻塞的，一旦它有返回，后面的操作就一定不是阻塞的，所以就不会有无谓的时间浪费在等待读和等待写上面。如果CPU的执行速度够快，那么从一个使用者的角度来看的话，就会看到并发的效果（而实质上这些“并发”的连接是按顺序被处理的）。这个道理现在看来，跟单核CPU上的多进程、多线程是一个道理（CPU-time multiplexing）。感觉实现并发效果的关键是：select的这个过程要足够快，然后对select返回的descriptor的处理也要快，否则就不会有并发的效果了。</p>
-
-<h4>Pros and Cons of I/O Multiplexing</h4>
-
-<ul>
-<li><p>One advantage is that event-driven designs give programmers more control over the behavior of their programs than process-based designs. For example, we can imagine writing an event-driven concurrent server that gives preferred service to some clients, which would be difficult for a concurrent server based on processes. 程序员对自己的程序有更多的控制，比如优先提供某个服务，而不是像基于进程的并发那样，完全交给操作系统来决定。</p></li>
-<li><p>Another advantage is that an event-driven server based on I/O multiplexing runs in the context of a single process, and thus every logical flow has access to the entire address space of the process.This makes it easy to share data between flows. A related advantage of running as a single process is that you can debug your concurrent server as you would any sequential program, using a familiar debugging tool such as gdb. Finally, event-driven designs are often significantly more efficient than process-based designs because they do not require a process context switch to schedule a new flow. 由于是单进程，所以共享更方便；debug难度也比多进程要低；资源消耗也比多进程低（因为没有context switch）</p></li>
-<li><p>A significant disadvantage of event-driven designs is coding complexity. 缺点就是代码的复杂度上来了。</p></li>
-<li><p>Another significant disadvantage of event-based designs is that they cannot fully utilize multi-core processors. 还有一个缺点是不能利用多核</p></li>
-</ul>
-
-
-<h4>Event Driven Programming又是什么呢？</h4>
-
-<p>常常看到event driven和I/O Multiplexing这两个概念在一起。我是这样理解的，通过I/O Multiplexing可以提供event driven programming中的事件。</p>
-
-<p>In an event model, everything runs in one process, one thread. Instead of spawning a new process/thread for each connection request, a event is emitted and the appropriate callback for that event is invoked. Once an event is treated, the process is ready to treat another event.</p>
-
-<p>Such a model is particularly interesting if most of the activities can be turned into events. This becomes a really good concurrency and high-performance model when any I/Os (not just network I/O as is the most common in existing frameworks) are events. It is based on event patterns such as the Reactor or the Proactor which are patterns for Concurrent, Parallel, and Distributed Systems; documents from Douglas C. Schmidt. This event-driven concurrency model is superior to the traditional multithreaded/multi-process one: the memory footprint is drastically reduced, the CPU is better used and more clients can be served concurrently out of a single machine.</p>
-
-<h4>The Event Loop</h4>
-
-<p>To some extent, one can consider the event-driven approach being very similar to cooperative multitasking but at the application level. Event-driven applications are themselves multiplexing CPU time between clients.</p>
-
-<p>There is obviously a risk with this; the same that with cooperative multitasking in fact. A risk which explains why at the OS level, preemptive multitasking is used. <strong>If the process at some point can block for one client, then it will block all the other clients.</strong> For example, in cooperative multitasking a non-responding process would make the system hang (Remember Windows before Windows 95 or Mac OS before Mac OS X ? )</p>
-
-<p>In event-driven model, all the events are treated by a gigantic loop know as the event-loop. The event-loop is going to get from a queue the next event to process and will dispatch it the corresponding handler. Anyone blocking the event-loop will prevent the other events from being processed. So in Node (and in all event-driven framework) the golden rule is <strong>“DO NOT BLOCK THE EVENT LOOP”.</strong> Everything has to be non-blocking. And Node is particularly good at this because all the API it exposes is non-blocking (with the exception of some file system operations which come in two flavors: asynchronous and synchronous).</p>
-
-<h4>参考</h4>
-
-<ul>
-<li><a href="http://www.baloo.io/blog/2013/11/30/node-event-driven-programming/">Node-Event-driven programming</a></li>
-</ul>
-
-
-<h3>Concurrent Programming with Threads</h3>
-
-<p>A thread is a logical flow that runs in the context of a process. modern systems also allow us to write programs that have multiple threads running concurrently in a single process. The threads are scheduled automatically by the kernel. <strong>Each thread has its own thread context, including a unique integer thread ID (TID), stack, stack pointer, program counter, general-purpose registers, and condition codes.</strong> All threads running in a process share the entire virtual address space of that process.</p>
-
-<h4>Thread Execution Model</h4>
-
-<p><strong>Each process begins life as a single thread called the main thread.</strong> At some point, the main thread creates a peer thread, and from this point in time the two threads run concurrently. Eventually, control passes to the peer thread via a context switch, because the main thread executes a slow system call such as read or sleep, or because it is interrupted by the system’s interval timer. The peer thread executes for a while before control passes back to the main thread, and so on.</p>
-
-<p>Thread execution differs from processes in some important ways. Because a thread context is much smaller than a process context, a thread context switch is faster than a process context switch(由于thread context要比process context要小，所以上下文切换要比进程快). Another difference is that threads, unlike processes, are not organized in a rigid parent-child hierarchy. The threads associated with a process form a pool of peers, independent of which threads were created by which other threads. The main thread is distinguished from other threads only in the sense that it is always the first thread to run in the process. The main impact of this notion of a pool of peers is that a thread can kill any of its peers, or wait for any of its peers to terminate. Further, each peer can read and write the same shared data.(进程内的线程之间没有父子的继承关系，都是平等的，一个线程可以kill或者wait其它任何线程，主线程跟其它线程的唯一区别是它总是一个第一个被创建的)</p>
-
-<h4>Terminating Threads</h4>
-
-<p>A thread terminates in one of the following ways:</p>
-
-<ul>
-<li><p>The thread terminates implicitly when its top-level thread routine returns. 上层的thread返回退出了（看这的意思感觉又是有层级关系了，主线程退出了，由它发起的其它线程也会terminates implicitly</p></li>
-<li><p>The thread terminates explicitly by calling the &ldquo;pthread exit&rdquo; function. If the main thread calls &ldquo;pthread exit&rdquo;, it waits for all other peer threads to terminate, and then terminates the main thread and the entire process with a return value of <code>thread_return</code>.</p></li>
-<li><p>Some peer thread calls the Unix exit function, which terminates the process and all threads associated with the process. 通过结束整个进程</p></li>
-<li><p>Another peer thread terminates the current thread by calling the &ldquo;pthread cancel&rdquo; function with the ID of the current thread. 被其它线程kill</p></li>
-</ul>
-
-
-<h4>Detaching Threads</h4>
-
-<p>At any point in time, a thread is joinable or detached. A joinable thread can be reaped and killed by other threads. Its memory resources (such as the stack) are not freed until it is reaped by another thread. In contrast, a detached thread cannot be reaped or killed by other threads. Its memory resources are freed automatically by the system when it terminates. detached状态的thread在退出后会被操作系统自动回收。</p>
-
-<p>By default, threads are created joinable. In order to avoid memory leaks, each joinable thread should either be explicitly reaped by another thread, or detached by a call to the &ldquo;pthread detach&rdquo; function. 线程默认都是joinable的</p>
-
-<h4>Shared Variables in Threaded Programs</h4>
-
-<p>From a programmer’s perspective, one of the attractive aspects of threads is the ease with which multiple threads can share the same program variables. However, this sharing can be tricky. In order to write correctly threaded programs, <strong>we must have a clear understanding of what we mean by sharing and how it works.</strong></p>
-
-<p>Threads Memory Model</p>
-
-<p>A pool of concurrent threads runs in the context of a process. Each thread has its own separate thread context, which includes a thread ID, stack, stack pointer, program counter, condition codes, and general-purpose register values. Each thread shares the rest of the process context with the other threads. <strong>This includes the entire user virtual address space, which consists of read-only text (code), read/write data, the heap, and any shared library code and data areas. The threads also share the same set of open files.</strong></p>
-
-<p>In an operational sense, <strong>it is impossible for one thread to read or write the register values of another thread.</strong> On the other hand, <strong>any thread can access any location in the shared virtual memory.</strong> If some thread modifies a memory location, then every other thread will eventually see the change if it reads that location. Thus, registers are never shared, whereas virtual memory is always shared.</p>
-
-<h4>Synchronizing Threads with Semaphores</h4>
-
-<p>Shared variables can be convenient, but they introduce the possibility of nasty <strong>synchronization errors</strong></p>
-
-<p>Semaphores</p>
-
-<p>Semaphores provide a convenient way to ensure mutually exclusive access to shared variables. The basic idea is to associate a semaphore s, initially 1, with each shared variable (or related set of shared variables) and then surround the corresponding critical section with P (s) and V (s) operations.</p>
-
-<ul>
-<li><p>P (s): If s is nonzero, then P decrements s and returns immediately. If s is zero, then suspend the thread until s becomes nonzero and the process is restarted by a V operation. After restarting, the P operation decrements s and returns control to the caller.</p></li>
-<li><p>V (s): The V operation increments s by 1. If there are any threads blocked at a P operation waiting for s to become nonzero, then the V operation restarts exactly one of these threads, which then completes its P operation by decrementing s.</p></li>
-</ul>
-
-
-<p>The test and decrement operations in P occur indivisibly, in the sense that once the semaphore s becomes nonzero, the decrement of s occurs without in- terruption. The increment operation in V also occurs indivisibly, in that it loads, increments, and stores the semaphore without interruption.  注意，关键是P或者V操作都是原子操作，不可分割，这是能够实现锁的关键。</p>
-
-<p>The definitions of P and V ensure that a running program can never enter a state where a properly initialized semaphore has a negative value. This property, known as the semaphore invariant, provides a powerful tool for controlling the trajectories of concurrent programs</p>
-
-<p>Synchronizing Threads with Semaphores</p>
-
-<p>A semaphore that is used in this way to protect shared variables is called a binary semaphore because its value is always 0 or 1. <strong>Binary semaphores whose purpose is to provide mutual exclusion are often called mutexes.</strong> Performing a P operation on a mutex is called locking the mutex. Similarly, <strong>performing the V operation is called unlocking the mutex. A thread that has locked but not yet unlocked a mutex is said to be holding the mutex. </strong></p>
-
-<p>Using Semaphores to Schedule Shared Resources</p>
-
-<p>Another important use of semaphores, besides providing mutual exclusion, is to <strong>schedule accesses to shared resources.</strong> In this scenario, a thread uses a semaphore operation to notify another thread that some condition in the program state has become true. Two classical and useful examples are the producer-consumer and readers-writers problems.</p>
-
-<p>Producer-Consumer Problem</p>
-
-<p>A producer and consumer thread share a bounded buffer with n slots. The producer thread repeatedly produces new items and inserts them in the buffer. The consumer thread repeat- edly removes items from the buffer and then consumes (uses) them. Variants with multiple producers and consumers are also possible.</p>
-
-<p>Since inserting and removing items involves updating shared variables, we must guarantee mutually exclusive access to the buffer. But guaranteeing mutual exclusion is not sufficient. We also need to schedule accesses to the buffer. If the buffer is full (there are no empty slots), then the producer must wait until a slot becomes available. Similarly, if the buffer is empty (there are no available items), then the consumer must wait until an item becomes available. 不仅要保证对共享变量的独享读写，而且还有保证先后顺序，必须要先生产再消费。</p>
-
-<h4>Other Concurrency Issues</h4>
-
-<p>You probably noticed that life got much more complicated once we were asked to synchronize accesses to shared data. Synchronization is a fundamentally difficult problem that raises issues that simply do not arise in ordinary sequential programs.</p>
-
-<p>Thread Safety</p>
-
-<p>A function is said to be thread-safe if and only if it will always produce correct results when called repeatedly from multiple concurrent threads. If a function is not thread-safe, then we say it is thread-unsafe.</p>
-
-<p>四类线程非安全的函数：</p>
-
-<ul>
-<li><p>Functions that do not protect shared variables. This class of thread-unsafe function is relatively easy to make thread-safe: protect the shared variables with synchronization operations such as P and V . An advantage is that it does not require any changes in the calling program. A disadvantage is that the synchronization operations will slow down the function. 解决方案，加锁。</p></li>
-<li><p>Functions that keep state across multiple invocations. A pseudorandom number generator is a simple example of this class of thread-unsafe function. The rand function is thread-unsafe because the result of the current invocation depends on an intermediate result from the previous iteration. When we call rand repeatedly from a single thread after seeding it with a call to srand, we can expect a repeatable sequence of numbers. However, this assumption no longer holds if multiple threads are calling rand. The only way to make a function such as rand thread-safe is to rewrite it so that it does not use any static data, relying instead on the caller to pass the state information in arguments. The disadvantage is that the programmer is now forced to change the code in the calling routine as well. 解决方案是不用static，而是通过caller传参数。</p></li>
-<li><p>Functions that return a pointer to a static variable. Some functions, such as ctime and gethostbyname, compute a result in a static variable and then return a pointer to that variable. If we call such functions from concurrent threads, then disaster is likely, as results being used by one thread are silently overwritten by another thread.</p></li>
-<li><p>Functions that call thread-unsafe functions. If a function f calls a thread-unsafe function g, is f thread-unsafe? It depends. If g is a class 2 function that relies on state across multiple invocations, then f is also thread- unsafe and there is no recourse short of rewriting g. However, if g is a class 1 or class 3 function, then f can still be thread-safe if you protect the call site and any resulting shared data with a mutex. 一个调用了线程非安全函数的函数是否是线程安全的呢？ 这得看情况。</p></li>
-</ul>
-
-
-<p>Reentrancy 可重入性</p>
-
-<p>There is an important class of thread-safe functions, known as reentrant functions, that are characterized by the property that they do not reference any shared data when they are called by multiple threads. 可重入函数是线程安全函数的子集，也就是说可重入函数一定是线程安全的，反之不成立。</p>
-
-<p>Reentrant functions are typically more efficient than nonreentrant thread- safe functions because they require no synchronization operations.</p>
-
-<p>Races  竞争</p>
-
-<p>A race occurs when the correctness of a program depends on one thread reaching point x in its control flow before another thread reaches point y. Races usually occur because programmers assume that threads will take some particular trajec- tory through the execution state space, forgetting the golden rule that threaded programs must work correctly for any feasible trajectory.</p>
-
-<p>The scary thing is that whether we get the correct answer depends on how the kernel sched- ules the execution of the threads. On our system it fails, but on other systems it might work correctly, leaving the programmer blissfully unaware of a serious bug. 此类bug不易复现，因而很难修复</p>
-
-<p>Deadlocks 死锁</p>
-
-<p>Semaphores introduce the potential for a nasty kind of run-time error, called deadlock, where a collection of threads are blocked, waiting for a condition that will never be true.</p>
-
-<p>Deadlock is an especially difficult issue because it is not always predictable. Some lucky execution trajectories will skirt the deadlock region, while others will be trapped by it. The implications for a programmer are scary. You might run the same program 1000 times without any problem, but then the next time it deadlocks.Or the program might work fine on one machine but deadlock on another. Worst of all, the error is often not repeatable because different executions have different trajectories.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[csapp network programming]]></title>
-    <link href="http://cs50Mu.github.io/blog/2016/08/29/csapp-network-programming/"/>
-    <updated>2016-08-29T08:57:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2016/08/29/csapp-network-programming</id>
-    <content type="html"><![CDATA[<h3>The Client-Server Programming Model</h3>
-
-<p>Every network application is based on the client-server model. With this model, an application consists of a server process and one or more client processes. A server manages some resource, and it provides some service for its clients by manipulating that resource.</p>
-
-<h3>Networks</h3>
-
-<p>Clients and servers often run on separate hosts and communicate using the hard- ware and software resources of a computer network.</p>
-
-<p>To a host, <strong>a network is just another I/O device that serves as a source and sink for data.</strong> An adapter plugged into an expansion slot on the I/O bus provides the physical interface to the network. Data received from the network is copied from the adapter across the I/O and memory buses into memory, typically by a DMA transfer. Similarly, data can also be copied from memory to the network.</p>
-
-<h3>The Socket Interface</h3>
-
-<p>Internet clients and servers communicate by sending and receiving streams of bytes over connections. A connection is point-to-point in the sense that it connects a pair of processes. It is full-duplex in the sense that data can flow in both directions <strong>at the same time.</strong> And it is reliable in the sense that—barring some catastrophic failure such as a cable cut by the proverbial careless backhoe operator—the stream of bytes sent by the source process is eventually received by the destination process in the same order it was sent.</p>
-
-<p>A socket is an end point of a connection. Each socket has a corresponding socket address that consists of an Internet address and a 16-bit integer port, and is denoted by address:port. The port in the client’s socket address is assigned automatically by the kernel when the client makes a connection request, and is known as an ephemeral port. However, the port in the server’s socket address is typically some well-known port that is associated with the service. For example, Web servers typically use port 80, and email servers use port 25. 客户端的端口是由内核自动指定的，服务器的端口是事先手动定义好的。</p>
-
-<p>A connection is uniquely identified by the socket addresses of its two end-points. This pair of socket addresses is known as a socket pair. 一个connection由两端的socket唯一确定。</p>
-
-<p>The sockets interface is a set of functions that are used in conjunction with the Unix I/O functions to build network applications.</p>
-
-<h3>Web Servers</h3>
-
-<p>Web clients and servers interact using a text-based application-level protocol known as HTTP (Hypertext Transfer Protocol). HTTP is a simple protocol. A Web client (known as a browser) opens an Internet connection to a server and requests some content. The server responds with the requested content and then closes the connection. The browser reads the content and displays it on the screen.</p>
-
-<p>What distinguishes Web services from conventional file retrieval services such as FTP? The main difference is that Web content can be written in a language known as HTML (Hypertext Markup Language). An HTML program (page) contains instructions (tags) that tell the browser how to display various text and graphical objects in the page. HTTP服务跟其它web服务的区别</p>
-
-<h4>Web Content</h4>
-
-<p>To Web clients and servers, content is a sequence of bytes with an associated MIME (Multipurpose Internet Mail Extensions) type. Web servers provide content to clients in two different ways:</p>
-
-<ul>
-<li><p>Fetch a disk file and return its contents to the client. The disk file is known as static content and the process of returning the file to the client is known as serving static content.</p></li>
-<li><p>Run an executable file and return its output to the client. The output produced by the executable at run time is known as dynamic content, and the process of running the program and returning its output to the client is known as serving dynamic content.</p></li>
 </ul>
 
 ]]></content>

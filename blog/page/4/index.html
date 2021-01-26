@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Jan 12th, 2015 Tags: The Vim Way .命令可以重复做上一次的改变(repeat last change)。这里关键是要理解这个改变的意思，就我现在的理解，这个改变是不包括光标位置的移动的，只是指对文本内容的改变，比如删除 增加等等。 &hellip;">
+	<meta name="description" content="Published on: Jan 20th, 2015 Tags: 今天很高兴，因为解决了几个困扰很久的问题。 OpenVPN 为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,176 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/01/20/trivial-problems/">
+		
+			Trivial Problems</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-20T18:40:00+08:00" pubdate data-updated="true">Jan 20<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>今天很高兴，因为解决了几个困扰很久的问题。</p>
+
+<h2>OpenVPN</h2>
+
+<p>为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大。</p>
+
+<p>不过，今天仔细一看，原来并不麻烦，只要把管理员提供的证书文件等放到相应文件夹上就搞定了！</p>
+
+<blockquote><p>将这几个文件放到/etc/openvpn目录下   xxx.ovpn ca.crt  xxx.crt  xxx.key  其中xxx.pvpn是配置文件
+然后就可以启动了！ sudo openvpn /etc/openvpn/xxx.ovpn   会提示输入密码，输入管理员提供的密码即可</p></blockquote>
+
+<h2>urxvt SSH远程登陆的问题</h2>
+
+<p>之前在Arch上用urxvt一直比较happy，不过公司里开发都是SSH远程登陆到linux主机上进行的，那么问题来了，明明在本地显示很正常的vim，SSH到了公司上的Linux主机上，显示就成了一堆渣。。明明vim的配置文件都是一样的啊。。  后来慢慢发现不是vim的问题，是终端的问题！！因为我换用lilyterm后就显示正常了！！然后，终于在今天让我google到解决方案了～</p>
+
+<blockquote><ol>
+<li><p>Run the following command on the external host to make a terminfo directory
+under the logged in user&rsquo;s home folder.</p>
+
+<pre><code>mkdir -p ~/.terminfo/r/
+</code></pre></li>
+<li><p>Copy the appropriate terminal profile from your local machine to the newly
+created folder on the remote host.</p>
+
+<pre><code>scp /usr/share/terminfo/r/rxvt-unicode-256color user@helloworld.com:.terminfo/r/
+</code></pre></li>
+<li><p>Restart the SSH connection. It should work now.</p></li>
+</ol>
+</blockquote>
+
+<h2>vim中使用tab自动补全</h2>
+
+<p>对于程序员来说，这世界上如果没有自动补全的话，简直不能想象。。之前习惯了使用TAB自动补全，现在在公司的远程Linux上却怎么也搞不出TAB自动补全的效果。。配置文件和插件都装一样的也不行。。。真是见鬼了。。 今天发现应该是之前装了supertab，然后不知道怎么又自己给删了，但是效果还在。。在远程Linux上装了supertab后，嗯，就是这个感觉～～</p>
+
+<p>本事件的教训就是，无论做什么一定要做好记录。。</p>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="http://www.cs.helsinki.fi/u/andrews/misc/full_urxvt_support_on_ssh_terminals.txt" title="">FULL URXVT TERMINAL SUPPORT FOR REMOTE (SSH) CONNECTIONS</a></li>
+<li><a href="" title="https://stavrovski.net/blog/installing-and-setting-up-openvpn-in-archlinux">Installing and setting up OpenVPN in ArchLinux</a></li>
+<li><a href="" title="https://wiki.archlinux.org/index.php/Airvpn">Configuring OpenVPN to connect as a client to an AirVPN server</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/20/trivial-problems//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/01/19/problems-about-python-and-mysql/">
+		
+			Problems About Python and Mysql</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-19T15:47:00+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>记录一下这几天项目上遇到的问题</p>
+
+<h2>Python 2.7的编码问题</h2>
+
+<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
+
+<pre><code>import sys
+print sys.getdefaultencoding()  # 获取系统默认编码
+reload(sys)
+sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
+</code></pre>
+
+<h2>MySQL 乱码解决</h2>
+
+<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
+创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
+
+<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
+
+<h2>git</h2>
+
+<ul>
+<li>基于某个分支新建分支
+  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
+  git checkout muchunyu  # 切换到这个分支
+或者可以直接：   <br/>
+  git checkout -b muchunyu origin/dev</li>
+<li>只clone某个分支到本地
+  git clone -b <branch> &lt;remote_repo></li>
+</ul>
+
+
+<h2>常用数据库操作</h2>
+
+<pre><code>create database xxx; #创建数据库
+use xxx;   # 转到某个数据库
+create table xxx (....); # 创建表
+show tables;  # 显示数据库中的表
+describe xxxx; # 显示表结构
+drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
+truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
+</code></pre>
+
+<h2>参考</h2>
+
+<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
+<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
+<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/01/19/problems-about-python-and-mysql//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1214,140 +1384,6 @@ def make_accumulator_nonlocal():
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2014/03/30/two-sort-algorithms//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/28/relearning-c/">
-		
-			重新学习C</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-28T20:14:00+08:00" pubdate data-updated="true">Mar 28<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>发现写learn python the hard way的大神Zed.A.Shaw的the hard其实是一个系列，除了python还有Ruby、C、SQL、Regex，都是我想学的有木有！这几天在看他的C的教程，虽然只是一个alpha版本，但已经很牛逼了啊，一开始还可以，现在光是消化一小节都要好几天好不好！看了他的教程，感觉自己以前学过的那点东西真的是连屎都不如。。anyway，学到了很多东东，记录下学到的东西。</p>
-
-<ul>
-<li>指针。发现在实际使用中很容易把指针变量和指针所指的内容搞混，要记住，指针变量里存放的只是一个地址而已，所以它的大小（位数）是固定的，应该是4个字节，跟它所指的内容没有一点关系。比如我在练习中遇到的一个问题是，有一个结构体，结构体有几个字符型指针，也就是说这几个指针是指向几个字符串的，然后在给这个结构体申请空间的时候我就晕了。。到底应该申请多少呢？直接malloc(sizeof(struct Address))吗？因为我总纠结着结构体里的字符型指针，想着这几个指针指向的字符数目又没有定，这可怎么办呢？其实是我想多了，把指针和它指向的内容混淆了，要知道，指针就是指针而已，大小固定，4个字节，所以上面那个结构体的大小是固定的，可以直接用sizeof来计算。至于那几个指针指向的字符串嘛，等要用的时候再malloc就可以了，也就是说它们跟上面说的结构体没半毛钱关系！只是因为里面有个指针指向了它们而已。</li>
-<li>内存管理。这个之前真的是没有想过，也没有遇到过。因为总是在用一些脚本语言，根本就没有关注过内存管理的问题，导致现在遇到都不知道该怎么处理了，现在通过一次练习，对内存管理有了一些理解了。基本上，在C中一切内存管理都要自己来，要放东西的时候就要自己malloc申请空间，不需要提前申请，只要在需要使用的时候申请就行了，然后记得申请的空间用完后要自己释放，否则会导致内存泄露！</li>
-<li>动态数据结构从文件的读取和写入。乍一想觉得挺简单，其实还是蛮复杂的好不好。。先说写入，这里说的动态结构是指用指针实现的，就是不是固定的数组，所以具体大小可以到时候malloc随意申请，灵活是灵活，但要写入文件的时候就SB了，不能像固定结构那样直接一个<code>fwrite(&amp;addr, sizeof(struct Addr), 1, fpr)</code>就行了好不好，你要自己找到指针指向的内容，然后一个一个自己写啊！再说读取，首先顺序要一致，怎么写入的就要怎么读取出来，否则肯定是没戏啊，然后读取的时候要先准备好地方啊！也就是说要为读入的数据用malloc提前申请空间啊！还有一个就是一次读入数据大小的问题，这个要好好弄清楚，我在练习的时候就是这个没弄清楚，导致程序一直都有问题，还是那句话，不要把指针和指针指向的内容混淆！！</li>
-<li>gdb。gdb是个神器！！</li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/28/relearning-c//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/03/get-your-visit-internet-frequency-by-python/">
-		
-			统计浏览器历史记录</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-03T19:13:00+08:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/python/'>python</a>, <a class='category' href='/blog/categories/bian-cheng/'>编程</a>
-
-
-</div>
-    </div>
-		<p>又是好久没更新。</p>
-
-<p>知乎是个好网站。那么多大牛分享自己的经验教训～涉及范围包罗万象，无所不有。对我而言，很重要的一点是它拓展了我的眼界，让我知道，哦，原来还可以这么想，事情还可以这么做，这世界上原来还有这样一种活法。。</p>
-
-<p>逛知乎的时候还是不由自主的看起编程方面的提问了，其中有一个问题是“用python可以做哪些有趣的事？”看到大家各种有趣的分享，我想这真是太酷了！一直以来，虽然对编程很感兴趣，但总是深入不进去，刚刚有点想法的时候，可总是考虑的太复杂，牵扯的知识点太多，然后要看很多东西，最后热情就这么一点点被消磨掉了，然后就是扔下好久不去想它，直到某天忽然又有热情了，如此循环往复。。看似做了很多，其实却一直在原地踏步。看了这么多知乎牛人的回答后，有了一点点启发，也有了具体的指导，那么就按各位大牛的做法来试试，从自己感兴趣的、容易实现的小玩意儿开始吧。</p>
-
-<p>要统计浏览器的访问记录，首先要找到访问记录，看起来简单，以为只要随便导出一下就可以了，实际还颇费了一番周折。火狐的历史记录以前是以xml格式存储的，现在则是用数据库格式存储的，位置是在<code>%appdata%\Mozilla\Firefox\Profiles\xxxxx.default\places.sqlite</code>。东西是找到了，可是肿么读出来呢？尼玛是数据库文件啊，我还不会用肿么办呢？google了一番后发现可以用firefox的一个扩展来打开读取，这个扩展叫SQLite Manager，相当赞，各种功能齐全，关键支持csv导出！好的，长话短说，导出为csv文件后就可以请python出场了！</p>
-
-<p>基本步骤是，先从csv文件中按行读出来，这数据库还是蛮大的，共13692条记录，然后从行中提取出需要的网址信息，放入一个列表中，然后再利用字典来统计各个网址的频度，程序如下：</p>
-
-<pre><code>#!/usr/bin/python
-
-import csv
-histList=[]
-histDict={}
-with open('f:\moz_places.csv','rb') as f:
-    reader = csv.reader(f)
-    for row in reader:
-    histList.append('/'.join((row[1].split('/'))[:3]))
-
-
-for place in histList:
-    if place not in histDict:
-    histDict[place] = 1
-    else:
-    histDict[place] += 1
-
-sortedDict = sorted(histDict.iteritems(),key=lambda d:d[1],reverse=True)
-
-for (place,freq) in sortedDict[:50]:
-    print '%s\t\t%s' %(freq,place)
-</code></pre>
-
-<p>PS，再总结下这几天学到的新东西：</p>
-
-<ul>
-<li>splinter。python下的一个网页应用测试库，就是可以操纵浏览器来与网站交互，玩了下还挺好上手，比底层一点的request神马的友好多了，之前还一直坚持不用这种直接操作浏览器的库，嫌太低端，现在看来，还是先从基础开始慢慢来吧。</li>
-<li>xpath。一种选择xml文件中节点的方法，通过它可以快速指定html文件中的元素。</li>
-<li>css selector。也是为了简化css而出现的，通过它也能快速指定网页中的特定元素。</li>
-</ul>
-
-
-<p>以上两个玩意儿的语法并不是很难，阮一峰的博客中都有介绍。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/03/get-your-visit-internet-frequency-by-python//blog/page/4/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>

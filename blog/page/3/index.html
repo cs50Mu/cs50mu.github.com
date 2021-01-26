@@ -6,7 +6,7 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Aug 28th, 2016 Tags: 概览 是什么？ Input/output (I/O) is the process of copying data between main memory and external devices such as disk &hellip;">
+	<meta name="description" content="Published on: Aug 29th, 2016 Tags: Applications that use application-level concurrency are known as concurrent programs. Modern operating systems &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +98,313 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2016/08/29/csapp-concurrent-programming/">
+		
+			Csapp Concurrent Programming</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-08-29T14:12:00+08:00" pubdate data-updated="true">Aug 29<span>th</span>, 2016</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p>Applications that use application-level concurrency are known as concurrent programs. Modern operating systems provide three basic approaches for building concurrent programs:</p>
+
+<ul>
+<li><p>Processes. With this approach, each logical control flow is a process that is scheduled and maintained by the kernel. Since processes have separate virtual address spaces, flows that want to communicate with each other must use some kind of explicit interprocess communication (IPC) mechanism.</p></li>
+<li><p>I/O multiplexing.This is a form of concurrent programming where <strong>applications explicitly schedule their own logical flows in the context of a single process</strong>. Logical flows are modeled as state machines that the main program explicitly transitions from state to state as a result of data arriving on file descriptors. Since the program is a single process, all flows share the same address space.</p></li>
+<li><p>Threads. Threads are logical flows that run in the context of a single process and are scheduled by the kernel. You can think of threads as a hybrid of the other two approaches, scheduled by the kernel like process flows, and sharing the same virtual address space like I/O multiplexing flows.</p></li>
+</ul>
+
+
+<h3>IO之殇</h3>
+
+<p>Access to the filesystem or the network are really long operations from the perspective of the CPU. See the numbers from Jeffrey Dean’s talk Stanford CS295 class lecture, Spring, 2007.</p>
+
+<pre><code>Operation     Latency
+L1 cache reference     0.5 ns
+Branch mispredict     5 ns
+L2 cache reference     7 ns
+Mutex lock/unlock     25 ns
+Main memory reference     100 ns
+Compress 1K bytes with Zippy     3,000 ns
+Send 2K bytes over 1 Gbps network     20,000 ns
+Read 1 MB sequentially from memory     250,000 ns
+Round trip within same datacenter     500,000 ns
+Disk seek     10,000,000 ns
+Read 1 MB sequentially from disk     20,000,000 ns
+Send packet CA-&gt;Netherlands-&gt;CA     150,000,000 ns
+</code></pre>
+
+<p>Blocking I/Os (or synchronous I/Os) will tie up the system resources as the waiting processes/threads cannot be used for something else. And from the CPU perspective, any I/O which is not done from/to memory takes ages. Fortunately the system itself is not stuck while I/Os are happening. The OS is going to preempt (i.e. interrupt) the process waiting for an I/O, allowing the CPU to be used by another process. But <strong>this costs another context switch and meanwhile I/O intensive applications will spend most of their time… waiting!</strong></p>
+
+<p>对于multi-process/threading来说</p>
+
+<p>So, the more processes there are, the more they will compete for the CPU. <strong>The more I/Os the application is doing, the more context switches there are, amplified by the number of process/threads the application is made of.</strong> At some point, no matter how good the operating system is, it is going to become overwhelmed. It will spend most of its time switching contexts and have many processes/threads waiting either for I/O or to acquire the CPU. This basically means that <strong>in such a model, the scalability is not at all linear to the number of processes/threads up to the CPU limit. The capacity gain of adding a process/thread significantly decreases with the number of active processes/threads.</strong></p>
+
+<h3>Concurrent Programming with Processes</h3>
+
+<p>Pros and Cons of Processes</p>
+
+<p>Processes have a clean model for sharing state information between parents and children: file tables are shared and user address spaces are not. Having separate address spaces for processes is both an advantage and a disadvantage. It is im- possible for one process to accidentally overwrite the virtual memory of another process, which eliminates a lot of confusing failures—an obvious advantage.</p>
+
+<p>On the other hand, separate address spaces make it more difficult for pro- cesses to share state information. To share information, they must use explicit IPC (interprocess communications) mechanisms. (See Aside.) Another disadvan- tage of process-based designs is that they tend to be slower because the overhead for process control and IPC is high.</p>
+
+<h3>Concurrent Programming with I/O Multiplexing</h3>
+
+<p>The select function manipulates sets of type <code>fd_set</code>, which are known as descriptor sets. Logically, we think of a descriptor set as a bit vector of size n: bn−1,&hellip;,b1,b0</p>
+
+<p>Each bit bk corresponds to descriptor k. Descriptor k is a member of the descriptor set if and only if bk = 1.</p>
+
+<p>the select function takes two inputs: a descriptor set (fdset) called the read set, and the cardinality (n) of the read set (actually the maximum cardinality of any descriptor set). <strong>The select function blocks until at least one descriptor in the read set is ready for reading. A descriptor k is ready for reading if and only if a request to read 1 byte from that descriptor would not block.</strong>select函数也是会阻塞的。</p>
+
+<p>Question: IO多路复用是如何实现并发的效果的？</p>
+
+<p>本质上是Event Driven Model来实现并发的，I/O Multiplexing只是必不可少的一环，有了它，使用Event Driven Model才成为可能。</p>
+
+<p>我是这样理解的：在一个事件循环（event loop）中，不断的调用select来返回当前可读、可写的descriptor，然后做相应的处理，一直循环往复。在这个过程中的一个关键是，只有select操作是阻塞的，一旦它有返回，后面的操作就一定不是阻塞的，所以就不会有无谓的时间浪费在等待读和等待写上面。如果CPU的执行速度够快，那么从一个使用者的角度来看的话，就会看到并发的效果（而实质上这些“并发”的连接是按顺序被处理的）。这个道理现在看来，跟单核CPU上的多进程、多线程是一个道理（CPU-time multiplexing）。感觉实现并发效果的关键是：select的这个过程要足够快，然后对select返回的descriptor的处理也要快，否则就不会有并发的效果了。</p>
+
+<h4>Pros and Cons of I/O Multiplexing</h4>
+
+<ul>
+<li><p>One advantage is that event-driven designs give programmers more control over the behavior of their programs than process-based designs. For example, we can imagine writing an event-driven concurrent server that gives preferred service to some clients, which would be difficult for a concurrent server based on processes. 程序员对自己的程序有更多的控制，比如优先提供某个服务，而不是像基于进程的并发那样，完全交给操作系统来决定。</p></li>
+<li><p>Another advantage is that an event-driven server based on I/O multiplexing runs in the context of a single process, and thus every logical flow has access to the entire address space of the process.This makes it easy to share data between flows. A related advantage of running as a single process is that you can debug your concurrent server as you would any sequential program, using a familiar debugging tool such as gdb. Finally, event-driven designs are often significantly more efficient than process-based designs because they do not require a process context switch to schedule a new flow. 由于是单进程，所以共享更方便；debug难度也比多进程要低；资源消耗也比多进程低（因为没有context switch）</p></li>
+<li><p>A significant disadvantage of event-driven designs is coding complexity. 缺点就是代码的复杂度上来了。</p></li>
+<li><p>Another significant disadvantage of event-based designs is that they cannot fully utilize multi-core processors. 还有一个缺点是不能利用多核</p></li>
+</ul>
+
+
+<h4>Event Driven Programming又是什么呢？</h4>
+
+<p>常常看到event driven和I/O Multiplexing这两个概念在一起。我是这样理解的，通过I/O Multiplexing可以提供event driven programming中的事件。</p>
+
+<p>In an event model, everything runs in one process, one thread. Instead of spawning a new process/thread for each connection request, a event is emitted and the appropriate callback for that event is invoked. Once an event is treated, the process is ready to treat another event.</p>
+
+<p>Such a model is particularly interesting if most of the activities can be turned into events. This becomes a really good concurrency and high-performance model when any I/Os (not just network I/O as is the most common in existing frameworks) are events. It is based on event patterns such as the Reactor or the Proactor which are patterns for Concurrent, Parallel, and Distributed Systems; documents from Douglas C. Schmidt. This event-driven concurrency model is superior to the traditional multithreaded/multi-process one: the memory footprint is drastically reduced, the CPU is better used and more clients can be served concurrently out of a single machine.</p>
+
+<h4>The Event Loop</h4>
+
+<p>To some extent, one can consider the event-driven approach being very similar to cooperative multitasking but at the application level. Event-driven applications are themselves multiplexing CPU time between clients.</p>
+
+<p>There is obviously a risk with this; the same that with cooperative multitasking in fact. A risk which explains why at the OS level, preemptive multitasking is used. <strong>If the process at some point can block for one client, then it will block all the other clients.</strong> For example, in cooperative multitasking a non-responding process would make the system hang (Remember Windows before Windows 95 or Mac OS before Mac OS X ? )</p>
+
+<p>In event-driven model, all the events are treated by a gigantic loop know as the event-loop. The event-loop is going to get from a queue the next event to process and will dispatch it the corresponding handler. Anyone blocking the event-loop will prevent the other events from being processed. So in Node (and in all event-driven framework) the golden rule is <strong>“DO NOT BLOCK THE EVENT LOOP”.</strong> Everything has to be non-blocking. And Node is particularly good at this because all the API it exposes is non-blocking (with the exception of some file system operations which come in two flavors: asynchronous and synchronous).</p>
+
+<h4>参考</h4>
+
+<ul>
+<li><a href="http://www.baloo.io/blog/2013/11/30/node-event-driven-programming/">Node-Event-driven programming</a></li>
+</ul>
+
+
+<h3>Concurrent Programming with Threads</h3>
+
+<p>A thread is a logical flow that runs in the context of a process. modern systems also allow us to write programs that have multiple threads running concurrently in a single process. The threads are scheduled automatically by the kernel. <strong>Each thread has its own thread context, including a unique integer thread ID (TID), stack, stack pointer, program counter, general-purpose registers, and condition codes.</strong> All threads running in a process share the entire virtual address space of that process.</p>
+
+<h4>Thread Execution Model</h4>
+
+<p><strong>Each process begins life as a single thread called the main thread.</strong> At some point, the main thread creates a peer thread, and from this point in time the two threads run concurrently. Eventually, control passes to the peer thread via a context switch, because the main thread executes a slow system call such as read or sleep, or because it is interrupted by the system’s interval timer. The peer thread executes for a while before control passes back to the main thread, and so on.</p>
+
+<p>Thread execution differs from processes in some important ways. Because a thread context is much smaller than a process context, a thread context switch is faster than a process context switch(由于thread context要比process context要小，所以上下文切换要比进程快). Another difference is that threads, unlike processes, are not organized in a rigid parent-child hierarchy. The threads associated with a process form a pool of peers, independent of which threads were created by which other threads. The main thread is distinguished from other threads only in the sense that it is always the first thread to run in the process. The main impact of this notion of a pool of peers is that a thread can kill any of its peers, or wait for any of its peers to terminate. Further, each peer can read and write the same shared data.(进程内的线程之间没有父子的继承关系，都是平等的，一个线程可以kill或者wait其它任何线程，主线程跟其它线程的唯一区别是它总是一个第一个被创建的)</p>
+
+<h4>Terminating Threads</h4>
+
+<p>A thread terminates in one of the following ways:</p>
+
+<ul>
+<li><p>The thread terminates implicitly when its top-level thread routine returns. 上层的thread返回退出了（看这的意思感觉又是有层级关系了，主线程退出了，由它发起的其它线程也会terminates implicitly</p></li>
+<li><p>The thread terminates explicitly by calling the &ldquo;pthread exit&rdquo; function. If the main thread calls &ldquo;pthread exit&rdquo;, it waits for all other peer threads to terminate, and then terminates the main thread and the entire process with a return value of <code>thread_return</code>.</p></li>
+<li><p>Some peer thread calls the Unix exit function, which terminates the process and all threads associated with the process. 通过结束整个进程</p></li>
+<li><p>Another peer thread terminates the current thread by calling the &ldquo;pthread cancel&rdquo; function with the ID of the current thread. 被其它线程kill</p></li>
+</ul>
+
+
+<h4>Detaching Threads</h4>
+
+<p>At any point in time, a thread is joinable or detached. A joinable thread can be reaped and killed by other threads. Its memory resources (such as the stack) are not freed until it is reaped by another thread. In contrast, a detached thread cannot be reaped or killed by other threads. Its memory resources are freed automatically by the system when it terminates. detached状态的thread在退出后会被操作系统自动回收。</p>
+
+<p>By default, threads are created joinable. In order to avoid memory leaks, each joinable thread should either be explicitly reaped by another thread, or detached by a call to the &ldquo;pthread detach&rdquo; function. 线程默认都是joinable的</p>
+
+<h4>Shared Variables in Threaded Programs</h4>
+
+<p>From a programmer’s perspective, one of the attractive aspects of threads is the ease with which multiple threads can share the same program variables. However, this sharing can be tricky. In order to write correctly threaded programs, <strong>we must have a clear understanding of what we mean by sharing and how it works.</strong></p>
+
+<p>Threads Memory Model</p>
+
+<p>A pool of concurrent threads runs in the context of a process. Each thread has its own separate thread context, which includes a thread ID, stack, stack pointer, program counter, condition codes, and general-purpose register values. Each thread shares the rest of the process context with the other threads. <strong>This includes the entire user virtual address space, which consists of read-only text (code), read/write data, the heap, and any shared library code and data areas. The threads also share the same set of open files.</strong></p>
+
+<p>In an operational sense, <strong>it is impossible for one thread to read or write the register values of another thread.</strong> On the other hand, <strong>any thread can access any location in the shared virtual memory.</strong> If some thread modifies a memory location, then every other thread will eventually see the change if it reads that location. Thus, registers are never shared, whereas virtual memory is always shared.</p>
+
+<h4>Synchronizing Threads with Semaphores</h4>
+
+<p>Shared variables can be convenient, but they introduce the possibility of nasty <strong>synchronization errors</strong></p>
+
+<p>Semaphores</p>
+
+<p>Semaphores provide a convenient way to ensure mutually exclusive access to shared variables. The basic idea is to associate a semaphore s, initially 1, with each shared variable (or related set of shared variables) and then surround the corresponding critical section with P (s) and V (s) operations.</p>
+
+<ul>
+<li><p>P (s): If s is nonzero, then P decrements s and returns immediately. If s is zero, then suspend the thread until s becomes nonzero and the process is restarted by a V operation. After restarting, the P operation decrements s and returns control to the caller.</p></li>
+<li><p>V (s): The V operation increments s by 1. If there are any threads blocked at a P operation waiting for s to become nonzero, then the V operation restarts exactly one of these threads, which then completes its P operation by decrementing s.</p></li>
+</ul>
+
+
+<p>The test and decrement operations in P occur indivisibly, in the sense that once the semaphore s becomes nonzero, the decrement of s occurs without in- terruption. The increment operation in V also occurs indivisibly, in that it loads, increments, and stores the semaphore without interruption.  注意，关键是P或者V操作都是原子操作，不可分割，这是能够实现锁的关键。</p>
+
+<p>The definitions of P and V ensure that a running program can never enter a state where a properly initialized semaphore has a negative value. This property, known as the semaphore invariant, provides a powerful tool for controlling the trajectories of concurrent programs</p>
+
+<p>Synchronizing Threads with Semaphores</p>
+
+<p>A semaphore that is used in this way to protect shared variables is called a binary semaphore because its value is always 0 or 1. <strong>Binary semaphores whose purpose is to provide mutual exclusion are often called mutexes.</strong> Performing a P operation on a mutex is called locking the mutex. Similarly, <strong>performing the V operation is called unlocking the mutex. A thread that has locked but not yet unlocked a mutex is said to be holding the mutex. </strong></p>
+
+<p>Using Semaphores to Schedule Shared Resources</p>
+
+<p>Another important use of semaphores, besides providing mutual exclusion, is to <strong>schedule accesses to shared resources.</strong> In this scenario, a thread uses a semaphore operation to notify another thread that some condition in the program state has become true. Two classical and useful examples are the producer-consumer and readers-writers problems.</p>
+
+<p>Producer-Consumer Problem</p>
+
+<p>A producer and consumer thread share a bounded buffer with n slots. The producer thread repeatedly produces new items and inserts them in the buffer. The consumer thread repeat- edly removes items from the buffer and then consumes (uses) them. Variants with multiple producers and consumers are also possible.</p>
+
+<p>Since inserting and removing items involves updating shared variables, we must guarantee mutually exclusive access to the buffer. But guaranteeing mutual exclusion is not sufficient. We also need to schedule accesses to the buffer. If the buffer is full (there are no empty slots), then the producer must wait until a slot becomes available. Similarly, if the buffer is empty (there are no available items), then the consumer must wait until an item becomes available. 不仅要保证对共享变量的独享读写，而且还有保证先后顺序，必须要先生产再消费。</p>
+
+<h4>Other Concurrency Issues</h4>
+
+<p>You probably noticed that life got much more complicated once we were asked to synchronize accesses to shared data. Synchronization is a fundamentally difficult problem that raises issues that simply do not arise in ordinary sequential programs.</p>
+
+<p>Thread Safety</p>
+
+<p>A function is said to be thread-safe if and only if it will always produce correct results when called repeatedly from multiple concurrent threads. If a function is not thread-safe, then we say it is thread-unsafe.</p>
+
+<p>四类线程非安全的函数：</p>
+
+<ul>
+<li><p>Functions that do not protect shared variables. This class of thread-unsafe function is relatively easy to make thread-safe: protect the shared variables with synchronization operations such as P and V . An advantage is that it does not require any changes in the calling program. A disadvantage is that the synchronization operations will slow down the function. 解决方案，加锁。</p></li>
+<li><p>Functions that keep state across multiple invocations. A pseudorandom number generator is a simple example of this class of thread-unsafe function. The rand function is thread-unsafe because the result of the current invocation depends on an intermediate result from the previous iteration. When we call rand repeatedly from a single thread after seeding it with a call to srand, we can expect a repeatable sequence of numbers. However, this assumption no longer holds if multiple threads are calling rand. The only way to make a function such as rand thread-safe is to rewrite it so that it does not use any static data, relying instead on the caller to pass the state information in arguments. The disadvantage is that the programmer is now forced to change the code in the calling routine as well. 解决方案是不用static，而是通过caller传参数。</p></li>
+<li><p>Functions that return a pointer to a static variable. Some functions, such as ctime and gethostbyname, compute a result in a static variable and then return a pointer to that variable. If we call such functions from concurrent threads, then disaster is likely, as results being used by one thread are silently overwritten by another thread.</p></li>
+<li><p>Functions that call thread-unsafe functions. If a function f calls a thread-unsafe function g, is f thread-unsafe? It depends. If g is a class 2 function that relies on state across multiple invocations, then f is also thread- unsafe and there is no recourse short of rewriting g. However, if g is a class 1 or class 3 function, then f can still be thread-safe if you protect the call site and any resulting shared data with a mutex. 一个调用了线程非安全函数的函数是否是线程安全的呢？ 这得看情况。</p></li>
+</ul>
+
+
+<p>Reentrancy 可重入性</p>
+
+<p>There is an important class of thread-safe functions, known as reentrant functions, that are characterized by the property that they do not reference any shared data when they are called by multiple threads. 可重入函数是线程安全函数的子集，也就是说可重入函数一定是线程安全的，反之不成立。</p>
+
+<p>Reentrant functions are typically more efficient than nonreentrant thread- safe functions because they require no synchronization operations.</p>
+
+<p>Races  竞争</p>
+
+<p>A race occurs when the correctness of a program depends on one thread reaching point x in its control flow before another thread reaches point y. Races usually occur because programmers assume that threads will take some particular trajec- tory through the execution state space, forgetting the golden rule that threaded programs must work correctly for any feasible trajectory.</p>
+
+<p>The scary thing is that whether we get the correct answer depends on how the kernel sched- ules the execution of the threads. On our system it fails, but on other systems it might work correctly, leaving the programmer blissfully unaware of a serious bug. 此类bug不易复现，因而很难修复</p>
+
+<p>Deadlocks 死锁</p>
+
+<p>Semaphores introduce the potential for a nasty kind of run-time error, called deadlock, where a collection of threads are blocked, waiting for a condition that will never be true.</p>
+
+<p>Deadlock is an especially difficult issue because it is not always predictable. Some lucky execution trajectories will skirt the deadlock region, while others will be trapped by it. The implications for a programmer are scary. You might run the same program 1000 times without any problem, but then the next time it deadlocks.Or the program might work fine on one machine but deadlock on another. Worst of all, the error is often not repeatable because different executions have different trajectories.</p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2016/08/29/csapp-concurrent-programming//blog/page/3/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2016/08/29/csapp-network-programming/">
+		
+			Csapp Network Programming</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-08-29T08:57:00+08:00" pubdate data-updated="true">Aug 29<span>th</span>, 2016</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<h3>The Client-Server Programming Model</h3>
+
+<p>Every network application is based on the client-server model. With this model, an application consists of a server process and one or more client processes. A server manages some resource, and it provides some service for its clients by manipulating that resource.</p>
+
+<h3>Networks</h3>
+
+<p>Clients and servers often run on separate hosts and communicate using the hard- ware and software resources of a computer network.</p>
+
+<p>To a host, <strong>a network is just another I/O device that serves as a source and sink for data.</strong> An adapter plugged into an expansion slot on the I/O bus provides the physical interface to the network. Data received from the network is copied from the adapter across the I/O and memory buses into memory, typically by a DMA transfer. Similarly, data can also be copied from memory to the network.</p>
+
+<h3>The Socket Interface</h3>
+
+<p>Internet clients and servers communicate by sending and receiving streams of bytes over connections. A connection is point-to-point in the sense that it connects a pair of processes. It is full-duplex in the sense that data can flow in both directions <strong>at the same time.</strong> And it is reliable in the sense that—barring some catastrophic failure such as a cable cut by the proverbial careless backhoe operator—the stream of bytes sent by the source process is eventually received by the destination process in the same order it was sent.</p>
+
+<p>A socket is an end point of a connection. Each socket has a corresponding socket address that consists of an Internet address and a 16-bit integer port, and is denoted by address:port. The port in the client’s socket address is assigned automatically by the kernel when the client makes a connection request, and is known as an ephemeral port. However, the port in the server’s socket address is typically some well-known port that is associated with the service. For example, Web servers typically use port 80, and email servers use port 25. 客户端的端口是由内核自动指定的，服务器的端口是事先手动定义好的。</p>
+
+<p>A connection is uniquely identified by the socket addresses of its two end-points. This pair of socket addresses is known as a socket pair. 一个connection由两端的socket唯一确定。</p>
+
+<p>The sockets interface is a set of functions that are used in conjunction with the Unix I/O functions to build network applications.</p>
+
+<h3>Web Servers</h3>
+
+<p>Web clients and servers interact using a text-based application-level protocol known as HTTP (Hypertext Transfer Protocol). HTTP is a simple protocol. A Web client (known as a browser) opens an Internet connection to a server and requests some content. The server responds with the requested content and then closes the connection. The browser reads the content and displays it on the screen.</p>
+
+<p>What distinguishes Web services from conventional file retrieval services such as FTP? The main difference is that Web content can be written in a language known as HTML (Hypertext Markup Language). An HTML program (page) contains instructions (tags) that tell the browser how to display various text and graphical objects in the page. HTTP服务跟其它web服务的区别</p>
+
+<h4>Web Content</h4>
+
+<p>To Web clients and servers, content is a sequence of bytes with an associated MIME (Multipurpose Internet Mail Extensions) type. Web servers provide content to clients in two different ways:</p>
+
+<ul>
+<li><p>Fetch a disk file and return its contents to the client. The disk file is known as static content and the process of returning the file to the client is known as serving static content.</p></li>
+<li><p>Run an executable file and return its output to the client. The output produced by the executable at run time is known as dynamic content, and the process of running the program and returning its output to the client is known as serving dynamic content.</p></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2016/08/29/csapp-network-programming//blog/page/3/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -3141,176 +3448,6 @@ datefmt=
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2015/02/02/logging-module-of-python//blog/page/3/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2015/01/20/trivial-problems/">
-		
-			Trivial Problems</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-20T18:40:00+08:00" pubdate data-updated="true">Jan 20<span>th</span>, 2015</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>今天很高兴，因为解决了几个困扰很久的问题。</p>
-
-<h2>OpenVPN</h2>
-
-<p>为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大。</p>
-
-<p>不过，今天仔细一看，原来并不麻烦，只要把管理员提供的证书文件等放到相应文件夹上就搞定了！</p>
-
-<blockquote><p>将这几个文件放到/etc/openvpn目录下   xxx.ovpn ca.crt  xxx.crt  xxx.key  其中xxx.pvpn是配置文件
-然后就可以启动了！ sudo openvpn /etc/openvpn/xxx.ovpn   会提示输入密码，输入管理员提供的密码即可</p></blockquote>
-
-<h2>urxvt SSH远程登陆的问题</h2>
-
-<p>之前在Arch上用urxvt一直比较happy，不过公司里开发都是SSH远程登陆到linux主机上进行的，那么问题来了，明明在本地显示很正常的vim，SSH到了公司上的Linux主机上，显示就成了一堆渣。。明明vim的配置文件都是一样的啊。。  后来慢慢发现不是vim的问题，是终端的问题！！因为我换用lilyterm后就显示正常了！！然后，终于在今天让我google到解决方案了～</p>
-
-<blockquote><ol>
-<li><p>Run the following command on the external host to make a terminfo directory
-under the logged in user&rsquo;s home folder.</p>
-
-<pre><code>mkdir -p ~/.terminfo/r/
-</code></pre></li>
-<li><p>Copy the appropriate terminal profile from your local machine to the newly
-created folder on the remote host.</p>
-
-<pre><code>scp /usr/share/terminfo/r/rxvt-unicode-256color user@helloworld.com:.terminfo/r/
-</code></pre></li>
-<li><p>Restart the SSH connection. It should work now.</p></li>
-</ol>
-</blockquote>
-
-<h2>vim中使用tab自动补全</h2>
-
-<p>对于程序员来说，这世界上如果没有自动补全的话，简直不能想象。。之前习惯了使用TAB自动补全，现在在公司的远程Linux上却怎么也搞不出TAB自动补全的效果。。配置文件和插件都装一样的也不行。。。真是见鬼了。。 今天发现应该是之前装了supertab，然后不知道怎么又自己给删了，但是效果还在。。在远程Linux上装了supertab后，嗯，就是这个感觉～～</p>
-
-<p>本事件的教训就是，无论做什么一定要做好记录。。</p>
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="http://www.cs.helsinki.fi/u/andrews/misc/full_urxvt_support_on_ssh_terminals.txt" title="">FULL URXVT TERMINAL SUPPORT FOR REMOTE (SSH) CONNECTIONS</a></li>
-<li><a href="" title="https://stavrovski.net/blog/installing-and-setting-up-openvpn-in-archlinux">Installing and setting up OpenVPN in ArchLinux</a></li>
-<li><a href="" title="https://wiki.archlinux.org/index.php/Airvpn">Configuring OpenVPN to connect as a client to an AirVPN server</a></li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2015/01/20/trivial-problems//blog/page/3/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2015/01/19/problems-about-python-and-mysql/">
-		
-			Problems About Python and Mysql</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-19T15:47:00+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2015</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<p>记录一下这几天项目上遇到的问题</p>
-
-<h2>Python 2.7的编码问题</h2>
-
-<p>Python 2.x内部处理编码默认还是ascii，在处理utf8编码的数据时会报UnicodeEncodeError: ‘ascii’ codec can’t encode异常错误。这个问题之前就遇到过。</p>
-
-<pre><code>import sys
-print sys.getdefaultencoding()  # 获取系统默认编码
-reload(sys)
-sys.setdefaultencoding('utf-8')  # 重新设置为utf-8
-</code></pre>
-
-<h2>MySQL 乱码解决</h2>
-
-<p>创建数据库  <code>CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_general_ci;</code>   <br/>
-创建表    <code>CREATE TABLE test_table (........) ENGINE=InnoDB DEFAULT CHARSET=utf8;</code></p>
-
-<p>Python连接数据库时 <code>conn = MySQLdb.connect(host="localhost", user="root", passwd="root", db="db",  charset="utf8")</code></p>
-
-<h2>git</h2>
-
-<ul>
-<li>基于某个分支新建分支
-  git branch muchunyu origin/dev  # 假设dev分支不在本地，存在于远程服务器
-  git checkout muchunyu  # 切换到这个分支
-或者可以直接：   <br/>
-  git checkout -b muchunyu origin/dev</li>
-<li>只clone某个分支到本地
-  git clone -b <branch> &lt;remote_repo></li>
-</ul>
-
-
-<h2>常用数据库操作</h2>
-
-<pre><code>create database xxx; #创建数据库
-use xxx;   # 转到某个数据库
-create table xxx (....); # 创建表
-show tables;  # 显示数据库中的表
-describe xxxx; # 显示表结构
-drop xxx  # 可以是表名或者数据库名 表的结构 属性 索引都会被删掉
-truncate xxx  # 只用于表且只会清空表中数据，不会删除表结构等
-</code></pre>
-
-<h2>参考</h2>
-
-<p><a href="http://www.cnblogs.com/mengdd/p/3447464.html">在GitHub上管理项目</a>
-<a href="http://www.cnblogs.com/fantiantian/p/3468454.html">Mysql乱码问题解决历程</a>
-<a href="http://www.2cto.com/database/201108/101151.html">Mysql中文乱码问题完美解决方案</a></p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2015/01/19/problems-about-python-and-mysql//blog/page/3/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>

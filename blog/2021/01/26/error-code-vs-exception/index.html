@@ -1,0 +1,272 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>error code vs exception - The Hard Way Is Easier</title>
+    <meta name="author" content="linuxfish">
+    
+	<meta name="description" content="error-code OR exception, it&rsquo;s a question. 然而答案是，you should use both，难点在于确定在什么场景下用什么 适合用 exception 的情况 发生的错误无法处理时 In some situations you can& &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="The Hard Way Is Easier" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.ico" rel="shortcut icon">
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+    <link href='http://fonts.googleapis.com/css?family=Slackey' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Slackey' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'> -->
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.useso.com/css?family=Amethysta' rel='stylesheet' type='text/css'> -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <!--<script src="http://ajax.useso.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script> -->
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+    <script type="text/javascript" src="/javascripts/jquery-tapir.js"></script>
+
+    <!-- remove or comment it to disable ajaxification -->   
+    <script src="/javascripts/ajaxify.js"></script>
+   
+    
+    
+
+</head>
+
+
+<body>
+    <div id="wrapper">
+    <header id="header" class="inner"><!-- for more effects see _animate.scss -->
+<h1 class="animated bounceInDown">
+    <div id="headerbg">
+        linuxfish
+    </div>
+</h1>
+<br>
+
+<ul id="social-links" style="text-align:center">
+  
+  <!-- GitHub -->
+  <li>
+  <a href="https://github.com/cs50mu" class="github" title="Github"></a>
+  </li>
+  
+  
+  <!-- Google Plus -->
+  <li>
+  <a href="http://plus.google.com/linuxfish.exe@gmail.com?rel=author" class="google" title="Google+"></a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li>
+  <a href="http://www.twitter.com/linuxfish" class="twitter" title="Twitter"></a>
+  </li>
+  
+  
+  
+  
+  
+</ul>
+
+
+<!-- use full url including 'index.html' for navigation bar if you are using ajax -->
+<ul id="nav">
+	<li id="ajax"><a href="/index.html">Home</a></li>
+	<li id="ajax"><a href="/blog/archives/index.html">Archives</a></li>
+    <li><a href="/atom.xml">RSS</a></li>
+    
+    <li>
+    <div id="dark">
+        <form method="get" action="/search.html" id="search">
+            <input name="query" type="text" placeholder="Search..." x-webkit-speech />
+        </form>
+    </div>
+    </li>
+        
+</ul>
+
+
+
+
+</header>
+
+<div id="toload">
+<!-- begin toload --> 
+    <div id="content" class="inner">
+        <article class="post">
+	<h2 class="title">Error Code vs Exception</h2>
+	<div class="entry-content"><p>error-code OR exception, it&rsquo;s a question.</p>
+
+<p>然而答案是，you should use both，难点在于确定在什么场景下用什么</p>
+
+<h3>适合用 exception 的情况</h3>
+
+<ul>
+<li>发生的错误无法处理时</li>
+</ul>
+
+
+<p>In some situations <strong>you can&rsquo;t do anything with the error code</strong>, and you just need to handle it in an upper level in the call stack, usually just log the error, display something to the user or close the program. In these cases, error codes would require you to bubble up the error codes manually level by level which is obviously much easier to do with exceptions. The point is that this is for unexpected and unhandleable situations. 与其将错误一层一层的 bubble up，不如将它一次性抛到最顶层</p>
+
+<ul>
+<li>In some situations you have a sequence of commands, and if any of them fail you should cleanup/dispose resources. 当有一堆调用要执行，而且每一个调用都有可能报错时，很明显用 exception 更方便，而不是每次调用后都要 handle 一次可能的error。</li>
+<li>In constructors you can only throw exceptions. 在初始化时若出错一律直接抛 exception，遵循速错原则</li>
+</ul>
+
+
+<h3>适合用 error-code 的情况</h3>
+
+<p>一般来说，除了上面适合使用 exception 的情况，其它任何时候都应该使用 error-code。</p>
+
+<p>in all other situations where you&rsquo;re returning some information on which the caller CAN/SHOULD take some action, using return codes is probably a better alternative. This includes all expected &ldquo;errors&rdquo;, because probably they should be handled by the immediate caller, and will hardly need to be bubbled up too many levels up in the stack.</p>
+
+<h3>sum up</h3>
+
+<p>To sum it up:</p>
+
+<ul>
+<li><p>I like to use exceptions when I have an unexpected situation, in which there&rsquo;s not much to do, and usually we want to abort a large block of code or even the whole operation or program. This is like the old &ldquo;on error goto&rdquo;.</p></li>
+<li><p>I like to use return codes when I have expected situations in which the caller code can/should take some action. This includes most business methods, APIs, validations, and so on.</p></li>
+</ul>
+
+
+<h3>Unchecked Exceptions 的问题</h3>
+
+<p>首先，啥是 unchecked exception？</p>
+
+<p>A quick recap. In an unchecked exceptions model, <strong>you throw and catch exceptions, without it being part of the type system or a function’s signature</strong>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// Foo throws an unhandled exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Foo</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="o">(...);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Bar calls Foo, and handles that exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Bar</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Foo</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// Handle the error.</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Baz also calls Foo, but does not handle that exception:</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">Baz</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">Foo</span><span class="o">();</span> <span class="c1">// Let the error escape to our callers.</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>问题在哪？</p>
+
+<p>In this model, <strong>any function call – and sometimes any statement – can throw an exception, transferring control non-locally somewhere else. Where? Who knows.</strong> There are no annotations or type system artifacts to guide your analysis. As a result, it’s difficult for anyone to reason about a program’s state at the time of the throw, the state changes that occur while that exception is propagated up the call stack – and possibly across threads in a concurrent program – and the resulting state by the time it gets caught or goes unhandled. 任何地方都有可能抛出exception，使得对于代码的分析变得非常困难。（我理解，这是因为没有限制，所以大家可以随心所欲的写，因而也非常难于理解。若大家在写的时候都遵循一定的规则，理论上也是可以写出易懂的代码，但每个人的水平不一样，对待代码的态度也不一样，在工程上没有限制的情况下，必然会造成“百花齐放”的现象）</p>
+
+<p>非常经典的分析：为什么 exception 在业界如此流行？</p>
+
+<blockquote><p>It’s of course possible to try. Doing so requires reading API documentation, doing manual audits of the code, leaning heavily on code reviews, and a healthy dose of luck. The language isn’t helping you out one bit here. Because failures are rare, this tends not to be as utterly disastrous as it sounds. My conclusion is that’s why many people in the industry think unchecked exceptions are “good enough.” They stay out of your way for the common success paths and, because most people don’t write robust error handling code in non-systems programs, throwing an exception usually gets you out of a pickle fast. Catching and then proceeding often works too. No harm, no foul. Statistically speaking, programs “work.”</p></blockquote>
+
+<p>exception 的通病（不管是checked还是unchecked）</p>
+
+<blockquote><p>Another thing most exception systems get wrong is encouraging too coarse a granularity of handling errors. Proponents of return codes love that error handling is localized to a specific function call. (I do too!) In exception handling systems, it’s all too easy to slap a coarse-grained try/catch block around some huge hunk of code, without carefully reacting to individual failures. That produces brittle code that’s almost certainly wrong; if not today, then after the inevitable refactoring that will occur down the road. A lot of this has to do with having the right syntaxes. 一般人通常做法是一个<code>try ... catch</code> wrap 住一大段代码，简单是简单，但一般会埋坑</p></blockquote>
+
+<p>参考：</p>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/253314/conventions-for-exceptions-or-error-codes">Conventions for exceptions or error codes</a></li>
+<li><a href="http://joeduffyblog.com/2016/02/07/the-error-model/">The Error Model</a></li>
+</ul>
+
+</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2021/01/26/error-code-vs-exception/#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+版权声明：自由转载-非商用-非衍生-保持署名 | <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">Creative Commons BY-NC-ND 3.0</a>
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+    </div>
+    <footer id="footer">
+    <div style="display:inline">
+    Copyright &copy; 2021
+
+    linuxfish
+. Powered by <a href="http://octopress.org">Octopress</a> | 
+    Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
+</div>
+
+
+    </footer>
+    <script src="/javascripts/fabric.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'thehardwayiseasier';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://cs50Mu.github.io/blog/2021/01/26/error-code-vs-exception/';
+        var disqus_url = 'http://cs50Mu.github.io/blog/2021/01/26/error-code-vs-exception/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+<!-- end toload --> 
+</div>
+</div>
+<script src="/javascripts/jquery.ui.totop.js" type="text/javascript"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+;(function($){$().UItoTop({easingType:'easeOutCirc'});})(jQuery); 
+/*]]>*/
+</script><!-- remove it to remove the scroll to top button -->
+</body>
+</html>
