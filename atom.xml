@@ -4,7 +4,7 @@
   <title><![CDATA[The Hard Way Is Easier]]></title>
   <link href="http://cs50Mu.github.io/atom.xml" rel="self"/>
   <link href="http://cs50Mu.github.io/"/>
-  <updated>2021-01-26T18:25:30+08:00</updated>
+  <updated>2021-02-05T14:15:19+08:00</updated>
   <id>http://cs50Mu.github.io/</id>
   <author>
     <name><![CDATA[linuxfish]]></name>
@@ -12,6 +12,1947 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[「Applying UML and Patterns」读书笔记]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-applying-uml-and-patterns/"/>
+    <updated>2021-02-05T12:08:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-applying-uml-and-patterns</id>
+    <content type="html"><![CDATA[<h2>「Applying UML and Patterns」读书笔记</h2>
+
+<h3>Inception</h3>
+
+<p>前期评估</p>
+
+<p>the idea is to do just enough investigation to form a rational, justifiable opinion of the overall purpose and feasibility of the potential new system, and decide if it is worthwhile to invest in deeper exploration</p>
+
+<p><strong>It is to decide if the project is worth a serious investigation (during elaboration), not to do that investigation.</strong></p>
+
+<h4>Use Cases</h4>
+
+<p>Informally, use cases are text stories of some actor using a system to meet goals.</p>
+
+<p>the essence is discovering and recording functional requirements by writing stories of using a system to fulfill user goals; that is, cases of use</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; Domain Models</h3>
+
+<h4>What is a Domain Model?</h4>
+
+<p>A domain model is a visual representation of conceptual classes or real-situation objects in a domain.</p>
+
+<p>Domain models have also been called conceptual models (the term used in the first edition of this book), domain object models, and analysis object models.</p>
+
+<p>Applying UML notation, a domain model is illustrated <strong>with a set of class diagrams in which no operations (method signatures) are defined.</strong> It provides a conceptual perspective. It may show:</p>
+
+<ul>
+<li>domain objects or conceptual classes</li>
+<li>associations between conceptual classes</li>
+<li>attributes of conceptual classes</li>
+</ul>
+
+
+<p>A domain model shows real-situation conceptual classes, <strong>not software classes.</strong></p>
+
+<h4>How to Find Conceptual Classes?</h4>
+
+<ul>
+<li>Reuse or modify existing models.</li>
+<li>Use a category list. 一些默认建议，非常好</li>
+<li>Finding Conceptual Classes with Noun Phrase Identification. 通过名词来找灵感
+
+<ul>
+<li><strong>use cases</strong> are one rich source to mine for noun phrase identification.</li>
+</ul>
+</li>
+</ul>
+
+
+<blockquote><p>Perhaps the most common mistake when creating a domain model is to represent something as an attribute when it should have been a conceptual class.</p></blockquote>
+
+<p>If we do not think of some conceptual class X as a number or text in the real world, X is probably a conceptual class, not an attribute. 类比现实世界</p>
+
+<h4>Why Use &lsquo;Description&rsquo; Classes?</h4>
+
+<p><img src="http://cs50Mu.github.io/images/post/description-class.jpg" alt="" /></p>
+
+<p>item的描述是一直存在的，但item可能会卖光</p>
+
+<p>The need for description classes is common in sales, product, and service domains. It is also common in manufacturing, which requires a description of a manufactured thing that is distinct from the thing itself.</p>
+
+<h4>Associations</h4>
+
+<p>An association is a relationship between classes (more precisely, instances of those classes) that indicates some meaningful and interesting connection</p>
+
+<p>Multiplicity defines how many instances of a class A can be associated with one instance of a class B</p>
+
+<p><img src="http://cs50Mu.github.io/images/post/association-multiplicity.jpg" alt="" /></p>
+
+<h4>Attributes</h4>
+
+<p>An attribute is a logical data value of an object.</p>
+
+<p>Informally, most attribute types should be what are often thought of as &ldquo;primitive&rdquo; data types, such as numbers and booleans. The type of an attribute should not normally be a complex domain concept, such as a Sale or Airport. 类属性应该是基础类型，不应该是复杂的自定义领域类型（这种应该用Association来表达）</p>
+
+<p>Relate conceptual classes with an association, not with an attribute.</p>
+
+<h4>Conclusion: Is the Domain Model Correct?</h4>
+
+<p>There is no such thing as a single correct domain model. All models are approximations of the domain we are attempting to understand; the domain model is primarily a tool of understanding and communication among a particular group. A useful domain model captures the essential abstractions and information required to understand the domain in the context of the current requirements, and aids people in understanding the domainits concepts, terminology, and relationships. 没有“正确”的模型</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; System Sequence Diagrams</h3>
+
+<h4>What are System Sequence Diagrams?</h4>
+
+<p>A system sequence diagram is a picture that shows, for one particular scenario of a use case, the events that external actors generate, their order, and inter-system events. All systems are treated as a <strong>black box</strong>; the emphasis of the diagram is events that cross the system boundary from actors to systems.</p>
+
+<p>System behavior is a description of what a system does, without explaining how it does it.  用于描述系统是做什么的，而不是如何做</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; Operation Contracts</h3>
+
+<h3>Elaboration Iteration 1Basics &ndash; Requirements to DesignIteratively</h3>
+
+<p>Iteratively Do the Right Thing, Do the Thing Right 做对的事 和 把事做对</p>
+
+<p>The requirements and object-oriented analysis has focused on learning to do the right thing; that is, understanding some of the outstanding goals for the case studies, and related rules and constraints. By contrast, the following design work will stress do the thing right; that is, skillfully designing a solution to satisfy the requirements for this iteration.</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; Logical Architecture and UML Package Diagrams</h3>
+
+<h4>What is the Logical Architecture? And Layers?</h4>
+
+<p>The logical architecture is the large-scale organization of the software classes into packages (or namespaces), subsystems, and layers. <strong>It&rsquo;s called the logical architecture because there&rsquo;s no decision about how these elements are deployed across different operating system processes or across physical computers in a network</strong></p>
+
+<p>A layer is a very coarse-grained grouping of classes, packages, or subsystems that has cohesive responsibility for a major aspect of the system. Also, layers are organized such that &ldquo;higher&rdquo; layers (such as the UI layer) call upon services of &ldquo;lower&rdquo; layers, but not normally vice versa.</p>
+
+<p>Typically layers in an OO system include:</p>
+
+<ul>
+<li>User Interface.</li>
+<li>Application Logic and Domain Objects 领域层</li>
+<li>Technical Services
+
+<ul>
+<li>general purpose objects and subsystems that provide supporting technical services, such as interfacing with a database or error logging.</li>
+<li>These services are usually application-independent and reusable across several systems.</li>
+</ul>
+</li>
+</ul>
+
+
+<blockquote><p>Guideline: Design with Layers</p></blockquote>
+
+<p>Applied to information systems, <strong>typical layers</strong> are illustrated and explained as follows:</p>
+
+<ul>
+<li>UI</li>
+<li>Application
+
+<ul>
+<li>handles presentation layer request</li>
+<li>workflow</li>
+<li>session state</li>
+</ul>
+</li>
+<li>Domain (aka Business, Application logic)
+
+<ul>
+<li>implementation of domain rules</li>
+</ul>
+</li>
+<li>Business Infrasture
+
+<ul>
+<li>very general low-level business services</li>
+<li>used in many business domains</li>
+<li>eg, CurrencyConverter</li>
+</ul>
+</li>
+<li>Technial Services
+
+<ul>
+<li>(relatively) high-level technical services and frameworks</li>
+<li>eg, persistence, security</li>
+</ul>
+</li>
+<li>Foundation
+
+<ul>
+<li>low-level technical services, utilities and frameworks</li>
+<li>eg, data structures, threads, math, file, DB and network I/O</li>
+</ul>
+</li>
+</ul>
+
+
+<blockquote><p>Guideline: Cohesive Responsibilities; Maintain a Separation of Concerns</p></blockquote>
+
+<p>每层干自己该干的事</p>
+
+<p>The responsibilities of the objects in a layer should be strongly related to each other and should not be mixed with responsibilities of other layers. For example, objects in the UI layer should focus on UI work, such as creating windows and widgets, capturing mouse and keyboard events, and so forth. Objects in the application logic or &ldquo;domain&rdquo; layer should focus on application logic, such as calculating a sales total or taxes, or moving a piece on a game board.</p>
+
+<p>UI objects should not do application logic. For example, a Java Swing JFrame (window) object should not contain logic to calculate taxes or move a game piece. And on the other hand, application logic classes should not trap UI mouse or keyboard events. That would violate a clear separation of concerns and maintaining high cohesion basic architectural principles.</p>
+
+<blockquote><p>How do we design the application logic with objects?</p></blockquote>
+
+<p>To create software objects with names and information similar to the real-world domain, and <strong>assign application logic responsibilities to them</strong>. For example, in the real world of POS, there are sales and payments. So, in software, we create a Sale and Payment class, and give them application logic responsibilities.</p>
+
+<blockquote><p>Guideline: The Model-View Separation Principle</p></blockquote>
+
+<p>In this context, model is a synonym for the domain layer of objects (it&rsquo;s an old OO term from the late 1970s). View is a synonym for UI objects, such as windows, Web pages, applets, and reports.</p>
+
+<p><strong>The Model-View Separation principle[2] states that model (domain) objects should not have direct knowledge of view (UI) objects, at least as view objects</strong>. So, for example, a Register or Sale object should not directly send a message to a GUI window object ProcessSaleFrame, asking it to display something, change color, close, and so forth.</p>
+
+<p>Model-View-Controller (MVC): The Model is the Domain Layer, the View is the UI Layer, and the Controllers are the workflow objects in the Application layer. 至今看到的对MVC的最完美的诠释吧</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; On to Object Design</h3>
+
+<h4>Designing Objects: What are Static and Dynamic Modeling?</h4>
+
+<p>There are two kinds of object models: dynamic and static. <strong>Dynamic models, such as UML interaction diagrams (sequence diagrams or communication diagrams), help design the logic, the behavior of the code or the method bodies.</strong> They tend to be the more interesting, difficult, important diagrams to create. <strong>Static models, such as UML class diagrams, help design the definition of packages, class names, attributes, and method signatures (but not method bodies).</strong></p>
+
+<p>People new to UML tend to think that the important diagram is the static-view class diagram, but in fact, most of the challenging, interesting, useful design work happens while drawing the UML dynamic-view interaction diagrams. It&rsquo;s during dynamic object modeling (such as drawing sequence diagrams) that &ldquo;the rubber hits the road&rdquo; in terms of really thinking through the exact details of what objects need to exist and how they collaborate via messages and methods. 重点：先做Dynamic Modeling（新手会误认为要先做Static Modeling）</p>
+
+<p>What&rsquo;s important is knowing how to think and design in objects, and apply object design best-practice patterns, which is a very different and much more valuable skill than knowing UML notation. 重点是OO设计，而不是UML</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; UML Interaction Diagrams</h3>
+
+<p>The term interaction diagram is a generalization of two more specialized UML diagram types:</p>
+
+<ul>
+<li>sequence diagrams
+
+<ul>
+<li>illustrate interactions in a kind of fence format, in which each new object is added to the right</li>
+</ul>
+</li>
+<li>communication diagrams
+
+<ul>
+<li>illustrate object interactions in a graph or network format, in which objects can be placed anywhere on the diagram</li>
+</ul>
+</li>
+</ul>
+
+
+<p><img src="http://cs50Mu.github.io/images/post/sequence-diagram.jpg" alt="" />
+<img src="http://cs50Mu.github.io/images/post/communication-diagram.jpg" alt="" /></p>
+
+<h3>Elaboration Iteration 1Basics &ndash; UML Class Diagrams</h3>
+
+<h3>Elaboration Iteration 1Basics &ndash; GRASP: Designing Objects with Responsibilities</h3>
+
+<p><strong>The critical design tool for software development is a mind well educated in design principles.</strong> It is not the UML or any other technology.</p>
+
+<blockquote><p>What Are Inputs to Object Design?</p></blockquote>
+
+<p>开始设计的前提是已做好需求分析</p>
+
+<blockquote><p>Responsibilities and Responsibility-Driven Design</p></blockquote>
+
+<p>Basically, these responsibilities are of the following two types: doing and knowing.</p>
+
+<p>Doing responsibilities of an object include:</p>
+
+<ul>
+<li>doing something itself, such as creating an object or doing a calculation</li>
+<li>initiating action in other objects</li>
+<li>controlling and coordinating activities in other objects</li>
+</ul>
+
+
+<p>Knowing responsibilities of an object include:</p>
+
+<ul>
+<li>knowing about private encapsulated data</li>
+<li>knowing about related objects</li>
+<li>knowing about things it can derive or calculate</li>
+</ul>
+
+
+<blockquote><p>What are Patterns?</p></blockquote>
+
+<p>In OO design, a pattern is a named description of a problem and solution that can be applied to new contexts; ideally, a pattern advises us on how to apply its solution in varying circumstances and considers the forces and trade-offs.</p>
+
+<p>New pattern should be considered an oxymoron if it describes a new idea. The very term &ldquo;pattern&rdquo; suggests a long-repeating thing. <strong>The point of design patterns is not to express new design ideas. Quite the oppositegreat patterns attempt to codify existing tried-and-true knowledge, idioms, and principles</strong>; the more honed, old, and widely used, the better.</p>
+
+<blockquote><p>A Short Example of Object Design with GRASP</p></blockquote>
+
+<p>There are nine GRASP patterns:</p>
+
+<ul>
+<li>Creator</li>
+</ul>
+
+
+<p>关键词：mental model、low representational gap (LRG)</p>
+
+<p>原则是要尽量降低人的心理模型跟design model之间的认知差异</p>
+
+<ul>
+<li>Information Expert</li>
+</ul>
+
+
+<p>Problem： What is a basic principle by which to assign responsibilities to objects?</p>
+
+<p>Solution： Assign a responsibility to the class that has the information needed to fulfill it.</p>
+
+<ul>
+<li>Low Coupling</li>
+</ul>
+
+
+<p>Briefly and informally, coupling is a measure of how strongly one element is connected to, has knowledge of, or depends on other elements.</p>
+
+<p>If there is coupling or dependency, then when the depended-upon element changes, the dependant may be affected. For example, a subclass is strongly coupled to a superclass. An object A that calls on the operations of object B has coupling to B&rsquo;s services.</p>
+
+<p>It is not high coupling per se that is the problem; it is high coupling to elements that are unstable in some dimension, such as their interface, implementation, or mere presence.  不是耦合本身不好，而要看耦合的东西，若耦合的东西不稳定就不太好</p>
+
+<ul>
+<li>Controller</li>
+</ul>
+
+
+<p>Problem：What first object beyond the UI layer receives and coordinates (&ldquo;controls&rdquo;) a system operation?</p>
+
+<p>Solution： Assign the responsibility to an object representing one of these choices:</p>
+
+<ol>
+<li>Represents the overall &ldquo;system,&rdquo; a &ldquo;root object,&rdquo; a device that the software is running within, or a major subsystem (these are all variations of a facade controller).</li>
+<li>Represents a use case scenario within which the system operation occurs (a use case or session controller)</li>
+</ol>
+
+
+<p>有两种：</p>
+
+<p>Facade controllers：门面，一切全包，比如TelecommSwitch、Phone、ChessGame</p>
+
+<p>use case controller：按使用场景来分的，比如ProcessSaleHandler</p>
+
+<ul>
+<li>High Cohesion</li>
+</ul>
+
+
+<p>In software design a basic quality known as cohesion informally measures how <strong>functionally related</strong> the operations of a software element are, and also measures how much work a software element is doing. 做的事要有相关性，一个类的方法集中如果有很多关系不大的事情，则这个类不是cohesive的</p>
+
+<p>As a simple contrasting example, an object Big with 100 methods and 2,000 source lines of code (SLOC) is doing a lot more than an object Small with 10 methods and 200 source lines. <strong>And if the 100 methods of Big are covering many different areas of responsibility (such as database access and random number generation), then Big has less focus or functional cohesion than Small.</strong> In summary, both the amount of code and the relatedness of the code are an indicator of an object&rsquo;s cohesion.</p>
+
+<p>Problem: How to keep objects focused, understandable, and manageable, and as a side effect, support Low Coupling?</p>
+
+<p>Solution: Assign responsibilities so that cohesion remains high. Use this to evaluate alternatives.</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; Object Design Examples with GRASP</h3>
+
+<p>I wish to exhaustively illustrate that no &ldquo;magic&rdquo; is needed in object design</p>
+
+<p>OO software design really can be <strong>more science than art</strong>, though there is plenty of room for creativity and elegant design.</p>
+
+<p>实例讲解，非常详尽！</p>
+
+<blockquote><p>The Command-Query Separation Principle</p></blockquote>
+
+<p>命令（有side effect的操作，比如update create等）与 查询 分离的原则</p>
+
+<p>要这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// style #1; used in the official solution</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">roll</span><span class="o">()</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'><span class="n">faceValue</span> <span class="o">=</span> <span class="c1">// random num generation</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">getFaceValue</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>   <span class="k">return</span> <span class="n">faceValue</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而不是这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// style #2; why is this poor?</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">roll</span><span class="o">()</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'><span class="n">faceValue</span> <span class="o">=</span> <span class="c1">// random num generation</span>
+</span><span class='line'>   <span class="k">return</span> <span class="n">faceValue</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>为什么呢？</p>
+
+<p>CQS is widely considered desirable in computer science theory <strong>because with it, you can more easily reason about a program&rsquo;s state without simultaneously modifying that state. And it makes designs simpler to understand and anticipate.</strong> For example, if an application consistently follows CQS, you know that a query or getter method isn&rsquo;t going to modify anything and a command isn&rsquo;t going to return anything. Simple pattern. This often turns out to be nice to rely on, as the alternative can be a nasty surpriseviolating the Principle of <strong>Least Surprise</strong> in software development</p>
+
+<h3>Elaboration Iteration 1Basics &ndash; Designing for Visibility</h3>
+
+<p>Visibility is the ability of one object to see or have reference to another</p>
+
+<p>There are four common ways that visibility can be achieved from object A to object B:</p>
+
+<ul>
+<li>Attribute visibility B is an attribute of A.</li>
+<li>Parameter visibility B is a parameter of a method of A.</li>
+<li>Local visibility B is a (non-parameter) local object in a method of A.</li>
+<li>Global visibility B is in some way globally visible.</li>
+</ul>
+
+
+<h3>Elaboration Iteration 1Basics &ndash; Mapping Designs to Code</h3>
+
+<h3>Elaboration Iteration 1Basics &ndash; Test-Driven Development and Refactoring</h3>
+
+<p>Refactoring [Fowler99] is a structured, disciplined method to rewrite or restructure existing code without changing its external behavior, applying small transformation steps combined with re- executing tests each step.</p>
+
+<h3>Elaboration Iteration 2 More Patterns &ndash; UML Tools and UML as Blueprint</h3>
+
+<h3>Elaboration Iteration 2 More Patterns &ndash; Quick Analysis Update</h3>
+
+<h3>Elaboration Iteration 2 More Patterns &ndash; Iteration 2More Patterns</h3>
+
+<h3>Elaboration Iteration 2 More Patterns &ndash; More Objects with Responsibilities</h3>
+
+<p>GRASP patterns:</p>
+
+<ul>
+<li>Polymorphism</li>
+</ul>
+
+
+<p>多态</p>
+
+<p>Alternatives based on type Conditional variation is a fundamental theme in programs. If a program is designed using if-then-else or case statement conditional logic, then if a new variation arises, it requires modification of the case logicoften in many places. This approach makes it difficult to easily extend a program with new variations because changes tend to be required in several placeswherever the conditional logic exists. if-else 问题</p>
+
+<p>原则：不要用if-else或者case来解决，而是用多态来解决</p>
+
+<ul>
+<li>Pure Fabrication</li>
+</ul>
+
+
+<p>Object-oriented designs are sometimes characterized by implementing as software classes representations of concepts in the real-world problem domain to lower the representational gap</p>
+
+<p>Problem: What object should have the responsibility, when you do not want to violate High Cohesion and Low Coupling, or other goals, but solutions offered by Expert (for example) are not appropriate? there are many situations in which assigning responsibilities only to domain layer software classes leads to problems in terms of poor cohesion or coupling, or low reuse potential. 没办法跟Domain model（现实模型）对应上的object怎么设计？</p>
+
+<p>Solution: Assign a highly cohesive set of responsibilities to <strong>an artificial or convenience class that does not represent a problem domain concept something made up</strong>, to support high cohesion, low coupling, and reuse.</p>
+
+<ul>
+<li>Indirection</li>
+</ul>
+
+
+<p>Most problems in computer science can be solved by another level of indirection</p>
+
+<ul>
+<li>Protected Variations</li>
+</ul>
+
+
+<p>Problem: How to design objects, subsystems, and systems so that the variations or instability in these elements does not have an undesirable impact on other elements?</p>
+
+<p>Solution: Identify points of predicted variation or instability; <strong>assign responsibilities to create a stable interface around them</strong>.</p>
+
+<p>虚拟机也是一个应用这个原则的例子</p>
+
+<blockquote><p>The Liskov Substitution Principle (LSP)</p></blockquote>
+
+<p>LSP [Liskov88] formalizes the principle of protection against variations in different implementations of an interface, or subclass extensions of a superclass.</p>
+
+<p>Informally, software (methods, classes, &hellip;) that refers to a type T (some interface or abstract superclass) should work properly or as expected with any substituted implementation or subclass of Tcall it S.</p>
+
+<blockquote><p>Law of Demeter</p></blockquote>
+
+<p>Don&rsquo;t Talk to Strangers</p>
+
+<p>违反<code>Law of Demeter</code>的代码示例：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doX</span><span class="o">()</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'><span class="n">F</span> <span class="n">someF</span> <span class="o">=</span> <span class="n">foo</span><span class="o">.</span><span class="na">getA</span><span class="o">().</span><span class="na">getB</span><span class="o">().</span><span class="na">getC</span><span class="o">().</span><span class="na">getD</span><span class="o">().</span><span class="na">getE</span><span class="o">().</span><span class="na">getF</span><span class="o">();</span>
+</span><span class='line'><span class="c1">// ... </span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>The design is coupled to a particular structure of how objects are connected.</strong> The farther along a path the program traverses, the more fragile it is. Why? Because the object structure (the connections) may change.</p>
+
+<p>Novice developers tend toward brittle designs, intermediate developers tend toward overly fancy and flexible, generalized ones (in ways that never get used). Expert designers choose with insight;  关键是这个度不好把握啊</p>
+
+<blockquote><p>Open-Closed Principle</p></blockquote>
+
+<p>OCP and PV are essentially two expressions of the same principle, with different emphasis</p>
+
+<h3>Elaboration Iteration 2 More Patterns &ndash; Applying GoF Design Patterns</h3>
+
+<blockquote><p>Adapter (GoF)</p></blockquote>
+
+<p>Problem:  How to resolve incompatible interfaces, or provide a stable interface to similar components with different interfaces?</p>
+
+<p>Solution: Convert the original interface of a component into another interface, through an intermediate adapter object.</p>
+
+<blockquote><p>Factory</p></blockquote>
+
+<p>The adapter raises a new problem in the design:</p>
+
+<p>who creates the adapters? And how to determine which class of adapter to create, such as TaxMaster-Adapter or GoodAsGoldTaxProAdapter?</p>
+
+<p>答案就是Factory</p>
+
+<p>Problem: Who should be responsible for creating objects when there are special considerations, such as complex creation logic, a desire to separate the creation responsibilities for better cohesion, and so forth?</p>
+
+<p>Solution: Create a Pure Fabrication object called a Factory that handles the creation.</p>
+
+<p><img src="http://cs50Mu.github.io/images/post/factory.jpg" alt="" /></p>
+
+<p>重点关注上图中，它是如何决定应该使用哪个Adapter的</p>
+
+<p>Note that in the ServicesFactory, the logic to decide which class to create is resolved <strong>by reading in the class name from an external source (for example, via a system property if Java is used) and then dynamically loading the class.</strong> This is an example of a partial data-driven design.</p>
+
+<blockquote><p>Singleton (GoF)</p></blockquote>
+
+<p>The ServicesFactory raises another new problem in the design: Who creates the factory itself, and how is it accessed? 汗死。。。  按下葫芦起了瓢的感觉</p>
+
+<p>观察</p>
+
+<p>First, observe that only one instance of the factory is needed within the process. Second, quick reflection suggests that the methods of this factory may need to be called from various places in the code, as different places need access to the adapters for calling on the external services.</p>
+
+<p>Problem: Exactly one instance of a class is allowedit is a &ldquo;singleton.&rdquo; Objects need a global and single point of access.</p>
+
+<p>Solution: Define a static method of the class that returns the singleton.</p>
+
+<p><img src="http://cs50Mu.github.io/images/post/singleton.jpg" alt="" /></p>
+
+<blockquote><p>Strategy (GoF)</p></blockquote>
+
+<p>Problem: How to design for varying, but related, algorithms or policies? How to design for the ability to change these algorithms or policies?</p>
+
+<p>Solution: Define each algorithm/policy/strategy in a separate class, with a common interface.</p>
+
+<blockquote><p>Composite (GoF)</p></blockquote>
+
+<p>Problem：How to treat a group or composition structure of objects the same way (polymorphically) as a non-composite (atomic) object?</p>
+
+<p>Solution: Define classes for composite and atomic objects so that they implement the same interface.</p>
+
+<p>没有太理解清楚这个pattern</p>
+
+<blockquote><p>Facade (GoF)</p></blockquote>
+
+<p>Problem: A common, unified interface to a disparate set of implementations or interfacessuch as within a subsystemis required. There may be undesirable coupling to many things in the subsystem, or the implementation of the subsystem may change. What to do?</p>
+
+<p>Solution: Define a single point of contact to the subsystema facade object that wraps the subsystem. This facade object presents a single unified interface and is responsible for collaborating with the subsystem components.</p>
+
+<blockquote><p>Observer (Publish-Subscribe)</p></blockquote>
+
+<p>Problem: Different kinds of subscriber objects are interested in the state changes or events of a publisher object, and want to react in their own unique way when the publisher generates an event. Moreover, the publisher wants to maintain low coupling to the subscribers. What to do?</p>
+
+<p>Solution: Define a &ldquo;subscriber&rdquo; or &ldquo;listener&rdquo; interface. Subscribers implement this interface. The publisher can dynamically register subscribers who are interested in an event and notify them when an event occurs.</p>
+
+<blockquote><p>Observer/Publish-Subscribe/Delegation Event Model (GoF)</p></blockquote>
+
+<p>都是一个意思</p>
+
+<p>Problem：Different kinds of subscriber objects are interested in the state changes or events of a publisher object, and want to react in their own unique way when the publisher generates an event. Moreover, the publisher wants to maintain low coupling to the subscribers. What to do?</p>
+
+<p>Solution: Define a &ldquo;subscriber&rdquo; or &ldquo;listener&rdquo; interface. Subscribers implement this interface. The publisher can dynamically register subscribers who are interested in an event and notify them when an event occurs.</p>
+
+<p>Observer provides a way to loosely couple objects in terms of communication. Publishers know about subscribers only through an interface, and subscribers can register (or de-register) dynamically with the publisher.</p>
+
+<h3>Elaboration Iteration 3 &ndash; Intermediate Topics</h3>
+
+<h3>Elaboration Iteration 3 &ndash; UML Activity Diagrams and Modeling</h3>
+
+<p>A UML activity diagram shows sequential and parallel activities in a process. They are useful for modeling business processes, workflows, data flows, and complex algorithms.</p>
+
+<p><img src="http://cs50Mu.github.io/images/post/activity-diagram.jpg" alt="" /></p>
+
+<h3>Elaboration Iteration 3 &ndash; UML State Machine Diagrams and Modeling</h3>
+
+<p>A UML state machine diagram, illustrates the interesting events and states of an object, and the behavior of an object in reaction to an event.</p>
+
+<p>A state machine diagram shows the lifecycle of an object: what events it experiences, its transitions, and the states it is in between these events.</p>
+
+<p><img src="http://cs50Mu.github.io/images/post/state-machine.jpg" alt="" /></p>
+
+<h3>Elaboration Iteration 3 &ndash; Relating Use Cases</h3>
+
+<h3>Elaboration Iteration 3 &ndash; More SSDs and Contracts</h3>
+
+<h3>Elaboration Iteration 3 &ndash; Domain Model Refinement</h3>
+
+<h3>Elaboration Iteration 3 &ndash; Architectural Analysis</h3>
+
+<p>Architectural analysis can be viewed as a specialization of requirements analysis, with a focus on requirements that strongly influence the &ldquo;architecture.&rdquo; For example, identifying the need for a highly-secure system.</p>
+
+<p>The essence of architectural analysis is to <strong>identify factors that should influence the architecture, understand their variability and priority, and resolve them.</strong> The difficult part is knowing what questions to ask, weighing the trade-offs, and knowing the many ways to resolve an architecturally significant factor, ranging from benign neglect, to fancy designs, to third-party products</p>
+
+<ul>
+<li>variation point
+
+<ul>
+<li>Variations in the existing current system or requirements, such as the multiple tax calculator interfaces that must be supported.</li>
+</ul>
+</li>
+<li>evolution point
+
+<ul>
+<li>Speculative points of variation that may arise in the future, but which are not present in the existing requirements.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>非功能性分析，比如安全、性能等</p>
+
+<h3>Elaboration Iteration 3 &ndash; Logical Architecture Refinement</h3>
+
+<p><img src="http://cs50Mu.github.io/images/post/view-of-layers.jpg" alt="" /></p>
+
+<p>When the lower Application or Domain layer needs to communicate upward with the UI layer, it is usually via the Observer pattern.</p>
+
+<p>it is not coupling per se that is a problem, but unnecessary coupling to variation and evolution points that are unstable and expensive to fix.</p>
+
+<blockquote><p>Is the Application Layer Optional?</p></blockquote>
+
+<p>If present, the Application layer contains objects responsible for knowing the session state of clients, mediating between the UI and Domain layers, and controlling the flow of work.</p>
+
+<h3>Elaboration Iteration 3 &ndash; More Object Design with GoF Patterns</h3>
+
+<blockquote><p>Handling Failure</p></blockquote>
+
+<p>a common exception handling pattern:</p>
+
+<ul>
+<li>Convert Exceptions
+
+<ul>
+<li>Within a subsystem, avoid emitting lower level exceptions coming from lower subsystems or services. Rather, convert the lower level exception into one that is meaningful at the level of the subsystem. The higher level exception usually wraps the lower-level exception, and adds information, to make the exception more contextually meaningful to the higher level.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>For example, the persistence subsystem catches a particular SQLException, and (assuming it can&rsquo;t handle it[2] ) throws a new DBUnavailableException, which contains the SQLException. Note that the DBProductAdapter is like a facade onto a logical subsystem for product information. Thus, the higher level DBProductAdapter (as the representative for a logical subsystem) catches the lower level DBUnavailableException and (assuming it can&rsquo;t handle it) throws a new ProductInfoUnavailableException, which wraps the DBUnavailableException.</p>
+
+<ul>
+<li><p>Name The Problem Not The Thrower</p>
+
+<ul>
+<li>What to call an exception? Assign a name that describes why the exception is being thrown, not the thrower. The benefit is that it makes it easier for the programmer to understand the problem, and it the highlights the essential similarity of many classes of exceptions (in a way that naming the thrower does not).</li>
+</ul>
+</li>
+<li><p>Centralized Error Logging</p>
+
+<ul>
+<li>Use a Singleton-accessed central error logging object and report all exceptions to it. If it is a distributed system, each local singleton will collaborate with a central error logger.</li>
+</ul>
+</li>
+<li><p>Error Dialog</p></li>
+</ul>
+
+
+<blockquote><p>Proxy</p></blockquote>
+
+<p>Problem: Direct access to a real subject object is not desired or possible. What to do?</p>
+
+<p>Solution: Add a level of indirection with a surrogate proxy object that implements the same interface as the subject object, and is responsibility for controlling or enhancing access to it.</p>
+
+<blockquote><p>Abstract Factory</p></blockquote>
+
+<p>Problem: How to create families of related classes that implement a common interface?</p>
+
+<p>Solution: Define a factory interface (the abstract factory). Define a concrete factory class for each family of things to create. Optionally, define a true abstract class that implements the factory interface and provides common services to the concrete factories that extend it.</p>
+
+<h3>Elaboration Iteration 3 &ndash; Package Design</h3>
+
+<h3>Elaboration Iteration 3 &ndash; Designing a Persistence Framework with Patterns</h3>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Grafana源码分析]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/02/05/sourcecode-of-grafana/"/>
+    <updated>2021-02-05T12:04:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/02/05/sourcecode-of-grafana</id>
+    <content type="html"><![CDATA[<h2>Grafana源码分析</h2>
+
+<h3>服务自动注入 / inject</h3>
+
+<p>代码里的service使用了一个包来实现自动注入：<a href="https://github.com/facebookarchive/inject"><code>facebookarchive / inject</code></a></p>
+
+<p>要实现这个自动，需要做以下准备工作：</p>
+
+<p>打struct tag</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">HTTPServer</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">log</span>           <span class="nx">log</span><span class="p">.</span><span class="nx">Logger</span>
+</span><span class='line'>      <span class="nx">macaron</span>       <span class="o">*</span><span class="nx">macaron</span><span class="p">.</span><span class="nx">Macaron</span>
+</span><span class='line'>      <span class="nx">context</span>       <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span>
+</span><span class='line'>      <span class="nx">streamManager</span> <span class="o">*</span><span class="nx">live</span><span class="p">.</span><span class="nx">StreamManager</span>
+</span><span class='line'>      <span class="nx">httpSrv</span>       <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Server</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">RouteRegister</span>        <span class="nx">routing</span><span class="p">.</span><span class="nx">RouteRegister</span>            <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">Bus</span>                  <span class="nx">bus</span><span class="p">.</span><span class="nx">Bus</span>                          <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">RenderService</span>        <span class="nx">rendering</span><span class="p">.</span><span class="nx">Service</span>                <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">Cfg</span>                  <span class="o">*</span><span class="nx">setting</span><span class="p">.</span><span class="nx">Cfg</span>                     <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">HooksService</span>         <span class="o">*</span><span class="nx">hooks</span><span class="p">.</span><span class="nx">HooksService</span>              <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">CacheService</span>         <span class="o">*</span><span class="nx">localcache</span><span class="p">.</span><span class="nx">CacheService</span>         <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">DatasourceCache</span>      <span class="nx">datasources</span><span class="p">.</span><span class="nx">CacheService</span>         <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">AuthTokenService</span>     <span class="nx">models</span><span class="p">.</span><span class="nx">UserTokenService</span>          <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">QuotaService</span>         <span class="o">*</span><span class="nx">quota</span><span class="p">.</span><span class="nx">QuotaService</span>              <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">RemoteCacheService</span>   <span class="o">*</span><span class="nx">remotecache</span><span class="p">.</span><span class="nx">RemoteCache</span>         <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">ProvisioningService</span>  <span class="nx">provisioning</span><span class="p">.</span><span class="nx">ProvisioningService</span> <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">Login</span>                <span class="o">*</span><span class="nx">login</span><span class="p">.</span><span class="nx">LoginService</span>              <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">License</span>              <span class="nx">models</span><span class="p">.</span><span class="nx">Licensing</span>                 <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">BackendPluginManager</span> <span class="nx">backendplugin</span><span class="p">.</span><span class="nx">Manager</span>            <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">PluginManager</span>        <span class="o">*</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">PluginManager</span>           <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>      <span class="nx">SearchService</span>        <span class="o">*</span><span class="nx">search</span><span class="p">.</span><span class="nx">SearchService</span>            <span class="s">`inject:&quot;&quot;`</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>启动server时会build Service Graph:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// 获取注册的服务，具体实现比较简单，分析略过</span>
+</span><span class='line'><span class="nx">services</span> <span class="o">:=</span> <span class="nx">registry</span><span class="p">.</span><span class="nx">GetServices</span><span class="p">()</span>
+</span><span class='line'><span class="k">if</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">buildServiceGraph</span><span class="p">(</span><span class="nx">services</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 看看它做了啥呢，这里就是关键了</span>
+</span><span class='line'>  <span class="c1">// buildServiceGraph builds a graph of services and their dependencies.</span>
+</span><span class='line'>  <span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">Server</span><span class="p">)</span> <span class="nx">buildServiceGraph</span><span class="p">(</span><span class="nx">services</span> <span class="p">[]</span><span class="o">*</span><span class="nx">registry</span><span class="p">.</span><span class="nx">Descriptor</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// Specify service dependencies.</span>
+</span><span class='line'>      <span class="nx">objs</span> <span class="o">:=</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{}{</span>
+</span><span class='line'>          <span class="nx">bus</span><span class="p">.</span><span class="nx">GetBus</span><span class="p">(),</span>
+</span><span class='line'>          <span class="nx">s</span><span class="p">.</span><span class="nx">cfg</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">routing</span><span class="p">.</span><span class="nx">NewRouteRegister</span><span class="p">(</span><span class="nx">middleware</span><span class="p">.</span><span class="nx">RequestMetrics</span><span class="p">,</span> <span class="nx">middleware</span><span class="p">.</span><span class="nx">RequestTracing</span><span class="p">),</span>
+</span><span class='line'>          <span class="nx">localcache</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">),</span>
+</span><span class='line'>          <span class="nx">s</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">service</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">services</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">objs</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">objs</span><span class="p">,</span> <span class="nx">service</span><span class="p">.</span><span class="nx">Instance</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">serviceGraph</span> <span class="nx">inject</span><span class="p">.</span><span class="nx">Graph</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// Provide services and their dependencies to the graph.</span>
+</span><span class='line'>      <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">obj</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">objs</span> <span class="p">{</span>
+</span><span class='line'>          <span class="c1">// 奥秘在这里了</span>
+</span><span class='line'>          <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">serviceGraph</span><span class="p">.</span><span class="nx">Provide</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">inject</span><span class="p">.</span><span class="nx">Object</span><span class="p">{</span><span class="nx">Value</span><span class="p">:</span> <span class="nx">obj</span><span class="p">});</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span> <span class="nx">errutil</span><span class="p">.</span><span class="nx">Wrapf</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="s">&quot;Failed to provide object to the graph&quot;</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// Resolve services and their dependencies.</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">serviceGraph</span><span class="p">.</span><span class="nx">Populate</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">errutil</span><span class="p">.</span><span class="nx">Wrapf</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="s">&quot;Failed to populate service dependency&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>user login是如何实现的？</h3>
+
+<p>有个middleware，在处理业务请求之前会先验证user</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// pkg/middleware/middleware.go</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">GetContextHandler</span><span class="p">(</span>
+</span><span class='line'>  <span class="nx">ats</span> <span class="nx">models</span><span class="p">.</span><span class="nx">UserTokenService</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">remoteCache</span> <span class="o">*</span><span class="nx">remotecache</span><span class="p">.</span><span class="nx">RemoteCache</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">renderService</span> <span class="nx">rendering</span><span class="p">.</span><span class="nx">Service</span><span class="p">,</span>
+</span><span class='line'><span class="p">)</span> <span class="nx">macaron</span><span class="p">.</span><span class="nx">Handler</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">func</span><span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">macaron</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">ctx</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">models</span><span class="p">.</span><span class="nx">ReqContext</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">Context</span><span class="p">:</span>        <span class="nx">c</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">SignedInUser</span><span class="p">:</span>   <span class="o">&amp;</span><span class="nx">models</span><span class="p">.</span><span class="nx">SignedInUser</span><span class="p">{},</span>
+</span><span class='line'>          <span class="nx">IsSignedIn</span><span class="p">:</span>     <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">AllowAnonymous</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">SkipCache</span><span class="p">:</span>      <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">Logger</span><span class="p">:</span>         <span class="nx">log</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;context&quot;</span><span class="p">),</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">orgId</span> <span class="o">:=</span> <span class="nb">int64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">orgIdHeader</span> <span class="o">:=</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">Req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;X-Grafana-Org-Id&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">orgIdHeader</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">orgId</span><span class="p">,</span> <span class="nx">_</span> <span class="p">=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">ParseInt</span><span class="p">(</span><span class="nx">orgIdHeader</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// the order in which these are tested are important</span>
+</span><span class='line'>      <span class="c1">// look for api key in Authorization header first</span>
+</span><span class='line'>      <span class="c1">// then init session and look for userId in session</span>
+</span><span class='line'>      <span class="c1">// then look for api key in session (special case for render calls via api)</span>
+</span><span class='line'>      <span class="c1">// then test if anonymous access is enabled</span>
+</span><span class='line'>      <span class="c1">// 这个写法可以学习一下</span>
+</span><span class='line'>      <span class="k">switch</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithRenderAuth</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">renderService</span><span class="p">):</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithApiKey</span><span class="p">(</span><span class="nx">ctx</span><span class="p">):</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithBasicAuth</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">orgId</span><span class="p">):</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithAuthProxy</span><span class="p">(</span><span class="nx">remoteCache</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">,</span> <span class="nx">orgId</span><span class="p">):</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithToken</span><span class="p">(</span><span class="nx">ats</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">,</span> <span class="nx">orgId</span><span class="p">):</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nx">initContextWithAnonymousUser</span><span class="p">(</span><span class="nx">ctx</span><span class="p">):</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">ctx</span><span class="p">.</span><span class="nx">Logger</span> <span class="p">=</span> <span class="nx">log</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;context&quot;</span><span class="p">,</span> <span class="s">&quot;userId&quot;</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">UserId</span><span class="p">,</span> <span class="s">&quot;orgId&quot;</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">OrgId</span><span class="p">,</span> <span class="s">&quot;uname&quot;</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">Login</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">ctx</span><span class="p">.</span><span class="nx">Data</span><span class="p">[</span><span class="s">&quot;ctx&quot;</span><span class="p">]</span> <span class="p">=</span> <span class="nx">ctx</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">c</span><span class="p">.</span><span class="nx">Map</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// update last seen every 5min</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">ShouldUpdateLastSeenAt</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">ctx</span><span class="p">.</span><span class="nx">Logger</span><span class="p">.</span><span class="nx">Debug</span><span class="p">(</span><span class="s">&quot;Updating last user_seen_at&quot;</span><span class="p">,</span> <span class="s">&quot;user_id&quot;</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">UserId</span><span class="p">)</span>
+</span><span class='line'>          <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">bus</span><span class="p">.</span><span class="nx">Dispatch</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">models</span><span class="p">.</span><span class="nx">UpdateUserLastSeenAtCommand</span><span class="p">{</span><span class="nx">UserId</span><span class="p">:</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">UserId</span><span class="p">});</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nx">ctx</span><span class="p">.</span><span class="nx">Logger</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;Failed to update last_seen_at&quot;</span><span class="p">,</span> <span class="s">&quot;error&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// login接口的实现，它会调用下面的`AuthenticateUser`方法</span>
+</span><span class='line'><span class="c1">// pkg/api/login.go</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">hs</span> <span class="o">*</span><span class="nx">HTTPServer</span><span class="p">)</span> <span class="nx">LoginPost</span><span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">models</span><span class="p">.</span><span class="nx">ReqContext</span><span class="p">,</span> <span class="nx">cmd</span> <span class="nx">dtos</span><span class="p">.</span><span class="nx">LoginCommand</span><span class="p">)</span> <span class="nx">Response</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 这里的逻辑包括：验证user、写cookie（middleware.WriteSessionCookie）</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// pkg/login/auth.go</span>
+</span><span class='line'><span class="c1">// AuthenticateUser authenticates the user via username &amp; password</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">AuthenticateUser</span><span class="p">(</span><span class="nx">query</span> <span class="o">*</span><span class="nx">models</span><span class="p">.</span><span class="nx">LoginUserQuery</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">validateLoginAttempts</span><span class="p">(</span><span class="nx">query</span><span class="p">.</span><span class="nx">Username</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">validatePasswordSet</span><span class="p">(</span><span class="nx">query</span><span class="p">.</span><span class="nx">Password</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">err</span> <span class="o">:=</span> <span class="nx">loginUsingGrafanaDB</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="o">||</span> <span class="p">(</span><span class="nx">err</span> <span class="o">!=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrUserNotFound</span> <span class="o">&amp;&amp;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="nx">ErrInvalidCredentials</span> <span class="o">&amp;&amp;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="nx">ErrUserDisabled</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">ldapEnabled</span><span class="p">,</span> <span class="nx">ldapErr</span> <span class="o">:=</span> <span class="nx">loginUsingLDAP</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">ldapEnabled</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">ldapErr</span> <span class="o">==</span> <span class="kc">nil</span> <span class="o">||</span> <span class="nx">ldapErr</span> <span class="o">!=</span> <span class="nx">ldap</span><span class="p">.</span><span class="nx">ErrInvalidCredentials</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">ldapErr</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="nx">ErrUserDisabled</span> <span class="o">||</span> <span class="nx">ldapErr</span> <span class="o">!=</span> <span class="nx">ldap</span><span class="p">.</span><span class="nx">ErrInvalidCredentials</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">err</span> <span class="p">=</span> <span class="nx">ldapErr</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">ErrInvalidCredentials</span> <span class="o">||</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">ldap</span><span class="p">.</span><span class="nx">ErrInvalidCredentials</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">saveInvalidLoginAttempt</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">loginLogger</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;Failed to save invalid login attempt&quot;</span><span class="p">,</span> <span class="s">&quot;err&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">ErrInvalidCredentials</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrUserNotFound</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">ErrInvalidCredentials</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>总线机制是如何工作的？</h3>
+
+<p>到处都看到<code>bus.Dispatch</code>，那么bus是如何知道action对应的handler的呢？一定有一个register的机制，但没找到呢</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// 这样注册</span>
+</span><span class='line'><span class="nx">bus</span><span class="p">.</span><span class="nx">AddHandler</span><span class="p">(</span><span class="s">&quot;sql&quot;</span><span class="p">,</span> <span class="nx">UpdateUserLastSeenAt</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 这里是handler的实现</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">UpdateUserLastSeenAt</span><span class="p">(</span><span class="nx">cmd</span> <span class="o">*</span><span class="nx">models</span><span class="p">.</span><span class="nx">UpdateUserLastSeenAtCommand</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">inTransaction</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">sess</span> <span class="o">*</span><span class="nx">DBSession</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">user</span> <span class="o">:=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">Id</span><span class="p">:</span>         <span class="nx">cmd</span><span class="p">.</span><span class="nx">UserId</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">LastSeenAt</span><span class="p">:</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">(),</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">ID</span><span class="p">(</span><span class="nx">cmd</span><span class="p">.</span><span class="nx">UserId</span><span class="p">).</span><span class="nx">Update</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">user</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">err</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// AddHandler的实现</span>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <span class="o">*</span><span class="nx">InProcBus</span><span class="p">)</span> <span class="nx">AddHandler</span><span class="p">(</span><span class="nx">handler</span> <span class="nx">HandlerFunc</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">handlerType</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">TypeOf</span><span class="p">(</span><span class="nx">handler</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">queryTypeName</span> <span class="o">:=</span> <span class="nx">handlerType</span><span class="p">.</span><span class="nx">In</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">Elem</span><span class="p">().</span><span class="nx">Name</span><span class="p">()</span>
+</span><span class='line'>  <span class="c1">// 原来所谓注册就是一个map，key是handler的入参，val是handler</span>
+</span><span class='line'>  <span class="nx">b</span><span class="p">.</span><span class="nx">handlers</span><span class="p">[</span><span class="nx">queryTypeName</span><span class="p">]</span> <span class="p">=</span> <span class="nx">handler</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Dispatch的实现</span>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Dispatch</span><span class="p">(</span><span class="nx">msg</span> <span class="nx">Msg</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">globalBus</span><span class="p">.</span><span class="nx">Dispatch</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <span class="o">*</span><span class="nx">InProcBus</span><span class="p">)</span> <span class="nx">DispatchCtx</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">msg</span> <span class="nx">Msg</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">msgName</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">TypeOf</span><span class="p">(</span><span class="nx">msg</span><span class="p">).</span><span class="nx">Elem</span><span class="p">().</span><span class="nx">Name</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">handler</span> <span class="p">=</span> <span class="nx">b</span><span class="p">.</span><span class="nx">handlersWithCtx</span><span class="p">[</span><span class="nx">msgName</span><span class="p">]</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">handler</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">ErrHandlerNotFound</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">params</span> <span class="p">=</span> <span class="p">[]</span><span class="nx">reflect</span><span class="p">.</span><span class="nx">Value</span><span class="p">{}</span>
+</span><span class='line'>  <span class="nx">params</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">ctx</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">params</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">msg</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// 反射来调用</span>
+</span><span class='line'>  <span class="nx">ret</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">handler</span><span class="p">).</span><span class="nx">Call</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Interface</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">err</span><span class="p">.(</span><span class="kt">error</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>setting是如何初始化的？</h3>
+
+<p>看到使用的时候是直接这样：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="k">if</span> <span class="p">!</span><span class="nx">setting</span><span class="p">.</span><span class="nx">BasicAuthEnabled</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>dto的运用</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="c1">// pkg/api/dashboard.go</span>
+</span><span class='line'>      <span class="nx">dashItem</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">dashboards</span><span class="p">.</span><span class="nx">SaveDashboardDTO</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">Dashboard</span><span class="p">:</span> <span class="nx">dash</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">Message</span><span class="p">:</span>   <span class="nx">cmd</span><span class="p">.</span><span class="nx">Message</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">OrgId</span><span class="p">:</span>     <span class="nx">c</span><span class="p">.</span><span class="nx">OrgId</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">User</span><span class="p">:</span>      <span class="nx">c</span><span class="p">.</span><span class="nx">SignedInUser</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">Overwrite</span><span class="p">:</span> <span class="nx">cmd</span><span class="p">.</span><span class="nx">Overwrite</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">dashboard</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">dashboards</span><span class="p">.</span><span class="nx">NewService</span><span class="p">().</span><span class="nx">SaveDashboard</span><span class="p">(</span><span class="nx">dashItem</span><span class="p">,</span> <span class="nx">allowUiUpdate</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">dashboardSaveErrorToApiResponse</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>业务error到api error的转换</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'>  <span class="nx">dashboard</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">dashboards</span><span class="p">.</span><span class="nx">NewService</span><span class="p">().</span><span class="nx">SaveDashboard</span><span class="p">(</span><span class="nx">dashItem</span><span class="p">,</span> <span class="nx">allowUiUpdate</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">dashboardSaveErrorToApiResponse</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">dashboardSaveErrorToApiResponse</span><span class="p">(</span><span class="nx">err</span> <span class="kt">error</span><span class="p">)</span> <span class="nx">Response</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardTitleEmpty</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardWithSameNameAsFolder</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardFolderWithSameNameAsDashboard</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardTypeMismatch</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardInvalidUid</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardUidToLong</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardWithSameUIDExists</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrFolderNotFound</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardFolderCannotHaveParent</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardFolderNameExists</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardRefreshIntervalTooShort</span> <span class="o">||</span>
+</span><span class='line'>      <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardCannotSaveProvisionedDashboard</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">Error</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span> <span class="kc">nil</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardUpdateAccessDenied</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">Error</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span> <span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">validationErr</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">err</span><span class="p">.(</span><span class="nx">alerting</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">);</span> <span class="nx">ok</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">Error</span><span class="p">(</span><span class="mi">422</span><span class="p">,</span> <span class="nx">validationErr</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span> <span class="kc">nil</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardWithSameNameInFolderExists</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">JSON</span><span class="p">(</span><span class="mi">412</span><span class="p">,</span> <span class="nx">util</span><span class="p">.</span><span class="nx">DynMap</span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="s">&quot;name-exists&quot;</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardVersionMismatch</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">JSON</span><span class="p">(</span><span class="mi">412</span><span class="p">,</span> <span class="nx">util</span><span class="p">.</span><span class="nx">DynMap</span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="s">&quot;version-mismatch&quot;</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">pluginErr</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">err</span><span class="p">.(</span><span class="nx">models</span><span class="p">.</span><span class="nx">UpdatePluginDashboardError</span><span class="p">);</span> <span class="nx">ok</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">message</span> <span class="o">:=</span> <span class="s">&quot;The dashboard belongs to plugin &quot;</span> <span class="o">+</span> <span class="nx">pluginErr</span><span class="p">.</span><span class="nx">PluginId</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span>
+</span><span class='line'>      <span class="c1">// look up plugin name</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">pluginDef</span><span class="p">,</span> <span class="nx">exist</span> <span class="o">:=</span> <span class="nx">plugins</span><span class="p">.</span><span class="nx">Plugins</span><span class="p">[</span><span class="nx">pluginErr</span><span class="p">.</span><span class="nx">PluginId</span><span class="p">];</span> <span class="nx">exist</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">message</span> <span class="p">=</span> <span class="s">&quot;The dashboard belongs to plugin &quot;</span> <span class="o">+</span> <span class="nx">pluginDef</span><span class="p">.</span><span class="nx">Name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">JSON</span><span class="p">(</span><span class="mi">412</span><span class="p">,</span> <span class="nx">util</span><span class="p">.</span><span class="nx">DynMap</span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="s">&quot;plugin-dashboard&quot;</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="nx">message</span><span class="p">})</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ErrDashboardNotFound</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">JSON</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="nx">util</span><span class="p">.</span><span class="nx">DynMap</span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="s">&quot;not-found&quot;</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Error</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="s">&quot;Failed to save dashboard&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[极客时间「软件工程之美」学习笔记]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-geektime-software-engineering/"/>
+    <updated>2021-02-05T11:58:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-geektime-software-engineering</id>
+    <content type="html"><![CDATA[<p><a href="https://time.geekbang.org/column/article/82337">软件工程之美</a></p>
+
+<p>配套书籍：构建之法</p>
+
+<p>[toc]</p>
+
+<h3>开篇</h3>
+
+<p>未来10年，什么不会变？</p>
+
+<blockquote><p>数据结构、算法、面向对象思想、设计模式、软件工程</p></blockquote>
+
+<h3>基础理论</h3>
+
+<h4>怎样理解软件工程</h4>
+
+<p>像这种有人参与、有计划、有步骤地造一件产品，我们通常称为“工程”。</p>
+
+<p>就是要用工程化方法去规范软件开发，让项目可以按时完成、成本可控、质量有保证。</p>
+
+<h4>工程思维</h4>
+
+<p>软件工程不仅可以应用在软件项目中，还可以应用于日常生活中遇到的一些问题，Everything is a project</p>
+
+<p>站在整体而非局部去看问题</p>
+
+<p>工程思维，本质上是一种思考问题的方式，在解决日常遇到的问题时，尝试从一个项目的角度去看待问题、尝试用工程方法去解决问题、站在一个整体而不是局部的角度去看问题。</p>
+
+<p><a href="https://zhuanlan.zhihu.com/p/21314651">记录下两个孩子在MineCraft里面还原公寓的经历</a></p>
+
+<h4>瀑布模型</h4>
+
+<p>问题的定义与规划</p>
+
+<p>需求分析</p>
+
+<p>软件设计</p>
+
+<p>程序编码</p>
+
+<p>软件测试</p>
+
+<p>运行维护</p>
+
+<p>优缺点：阶段分的很清楚，但有点死板了。对于前期需求不明确的项目，很难开展需求分析，后续如果有需求变更，瀑布模型便很难响应</p>
+
+<h4>其它模型</h4>
+
+<h5>快速原型模型</h5>
+
+<p>先迅速建造一个可以运行的软件原型，然后收集用户反馈，再反复修改确认，使开发出的软件能真正反映用户需求，这种开发模型就叫快速原型模型，也叫原型模型</p>
+
+<h5>增量模型</h5>
+
+<p>按模块分批次交付</p>
+
+<h5>迭代模型</h5>
+
+<p>每次迭代都是一个可用的版本</p>
+
+<h4>敏捷开发</h4>
+
+<p>敏捷不是一种方法论，也不是一种软件开发的具体方法，更不是一个框架或过程，<strong>而是一套价值观和原则</strong>。</p>
+
+<p>当你开发做决策的时候，遵守了敏捷开发的价值观和原则，不管你是不是用 Scrum 或者极限编程，那么都可以算是敏捷开发。</p>
+
+<h4>项目管理金三角</h4>
+
+<p>做产品想“多、快、好、省”都占着，是不可能的，最多只能选两样。</p>
+
+<p>想要便宜和质量好，就要花时间等；想要快还要质量好，那就得多花钱；想要又便宜又快，那就得接受难用、质量差。</p>
+
+<p>在软件项目中，有一个类似的平衡关系，就是软件质量（产品的质量，客户的满意度）与范围（需要实现多少功能）、时间（多久可以完成）、成本（花多少钱）四个要素之间的平衡。</p>
+
+<h3>项目规划篇</h3>
+
+<h4>可行性分析</h4>
+
+<p>如何科学地论证项目的可行性，以及这个项目是不是值得做</p>
+
+<p>可分为经济可行性、技术可行性、社会可行性</p>
+
+<h4>如果你想技术转管理，先来试试管好一个项目</h4>
+
+<h4>代码未动，计划先行</h4>
+
+<p>如果没有计划，你的项目可能会陷入一种无序和混乱中。</p>
+
+<p>参与做计划的过程，可以让你对项目的各种事情了然于胸，这就相当于扩大了你的上下文，让你有更高的视角看待当前工作遇到的问题。</p>
+
+<blockquote><p>如何制定计划？</p></blockquote>
+
+<p>第一步：任务分解；</p>
+
+<p>意思是工作分解结构（Work Breakdown Structure, WBS)。就是把要做的事情，按照一个树形结构去组织，逐级分解，分割成小而具体的可交付结果，直到不能再拆分为止</p>
+
+<p>第二步：估算时间；</p>
+
+<p>主要还是得依靠以前的经验:</p>
+
+<ul>
+<li><p>任务拆分的越细致，想的越清楚，就能估算的越准确</p></li>
+<li><p>要让负责这个任务的人员参与估算</p></li>
+</ul>
+
+
+<p>在沟通中也要注意技巧，<strong>不要采用质问的方式</strong>：“这么简单一个模块居然要 5 天？”这只会让听者产生逆反心理，无法有效的沟通。可以恰当的提一些问题来达到有效沟通的目的，比如我通常会问两个问题：</p>
+
+<ul>
+<li>“能不能把你这个任务再细化一下？”</li>
+<li>“能不能简单介绍一下这个模块你是打算如何实现的？”</li>
+</ul>
+
+
+<p>对于估算的结果，<strong>通常还要考虑增加一些余量</strong>，因为实际项目执行过程中，并没办法保证是 100% 投入，有可能并行还有其他事情，或者一些突发事情、事先没有考虑到的任务都有可能影响进度。</p>
+
+<p>第三步：排任务路径。</p>
+
+<p>项目中有些任务是可以并行做的，而有些任务之间则是有依赖关系的。</p>
+
+<p>排路径就是要根据任务之间的关系，资源的占用情况，排出合适的顺序。</p>
+
+<p><strong>制定计划时不要担心不够准确，先有一个基本的计划，可以粒度比较粗，不那么准确，让事情先推进起来。</strong></p>
+
+<blockquote><p>设置里程碑</p></blockquote>
+
+<p>周期很长的项目，一直看不到结果，时间一长会很疲惫。所以有经验的项目经理会在项目启动后，根据制订好的初步计划，确定几个关键的里程碑</p>
+
+<p>里程碑代表着一份承诺，在里程碑完成后，大家会获得一种正面激励。</p>
+
+<p>在项目的推进过程中，根据里程碑完成的情况，你就可以很直观地知道项目的进展如何。如果发现不能如期完成里程碑，就需要进行适当的调整了</p>
+
+<blockquote><p>计划需要跟踪和调整</p></blockquote>
+
+<p>跟踪进度的方式主要有两种，一种是项目经理定期收集跟踪，一种是项目成员主动汇报。项目经理挨个收集的话，会有一个沟通确认的过程，对进度会了解的更准确；项目成员主动汇报，可以减少项目经理的收集工作，但有可能不准确。</p>
+
+<h4>流程和规范：红绿灯不是约束，而是用来提高效率</h4>
+
+<p>从个体来看，因为流程规范的存在，确实可能存在效率降低的情况，但从团队的角度来看，好的流程规范反而是提升效率的。</p>
+
+<p>以代码审查的规范为例，对于技术高的程序员来说，代码审查可能会耽误一点时间，但对整个团队来讲：</p>
+
+<ul>
+<li>即使是水平高的程序员，也可能会被发现有错误，代码审查可以降低出错的概率，保障质量</li>
+<li>对于水平低的程序员，可以通过代码审查学习和成长，代码被高水平程序员审查后，可以有效提高质量。</li>
+</ul>
+
+
+<blockquote><p>如何制定好流程规范？</p></blockquote>
+
+<p>第一步：明确要解决的问题</p>
+
+<p>要制定一个流程规范，第一步就是明确你是要解决什么样的问题。项目中很多问题，都可以思考是不是能通过流程解决。</p>
+
+<p>第二步：提出解决方案</p>
+
+<p>第三步：达成共识，推广执行</p>
+
+<p>在流程规范提出后，还需要得到大家认可，只有大家认可，达成共识，才能共同遵守，保障制度的执行。</p>
+
+<p>第四步： 持续优化，不断改进</p>
+
+<p>流程制定后，在实际执行的时候，难免发现一些不合理或者不科学的地方，这时候就需要对其进行调整。</p>
+
+<blockquote><p>将流程规范工具化</p></blockquote>
+
+<p>尽可能借助技术手段来推动甚至替代流程规范。</p>
+
+<h4>白天开会，加班写代码的节奏怎么破？</h4>
+
+<blockquote><p>如何提高开会效率？</p></blockquote>
+
+<p>我们先要认识到一个前提：<strong>那就是要让大家意识到开会是有成本的，如果开会创造的价值不能大于其成本，就是浪费。</strong></p>
+
+<ol>
+<li>砍掉一些没价值的会议</li>
+<li>减少参与会议的人。会议的成本和两个因素相关：一个是人数，一个是时间。如果减少人数，就能减少成本。</li>
+<li>缩短开会时间</li>
+<li>提升会议所创造的价值</li>
+</ol>
+
+
+<h4>项目管理工具：一切管理问题，都应思考能否通过工具解决</h4>
+
+<blockquote><p>基于 Ticket 的任务跟踪系统</p></blockquote>
+
+<p>那一个 Ticket 应该包含哪些主要信息呢？</p>
+
+<ul>
+<li>标题：摘要性的描述 Ticket 内容；</li>
+<li>类型：属于什么类型的 Ticket：Bug、需求、任务；</li>
+<li>内容：Ticket 的详细内容，例如，如果是 Bug 的话，除了要写清楚 Bug 内容，还需要重现步骤。如果是需求的话，要有需求的描述，可能还需要额外的文档链接辅助说明；</li>
+<li>创建人：谁创建的这条 Ticket；</li>
+<li>优先级：这个 Ticket 的优先级高还是低；</li>
+<li>状态：Ticket 的状态，例如：未开始、处理中、已解决、重新打开、关闭等；</li>
+<li>指派给谁：这个 Ticket 被指派给谁了，谁来负责；</li>
+<li>历史记录：整个 Ticket 改变的历史信息，用以跟踪；</li>
+</ul>
+
+
+<h4>风险管理：不能盲目乐观，凡事都应该有B计划</h4>
+
+<p>风险管理就是指在项目进行过程中，识别可能的风险，对风险进行评估，并加以监控，从而减少风险对项目的负面影响。</p>
+
+<blockquote><p>如何做好风险管理？</p></blockquote>
+
+<p>培养风险意识</p>
+
+<p>项目中的任务，不能盲目乐观，都思考一下它最坏的结果是什么，如果最坏的结果不能接受，就说明要有个 B 计划，考虑风险管理了。</p>
+
+<p>管理风险</p>
+
+<p>第一步：风险识别，识别可能的风险</p>
+
+<ul>
+<li>项目风险：项目预算、进度、用户和需求等方面的问题；</li>
+<li>人员风险：人员离职、人手不足等问题；</li>
+<li>技术风险：采用的技术所可能带来的风险；</li>
+<li>商业风险：与市场、产品策略等有关的商业风险。</li>
+</ul>
+
+
+<p>第二步：风险量化，对风险进行评估量化</p>
+
+<p>第三步：应对计划，对风险制定应对策略</p>
+
+<p>第四步：风险监控，对风险进行监控预警</p>
+
+<h4>怎样才能写好项目文档？</h4>
+
+<blockquote><p>为什么要写文档？</p></blockquote>
+
+<p>写文档，其实对个人、对项目、对团队，都是非常重要的事情。</p>
+
+<ul>
+<li>帮助写文档的人理清楚思路.先写文档。先写文档，就会抛开代码细节，去站在全局思考</li>
+</ul>
+
+
+<p>有人觉得自己写作不行，所以不会写文档。写作不行，只是让你在用词遣句上会有所欠缺，而这不是写文档的真正障碍</p>
+
+<p><strong>真正的障碍是没想清楚，在心中只有一些未成型的混乱的想法和概念，必须要努力把这些模糊的想法确定化和具体化，才能写出来。</strong></p>
+
+<p>换个角度来说，如果你连文档都写不出来，那又怎么能指望代码写得好呢？</p>
+
+<ul>
+<li>便于未来的维护和交接</li>
+</ul>
+
+
+<p>我有一个习惯，每到一个新项目组，就会把日常工作中遇到的问题、各种环境配置、一些操作的步骤等，所有以后可能还会用上的都记录下来，其中一些还会整理到团队的 WIKI 上</p>
+
+<ul>
+<li>团队更好的协作沟通</li>
+</ul>
+
+
+<blockquote><p>如何写好文档？</p></blockquote>
+
+<p>很多人对于写文档是有心理压力，觉得自己写作水平不高，不知道该如何下手。首先你要对文档有一个正确的认识：文档写作，<strong>关键是通过文档把你的想法表达出来</strong>，至于用词、格式相对都是其次的。</p>
+
+<ul>
+<li>从模仿开始</li>
+<li>从小文档开始</li>
+</ul>
+
+
+<p>项目中很多文档都可以从这样小的内容开始：别人给你讲一个问题的时候记录下来；你给别人讲一个问题的时候记录下来；解决一个技术难题时记录下来方案……</p>
+
+<p>这些记录下来的笔记，稍加整理，就可以是很不错的项目文档。</p>
+
+<ul>
+<li>从粗到细，迭代更新</li>
+</ul>
+
+
+<p>为什么我不一开始就写很细的文档呢？</p>
+
+<p>一个原因是太难写，要花很多时间精力，甚至可能写不下去；另一个原因就是在收集反馈的过程中，会有很多修改。<strong>写得越细则无用功越多，最后，你甚至会因为不想改文档而抵触不同的意见。</strong></p>
+
+<blockquote><p>基本的画图的技巧</p></blockquote>
+
+<p>写文档的时候，主要有几种图比较常用：线框图、流程图、时序图、各种格式的截图。</p>
+
+<ul>
+<li>线框图</li>
+<li>流程图</li>
+<li>时序图</li>
+</ul>
+
+
+<p>在评审技术文档或者你自己写技术文档，你可以从几个角度去思考：</p>
+
+<ol>
+<li><p>文档是否讲清楚了它的目的是什么？内容是否和目的匹配？
+比如说你这个设计文档是要解决什么问题？设计的是哪个模块？</p></li>
+<li><p>文档是否解释了为什么要这么做？
+比如说你这个模块设计文档，是否解释清楚了为什么要这样设计？这样设计的优缺点是什么？</p></li>
+<li><p>文档是否描述清楚了如何实现？
+比如说作为模块设计文档，到底是如何设计的？有没有讲清楚整体的设计架构？</p></li>
+</ol>
+
+
+<p>总结一下就是一个技术文档，要讲清楚：是什么（What）？为什么（Why）？怎么做（How）？这三个是最核心的要素。</p>
+
+<p>这三个核心问题讲清楚了，然后就是多画图，内容简洁明了。</p>
+
+<blockquote><p>例子？</p></blockquote>
+
+<p><a href="https://docshome.gitbooks.io/microservices/content/2-using-an-api-gateway.html">微服务：从设计到部署</a></p>
+
+<h3>需求分析篇</h3>
+
+<h3>系统设计篇</h3>
+
+<h4>架构设计：普通程序员也能实现复杂系统？</h4>
+
+<p>软件需求越来越多，而高手又是稀缺资源，所以要解决的一个问题就是：让普通程序员也能参与其中，一起实现复杂系统，而不必依赖于很多精英。</p>
+
+<blockquote><p>为什么软件项目需要架构设计？</p></blockquote>
+
+<p>复杂的软件项目，通常有两个特点：需求不确定和技术复杂。</p>
+
+<blockquote><p>什么是架构设计？</p></blockquote>
+
+<p>最开始我以为架构设计的目标是满足业务需求，保证软件能正常工作。后来发现<strong>这其实只是最基本的要求，因为很多糟糕的架构设计，也能满足业务需求，让系统正常运行。</strong></p>
+
+<p>架构设计的目标，是<strong>用最小的人力成本来满足需求的开发和响应需求的变化，用最小的运行成本来保障软件的运行。</strong></p>
+
+<p>架构设计，已经有很多成熟的方法:</p>
+
+<ul>
+<li>使用微服务这样的架构，把复杂系统拆分成一系列小的服务，服务再拆成功能模块，让人员更好地分工协作；</li>
+<li>通过前后端分离，让程序员更专注于某个知识领域，降低开发难度；</li>
+<li>用分层设计来隔离业务逻辑，减少需求变更带来的影响。</li>
+</ul>
+
+
+<p>这些架构设计的方法，其实都是基于工程领域分而治之的策略，本质上就是将系统分拆，将人员分拆。<strong>但是光拆还不够，拆完了还得能拼回来</strong></p>
+
+<blockquote><p>如何做好架构设计？</p></blockquote>
+
+<p>第一步：分析需求</p>
+
+<p>架构设计，最基本的就是要能满足业务需求，所以搞清楚需求是至关重要一步。<strong>而产品需求，只有功能的描述，界面的交互，还需要进一步进行抽象。</strong></p>
+
+<p>一个常用的分析方法就是分析用例，也就是了解主要用户角色和其使用的场景。</p>
+
+<p>第二步：选择相似的成熟的架构设计方案</p>
+
+<p><a href="http://www.ruanyifeng.com/blog/2016/09/software-architecture.html">软件架构入门</a></p>
+
+<p><a href="https://yq.aliyun.com/articles/57715">异地多活设计辣么难？其实是你想多了！</a></p>
+
+<p>这篇文章有醍醐灌顶的感觉~  解开了不少疑惑！</p>
+
+<p>第三步：自顶向下层层细化</p>
+
+<p>第四步：验证和优化架构设计方案</p>
+
+<blockquote><p>推荐材料</p></blockquote>
+
+<ul>
+<li><a href="https://www.w3cschool.cn/architectroad/">架构师之路</a></li>
+<li><a href="https://mp.weixin.qq.com/s/wSCeO8QVYniMIGcBFDZyjw?">图解：从单个服务器扩展到百万用户的系统</a></li>
+<li><a href="https://www.infoq.cn/article/architecture-design-process">以“前浪微博”场景为例，谈谈架构设计流程四步曲</a></li>
+<li><a href="https://book.douban.com/subject/30333919/">架构整洁之道</a></li>
+<li><a href="https://www.infoq.cn/article/q7xlHaaiZ-9H6SwHXCNg">极客邦池建强：难的不是从零打造一款产品，而是……</a></li>
+<li><a href="https://book.douban.com/subject/1761742/">Head First Object-Oriented Analysis and Design</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2016/09/software-architecture.html">软件架构入门</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[「影响力」读书笔记]]></title>
+    <link href="http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-influence/"/>
+    <updated>2021-02-05T11:54:00+08:00</updated>
+    <id>http://cs50Mu.github.io/blog/2021/02/05/reading-notes-of-influence</id>
+    <content type="html"><![CDATA[<h3>互惠</h3>
+
+<p>一个古老的原理：给予、索取。。。再索取</p>
+
+<p>互惠原因认为，我们应该尽量以相同的方式回报他人为我们所做的一切</p>
+
+<p>当前社会的普遍价值观认为「互惠」是一种好的行为，若违背了它会遭到无情的唾弃和嘲弄，甚至会被戴上乞讨赖账、忘恩负义之类的大帽子。我们为了维护自己的形象，往往会努力遵循这个原则，但也给了一些人利用这个原理获利的机会</p>
+
+<p>互惠原理的几个重要特点：</p>
+
+<ul>
+<li>互惠原理具有压倒性的力量</li>
+</ul>
+
+
+<p>意味着即使是我们不喜欢的人（不请自来的推销员、令人讨厌的点头之交等），只要在提出要求之前送我们一个小小的人情，我们对他们的要求就失去了抵抗力。</p>
+
+<p>例子：</p>
+
+<p>问卷调查时附带一些钱作为礼物，会明显提供问卷的答复率（对比，回答了问卷后，再给奖励，效果并不好）</p>
+
+<p>生意人发现，在收到一件礼物后，顾客们有可能会购买他们本来会拒绝的服务或商品</p>
+
+<p>免费试用（据说目的是让他们试一下看自己到底喜不喜欢这个产品），但实际上免费试用品也是一种礼品。比如，超市中的试吃，你吃了后还会那么从容的走开吗？</p>
+
+<p>吉姆 琼斯：集体自杀事件中，大部分人都顺从的服毒自杀，但没有自杀的人中，拒绝自杀的命令是因为“当初在有需要的时候拒绝了吉姆 琼斯的帮助”</p>
+
+<ul>
+<li>强加于人的负债感</li>
+</ul>
+
+
+<p>互惠原理只是说我们应该回报人家的善举，而并没有说只有当我们主动要求了这个善举时才有回报的义务。当这个好处是不请自来时，这种负债的感觉也是照样存在的</p>
+
+<h4>「互惠」的变种</h4>
+
+<ul>
+<li>相互退让</li>
+</ul>
+
+
+<p>如果他人对我们作出让步，我们也有义务作出让步</p>
+
+<ul>
+<li>拒绝 &ndash; 退让策略</li>
+</ul>
+
+
+<p>先提出一个比较大的、极可能被拒绝的请求，然后在被拒绝后，再提出你真正想提的请求</p>
+
+<p>例子：</p>
+
+<p>如果你要向别人推销，就要先展示质次价高的商品；如果你要向别人借钱，就要先开口借一个很高的金额。这样会增加第二个请求被接受的可能性</p>
+
+<h4>如何保护自己</h4>
+
+<p>好像也没有很好的办法</p>
+
+<ul>
+<li>拒绝好意？ 有可能会误伤</li>
+<li>有意识的提醒自己</li>
+</ul>
+
+
+<h3>承诺和一致</h3>
+
+<p>如果一开始没拒绝，后来就难了</p>
+
+<p>我们都有一种要做到与过去的行为相一致的愿望。一旦我们作出了一个觉得或者选择了一种立场，就会有发自内心以及来自外部的压力来迫使我们与此保持一致。在这种压力下，我们总是希望以实际行动来证明我们以前的决定是正确的</p>
+
+<p>例子：</p>
+
+<p>一投完票，选民们往往就会更相信他们的候选人一定会当选</p>
+
+<p>玩具商先鼓吹一个玩具，当又不供货，家长买不到只能先买别的替代品，然后玩具商又鼓吹一波，这次有货了，为了信守承诺，家长又买了一次</p>
+
+<h4>为什么会这样？</h4>
+
+<p>很多情况下，保持一致是一种很有益的行为；始终如一的个性是受到高度评价的</p>
+
+<h4>如何被利用</h4>
+
+<p>先引诱我们采取某种行动或作出某种声明，然后再利用我们要与过去保持一致的压力来迫使我们屈从于他们的要求</p>
+
+<p>例子：</p>
+
+<p>音乐会广告隐藏票价（即使是一个电话，也是对参加音乐会的一种初步承诺）</p>
+
+<p>先给出一个很有诱惑力的价格，使顾客作出买车的决定，然后当这个决定已经作出但还没有最后成交时，那个最先给出的诱惑却被巧妙的拿走了</p>
+
+<h4>如何保护自己</h4>
+
+<p>唯一有效的办法是对原理有一个清醒的认识。虽然保持一致性通常来说是应该的，甚至是至关重要的，但愚蠢地、机械地保持一致却是应该避免的</p>
+
+<h3>社会认同</h3>
+
+<p>在大家都用同样的方式思考的地方，没有人思考的很深刻</p>
+
+<p>为什么有些电视中会使用配音笑声？为什么笑声明明是假的，却仍然可以左右我们的行动？</p>
+
+<p>社会认同原理认为，我们进行是非判断的标准之一就是看别人是怎么想的，尤其是当我们要决定什么是正确的行为时。如果我们看到别人在某种场合做某件事情，我们就会断定这样做是有道理的。我们周围的人的做法对我们决定自己应该怎么行动都有重要的指导意义。</p>
+
+<p>例子：</p>
+
+<p>小费盘中先放几块钱，假装是前面的顾客留下的</p>
+
+<p>广告商最喜欢告诉我们某种商品的增长最快或者销售最旺，不必说他们的产品很优良，而只需说其他人都这样认为，这个证据已经很充分了</p>
+
+<p>慈善节目里主持人会花大量时间念一长串已经捐赠的观众名单</p>
+
+<p>夜总会老板在舞厅还有空余的情况下故意让顾客在外面排长龙（让大家觉得，这么多人都去了。。）</p>
+
+<blockquote><p>旁观者效应</p></blockquote>
+
+<ul>
+<li>别人不救，我也不救</li>
+</ul>
+
+
+<p><a href="https://zh.wikipedia.org/wiki/%E5%B0%8F%E6%82%A6%E6%82%A6%E4%BA%8B%E4%BB%B6">小悦悦事件</a>：2岁女童王悦（乳名“小悦悦”）在阴雨天黑夜独自跑出家门百米外后，先后被两辆汽车撞伤倒地，最初路过的18名行人未及时施救，惟第19名路人陈贤妹（生于1953年，佛山本地人，职业是清洁工）救起王悦</p>
+
+<p>如何破解？  明确指定一个人来寻求帮助</p>
+
+<ul>
+<li>别人进，我也进</li>
+</ul>
+
+
+<p>股票牛市大家都冲进去</p>
+
+<h4>影响因子</h4>
+
+<ul>
+<li>不确定性</li>
+</ul>
+
+
+<p>当人们对自己的处境不是很有把握时，更有可能根据他人的行为来决定自己应该怎么办</p>
+
+<ul>
+<li>相似性</li>
+</ul>
+
+
+<p>我们更有可能效仿与我们相同而不是不同的人的行动</p>
+
+<h4>如何保护自己</h4>
+
+<p>大部分情况下，这个原理是非常有用处的</p>
+
+<p>困境：如何利用一种既对我们有利又对我们有害的装置</p>
+
+<ul>
+<li>识别被伪造的社会证据。比如前面说的假笑、广告里的普通人</li>
+<li>多观察、多思考、多求证</li>
+</ul>
+
+
+<h3>喜好</h3>
+
+<p>人们总是愿意答应自己认识和喜爱的人提出的要求，这应该是很自然的。但这条原理却被一些想要我们答应他们要求的陌生人利用了</p>
+
+<ul>
+<li>外表吸引力的光环</li>
+</ul>
+
+
+<p>例子：</p>
+
+<p>骗子通常都是俊男靓女</p>
+
+<ul>
+<li>相似性</li>
+</ul>
+
+
+<p>人都喜欢跟自己类似的人，不管是什么方面，所谓的聊的来</p>
+
+<ul>
+<li>称赞</li>
+</ul>
+
+
+<h4>如何保护自己</h4>
+
+<p>时刻自问：是否对「对方」过于喜爱了？</p>
+
+<p>提醒自己，把交易者和交易分开</p>
+
+<h3>权威</h3>
+
+<p>跟着行家走</p>
+
+<p>遵从权威对我们来说，通常都是一件很实际的事情。比如，年幼的时候，老师和父母是我们心目中的权威人物，我们发现听他们的话是很明智的。这一方面是因为他们拥有更多的智慧，另一方面是由于他们就是决定奖赏的人</p>
+
+<p>成年后，因为同样的原因，我们还是愿意接受权威的忠告，只不过现在的权威人物变成了雇主、法官和政府。因为他们所处的有利位置，他们可以接触更多的信息，拥有更多的权力，因此按照他们的意志行事大体上是错不了的。</p>
+
+<p>而正是由于我们对这一点深信不疑，也很容易走进一个误区：有时候权威的话并没有什么道理，可是我们还是会毫不犹豫的按照他们所说的做</p>
+
+<p>例子：</p>
+
+<p>名人做广告。扮演皇帝的演员</p>
+
+<ul>
+<li>头衔</li>
+</ul>
+
+
+<p>骗子喜欢用头衔、衣着和象征身份地位的外部标志</p>
+
+<ul>
+<li>衣着</li>
+</ul>
+
+
+<p>假警察</p>
+
+<p>网络诈骗，一般会声称自己是公安局的</p>
+
+<ul>
+<li>外部标志</li>
+</ul>
+
+
+<p>有豪车</p>
+
+<h4>如何保护自己</h4>
+
+<p>做好充分的思想准备，对权威保持高度的警觉。有了这种警觉，同时也意识到权威是多么容易假冒，在遇到有人想利用权威来影响我们的场合，我们自然就会采取一种比较谨慎的态度</p>
+
+<h3>短缺</h3>
+
+<p>物以稀为贵</p>
+
+<ul>
+<li>数量有限</li>
+</ul>
+
+
+<p>例子：</p>
+
+<p>告诉顾客某种产品数量有限，不能保证一直有货。&mdash;&mdash;  饥饿营销</p>
+
+<ul>
+<li>时间限制</li>
+</ul>
+
+
+<p>截止时间策略</p>
+
+<p>例子：</p>
+
+<p>审查制度使得“禁片”更加流行，删减片段更容易传播</p>
+
+<h4>如何保护自己</h4>
+
+<p>面临短缺的压力时，问自己：我们为什么想要这件东西？如果我们的回答是主要目的是拥有它，那么我们就应该根据它的稀缺程度来决定它的价格。然而，如果回答是我们之所以想要它，主要是为了它的功能（驾驶、吃、穿、喝的东西），那么我们就应该记住，不管这种东西的供应是否充足，它的功能是一样的。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Golang工程最佳实践]]></title>
@@ -8847,638 +10788,6 @@
 
 
 <p>所以这么看来，Django这一类框架在前面挂一个nginx是必须的。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[zhihu authentication analysis]]></title>
-    <link href="http://cs50Mu.github.io/blog/2017/03/20/zhihu-authentication-analysis/"/>
-    <updated>2017-03-20T09:39:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2017/03/20/zhihu-authentication-analysis</id>
-    <content type="html"><![CDATA[<h2>知乎以及得到手机App与Server端的认证机制分析</h2>
-
-<h3>抓包</h3>
-
-<p>采用Charles进行抓包</p>
-
-<ul>
-<li>一个关键点是如何抓SSL包
-
-<ul>
-<li><a href="https://www.charlesproxy.com/documentation/using-charles/ssl-certificates/">https://www.charlesproxy.com/documentation/using-charles/ssl-certificates/</a></li>
-</ul>
-
-
-<p>  需要在手机上安装Charles自己的证书，但注意<strong>从Android N开始，必须在手机App的配置文件里显式的指定信任Charles的根证书才行。</strong></p></li>
-</ul>
-
-
-<p>在分析得到App与Server端的交互时发现，几乎每个链接都会带一个sign参数，如果不传递这个参数的话，Server端会返回错误，那么这个sign参数是从哪里来的呢？这个时候就需要反编译一下APK来分析一下了。</p>
-
-<h3>逆向APK</h3>
-
-<p>逆向APK所用到的工具主要是Jadx，有时可能还需要Hopper Dissembler，下面会详细介绍</p>
-
-<ul>
-<li><p>Jadx</p>
-
-<p>  来自GitHub首页的介绍：Command line and GUI tools for produce Java source code from Android Dex and Apk files，非常简单易用，<strong>反编译的时候记得在配置里把反混淆勾上。</strong></p>
-
-<p>  反编译完成后，可以直接在jadx-gui里浏览源代码，也可以导入Android Studio里查看，再配合一些关键字用grep在命令行定位代码不要太爽啊~~~</p></li>
-</ul>
-
-
-<p>在分析反编译出来的代码过程中发现，某个关键的函数找不到定义的地方，样子如下：</p>
-
-<pre><code>    public static native String keyBaseFromJNI();
-</code></pre>
-
-<p>一番搜索后发现，这种写法是调用了C或者C++写的底层库文件（比如so或者dll文件），这样做的原因显然是：1. 效率更高；2. 增加破解难度。下面就该反汇编大神出场了。</p>
-
-<ul>
-<li><p>Hopper Dissembler</p>
-
-<p>  Hopper is a tool that will assist you in your static analysis of executable files.</p>
-
-<ul>
-<li><a href="https://www.hopperapp.com/tutorial.html">https://www.hopperapp.com/tutorial.html</a></li>
-<li><a href="https://bestswifter.com/app-crack/">https://bestswifter.com/app-crack/</a></li>
-<li><a href="http://www.10tiao.com/html/410/201701/2656257139/1.html">http://www.10tiao.com/html/410/201701/2656257139/1.html</a></li>
-</ul>
-
-
-<p>  直接把从APK中提取出的so文件导入Hopper Dissembler即可，注意这个工具最牛逼的一点是可以生成C伪代码。</p></li>
-<li>TODO
-
-<ul>
-<li>搞明白混淆是怎么做的</li>
-<li>为啥反编译后的代码有些是正常的，有些变量名已经被改成乱码了，基本不可读</li>
-</ul>
-</li>
-</ul>
-
-
-<p>分析知乎客户端与Server认证机制时遇到一个签名算法HMAC，顺便把各种签名算法学习一下</p>
-
-<h3>签名算法</h3>
-
-<ul>
-<li>hmac-sha1</li>
-<li>md5</li>
-<li>sha1</li>
-<li>各种算法的优缺点</li>
-</ul>
-
-
-<p>to be continued</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[process data using awk]]></title>
-    <link href="http://cs50Mu.github.io/blog/2017/02/22/process-data-using-awk/"/>
-    <updated>2017-02-22T15:18:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2017/02/22/process-data-using-awk</id>
-    <content type="html"><![CDATA[<h3>AWK学习笔记</h3>
-
-<p>以下内容主要参考自《The AWK Programming Language》一书以及GNU的《The GNU Awk User’s Guide》。</p>
-
-<ul>
-<li><p>the structure of an AWK program</p>
-
-<pre><code>  pattern { action }
-</code></pre>
-
-<p>the basic operation of awk is to scan a sequence of input lines one after another, searching for lines that are matched by any of the patterns in the program. For each pattern that matches, the corresponding action is performed.</p></li>
-<li><p>simple example</p>
-
-<ul>
-<li><p>NF, the number of fields. Print the number of fields and the first and last fields of each input line.</p>
-
-<pre><code>  { print NF, $1, $NF }
-</code></pre></li>
-<li><p>NR, the number of lines read so far. Prefix each line of the file with its line number.</p>
-
-<pre><code>  { print NR, $0 }
-</code></pre></li>
-<li><p>Putting text in the output.</p>
-
-<pre><code>  { print "this is",NR,"line",$0 }
-</code></pre></li>
-<li><p>Fancier Output, use <code>printf</code> statement</p></li>
-<li><p>Selection by comparision</p>
-
-<pre><code>  $2 &gt;= 5
-</code></pre></li>
-<li><p>Selection by text content</p>
-
-<pre><code>  $1 == "Susie"
-</code></pre></li>
-<li><p>Combinations of patterns. <code>&amp;&amp;</code>,<code>||</code>,<code>!</code>, which stand for AND, OR, NOT</p>
-
-<pre><code>  $2 &gt;=4 || $3 &gt;= 20
-</code></pre></li>
-<li><p>BEGIN and END. The special pattern <code>BEGIN</code> matches before the first line of the first input file read, and <code>END</code> matches after the last line of the last file has been processed. The following example uses <code>BEGIN</code> to print a heading.</p>
-
-<pre><code>  BEGIN { print "NAME  RATE  HOURS"; print "" }
-  { print }
-</code></pre>
-
-<p>  注意，第一个<code>print ""</code> 输出一个空行</p></li>
-<li><p>Exchange the first two fields of every line and then print the line</p>
-
-<pre><code>  { temp = $1; $1 = $2; $2 = temp; print }
-</code></pre></li>
-<li><p>Print in reverse order the fields of every line</p>
-
-<pre><code>  { for (i = NF; i &gt; 0; i = i - 1) printf("%s ", $i)
-      printf("\n")
-  }
-</code></pre></li>
-<li><p>Print the sums of the fields of every line</p>
-
-<pre><code>  { sum = 0
-      for (i = 1; i &lt;= NF; i = i + 1) sum = sum + $i
-      print sum
-  }
-</code></pre></li>
-<li><p>Print every line after replacing each field by its absolute value</p>
-
-<pre><code>  { for (i = 1; i &lt;= NF; i = i + 1) if ($i &lt; 0) $i = -$i
-      print
-  }
-</code></pre></li>
-</ul>
-</li>
-<li><p>Computing with AWK</p>
-
-<p>  In awk, user-created variables are <strong>not</strong> declared.</p>
-
-<ul>
-<li><p>Counting</p>
-
-<pre><code>  $3 &gt; 15 { emp = emp + 1 }
-  END   { print emp, "employees worked more than 15 hours" }
-</code></pre>
-
-<p>  Awk varibales used as numbers begin life with the value 0, so we didn&rsquo;t need to initialize emp.</p></li>
-<li><p>String Concatenation</p>
-
-<pre><code>  { names = names $1 " " }
-  END { print names }
-</code></pre>
-
-<p>  collects all the employee names into a single string, by appending each name and a blank to the previous value in the variable names.</p></li>
-</ul>
-</li>
-<li><p>Control-Flow Statements</p>
-
-<ul>
-<li><p>if-else statement</p>
-
-<pre><code>  $2 &gt; 6 { n = n + 1; pay = pay + $2 * $3 }
-  END    { if (n &gt; 0)
-                  print n, "employees, total pay is", pay,
-                              "average pay is", pay/n
-          else
-              print "no employees are paid more than $6/hour"
-          }
-</code></pre></li>
-<li><p>While Statement</p></li>
-<li>For Statement</li>
-</ul>
-</li>
-<li><p>String-Matching Patterns</p>
-
-<ul>
-<li><code>[.]</code>matches a period and <code>^[^^]</code>matches any character except a caret at the beginning of a string</li>
-</ul>
-</li>
-<li><p>String-Manipulation Functions</p>
-
-<ul>
-<li><code>gsub</code>
-
-<ul>
-<li>Search target for all of the longest, leftmost, nonoverlapping matching substrings it can find and replace them with replacement. The ‘g’ in gsub() stands for “global,” which means replace everywhere.</li>
-<li><code>gsub("^=\"|\"$", "", $33)</code>  &mdash;&ndash;>  &ldquo;=1234567&rdquo; &mdash;&ndash;> 1234567</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>Built-in Variables That Control awk</p>
-
-<ul>
-<li><p>FS</p>
-
-<ul>
-<li>The input field separator.</li>
-</ul>
-</li>
-<li><p>OFS</p>
-
-<ul>
-<li>The output field separator. It is output between the fields printed by a print statement. Its default value is &ldquo; &rdquo;, a string consisting of a single space.</li>
-<li>对<code>print</code>有效，会被<code>printf</code>忽略</li>
-</ul>
-</li>
-<li><p>RS</p>
-
-<ul>
-<li>The input record separator. Its default value is a string containing a single newline character, which means that an input record consists of a single line of text.</li>
-<li>这个字段的用处是，可以手动指定行结束符，一般用不上，不过当在unix系统上处理windows生成的文件时，并且在某些字段中含有未转义的<code>\n</code>时。这时，指定<code>RS="\r\n"</code>后，你就会感谢上帝给你提供了RS这个设置</li>
-</ul>
-</li>
-<li>ORS
-
-<ul>
-<li>The output record separator. It is output between the fields printed by a print statement. Its default value is &ldquo; &rdquo;, a string consisting of a single space.</li>
-<li>注意，该变量只对<code>print</code>语句有效，<code>printf</code>语句会忽略这个变量的设置，<strong>必须显式指定行分隔符</strong>，否则所有的记录都在一行上！</li>
-</ul>
-</li>
-<li>FPAT
-
-<ul>
-<li>gawk专有的</li>
-<li>A regular expression (as a string) that tells gawk to create the fields based on text that matches the regular expression. Assigning a value to FPAT overrides the use of FS and FIELDWIDTHS for field splitting.</li>
-<li>处理字段中含有<code>,</code>的csv文件的大杀器
-
-<ul>
-<li>比如这样的<code>Robbins,Arnold,"1234 A Pretty Street, NE",MyTown,MyState,12345-6789,USA</code></li>
-<li>可以设置<code>FPAT = "([^,]+)|(\"[^\"]+\")"</code>来正确提取出相应的字段，否则若只用逗号分隔符的话，会提取出错</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>Built-in Variables That Convey Information</p>
-
-<p>  The following is an alphabetical list of variables that awk sets automatically on certain occasions in order to provide information to your program.</p>
-
-<ul>
-<li>ARGC, ARGV
-
-<ul>
-<li>The command-line arguments available to awk programs are stored in an array called ARGV. ARGC is the number of command-line arguments present.</li>
-</ul>
-</li>
-<li>ARGIND
-
-<ul>
-<li>gawk专有，在处理多个文件时很有用</li>
-<li><p>The index in ARGV of the current file being processed. Every time gawk opens a new data file for processing, it sets ARGIND to the index in ARGV of the file name. When gawk is processing the input files, ‘FILENAME == ARGV[ARGIND]’ is always true.</p>
-
-<pre><code>  awk -F, 'ARGIND==1{data[$1]=1} ARGIND==2{if(!($1 in data)) print $1}' dedao_mall_transaction_uniq.csv gongzhonghao_caifutong_uniq.csv &gt; in_caifutong_not_in_dedao.csv
-</code></pre>
-
-<p>  上面这个例子可用于比较两个文件的差异</p></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>Array</p>
-
-<ul>
-<li><p><a href="https://www.gnu.org/software/gawk/manual/gawk.html#Array-Basics">https://www.gnu.org/software/gawk/manual/gawk.html#Array-Basics</a></p>
-
-<pre><code>  awk -F, '{ data[$1]["amount"] += $5; data[$1]["product_price*amount"] += $3*$5; data[$1]["refund"] += $6; data[$1]["pay_price*amount"] += $4*$5; data[$1]["discount_price"] += ($3-$4)*$5;}\
-  END{for (d in data) printf("%s,%d,%.2f,%.2f,%.2f,%.2f\n", d, data[d]["amount"], data[d]["product_price*amount"], data[d]["pay_price*amount"], data[d]["discount_price"], data[d]["refund"])}' \
-  tt_new.csv | awk -F, 'BEGIN{printf("%s,%s,%s,%s,%s,%s\n", "sku", "amount", "product_price*amount", "pay_price*amount", "discount_price", "refund")} {print $0}' &gt; summary_by_sku.csv
-
- 上面的例子用到了gawk扩展的多维array特性，不适用于unix下默认的awk
-</code></pre></li>
-</ul>
-</li>
-</ul>
-
-
-<h3>避坑指南</h3>
-
-<p>这几天用awk写了几个处理数据的小程序，顺便总结下遇到的坑：</p>
-
-<ul>
-<li>由于操作系统平台不同引起的问题
-
-<ul>
-<li>换行符
-
-<ul>
-<li>win平台为<code>\r\n</code>，*nix平台为<code>\n</code>。因此在比较两个文件时，切记先把换行符转换为一致再比较，否则会发生“明明看起来是一样的，但为啥不一样呢？”的令人困惑的情况。</li>
-</ul>
-</li>
-<li>文件编码问题
-
-<ul>
-<li>*nix系统下一般使用<code>utf-8</code>编码，win平台中文环境一般为gb18030编码。更需要注意的是中国人民的好朋友Excel，在编辑完csv文件再保存后，会把文件编码强制更改为gb18030，即使原来的文件编码是utf-8.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<h3>参考</h3>
-
-<ul>
-<li>The GNU Awk User’s Guide
-
-<ul>
-<li><a href="https://www.gnu.org/software/gawk/manual/gawk.html#Index">https://www.gnu.org/software/gawk/manual/gawk.html</a></li>
-</ul>
-</li>
-<li>The AWK Programming Language</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[thrift server error caused by aliyun health check]]></title>
-    <link href="http://cs50Mu.github.io/blog/2017/01/14/thrift-server-error-caused-by-aliyun-health-check/"/>
-    <updated>2017-01-14T21:58:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2017/01/14/thrift-server-error-caused-by-aliyun-health-check</id>
-    <content type="html"><![CDATA[<p>近期遇到一个thrift server方面的问题，记录一下。</p>
-
-<h3>Background</h3>
-
-<p>server做的事情其实很简单，就是一个图片上传服务，别人把图片传过来，服务器上传到阿里云的云上，再返回一个图片地址。</p>
-
-<p>问题暴露出来的现象是：这个服务每隔一段时间就会“挂掉”，重启服务后会好那么一段时间然后又会“挂掉”。客户端调用返回<code>TSocket: Could read 4 bytes from ....</code>，但去线上ps会发现，server进程其实是在的，
-也就是说服务器其实只是不响应了，并没有真正挂掉。</p>
-
-<h3>First guess</h3>
-
-<p>分析后台日志发现，大量重复的报错信息<code>Connection reset by peer</code>，以及偶尔的错误信息<code>too many open files</code>（其实，这个偶尔也只是猜测，因为并没有完整的确认过），当时看到这个日志后，就猜测
-原因是：请求太多，导致该程序打开的文件描述符超过限制，从而拒绝服务。由于是线上服务，出现问题时为了及时恢复服务，当时就重启了服务，因此也并没有验证这个猜测。但看了下操作系统对单个程序
-打开文件数的限制:</p>
-
-<pre><code>$ ulimit -n 
-65535
-</code></pre>
-
-<p>基于too many open files这个错误加上这个thrift server使用的ThreadPoolServer类型，google了一番，找到几个类似问题的帖子：</p>
-
-<ul>
-<li><a href="http://blog.csdn.net/heavendai/article/details/8614941">http://blog.csdn.net/heavendai/article/details/8614941</a></li>
-<li><a href="http://web.archive.org/web/20110103083546/http://blog.rushcj.com/2010/12/20/thrift-close-wait/">http://web.archive.org/web/20110103083546/http://blog.rushcj.com/2010/12/20/thrift-close-wait/</a></li>
-<li><a href="http://blog.csdn.net/hwz119/article/details/1611182">http://blog.csdn.net/hwz119/article/details/1611182</a></li>
-</ul>
-
-
-<p>里面讲到，ThreadPoolServer来说，它使用的是定长线程池来服务的，当并发太多时使得现存的线程数无法满足要求时，就会出现很多<code>CLOSE_WAIT</code>状态的连接，最终会
-把当前程序的文件描述符占满，从而出现<code>too many open files</code>的错误。正好这个服务用的线程是默认的，只有10个，当时就认为问题就在这里了。</p>
-
-<h3>Second guess</h3>
-
-<p>然后第二天又问了下服务调用方，其实这个服务的使用频率很低，只有在用户更改头像的时候才会调一下，按理说不会有太多并发量，所以这样看来，上面的猜测就不成立了。然后去线上看了下，该服务一共部署了两台机器，
-发现其中一台机器上的服务又“挂了”，抓住这个好机会，看了下这个服务的socket连接情况：</p>
-
-<pre><code># 先找到程序的进程id
-$ ps aux | grep 'xxx'
-# 然后再用lsof看
-$ lsof -i -P | grep 28719
-python  28719  www    4u  IPv4 261027973      0t0  TCP *:9455 (LISTEN)
-python  28719  www    5u  IPv4 261328458      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.0:45587 (ESTABLISHED)
-python  28719  www    6u  IPv4 261327693      0t0  TCP 10.171.20.131:9455-&gt;100.109.221.128:23814 (ESTABLISHED)
-python  28719  www    7u  IPv4 261429153      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.0:17384 (ESTABLISHED)
-python  28719  www    8u  IPv4 261717598      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.0:23881 (ESTABLISHED)
-python  28719  www    9u  IPv4 261429722      0t0  TCP 10.171.20.131:9455-&gt;100.109.225.128:19752 (ESTABLISHED)
-python  28719  www   10u  IPv4 261470638      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.128:14370 (ESTABLISHED)
-python  28719  www   11u  IPv4 261456259      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.128:24267 (ESTABLISHED)
-python  28719  www   12u  IPv4 261714765      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.0:8860 (ESTABLISHED)
-python  28719  www   13u  IPv4 261470701      0t0  TCP 10.171.20.131:9455-&gt;100.109.221.0:42186 (ESTABLISHED)
-python  28719  www   14u  IPv4 261717599      0t0  TCP 10.171.20.131:9455-&gt;100.109.224.0:3487 (ESTABLISHED)
-python  28719  www   98u  IPv4 261718019      0t0  TCP 10.171.20.131:9455-&gt;100.109.220.0:37454 (ESTABLISHED)
-python  28719  www  827u  IPv4 261722045      0t0  TCP 10.171.20.131:9455-&gt;10.44.155.227:24038 (CLOSE_WAIT)
-python  28719  www  914u  IPv4 261722497      0t0  TCP 10.171.20.131:9455-&gt;10.172.224.17:35876 (CLOSE_WAIT)
-python  28719  www 1309u  IPv4 261724582      0t0  TCP 10.171.20.131:9455-&gt;10.172.142.166:52953 (CLOSE_WAIT)
-python  28719  www 1329u  IPv4 261724675      0t0  TCP 10.171.20.131:9455-&gt;10.44.155.227:52921 (CLOSE_WAIT)
-python  28719  www 1672u  IPv4 261726365      0t0  TCP 10.171.20.131:9455-&gt;10.44.191.118:7070 (CLOSE_WAIT)
-python  28719  www 1694u  IPv4 261726531      0t0  TCP 10.171.20.131:9455-&gt;10.170.210.248:39802 (CLOSE_WAIT)
-</code></pre>
-
-<p>可以看到<code>CLOSE_WAIT</code>状态的连接并不多，但此时这台机器上部署的服务已经不能用了。同时又去现在还可用的机器上看了下，发现只有状态为<code>ESTABLISHED</code>的连接，并没有状态为<code>CLOSE_WAIT</code>的连接，
-同时发现日志在不停的报错：<code>Connection reset by peer</code>。但并没人反馈服务不可用啊，看了下图片上传还是可用的，正百思不得其解中，运维哥哥说，这不会是阿里云的健康检查导致的吧！于是，
-暂停了一下健康检查，果然日志的报错停止了。</p>
-
-<p>然后我的猜测又变成了：由于阿里云的持续不断的健康检查（2秒一次）把服务检查挂了。。显然，运维是不会认可这个猜测的，他们说报这个错是正常的，别的服务也有这个问题，只要不理会它就行了。
-说实话，光看这个，确实无法断定服务挂是由于健康检查的原因。况且我也查了下阿里云所谓的健康检查，找到了如下官方资料：</p>
-
-<ul>
-<li><a href="https://help.aliyun.com/knowledge_list/39451.html?spm=5176.7739464.6.753.FE0164">https://help.aliyun.com/knowledge_list/39451.html?spm=5176.7739464.6.753.FE0164</a></li>
-<li><a href="https://help.aliyun.com/knowledge_detail/39455.html?spm=5176.7839451.2.4.KKMkQd">https://help.aliyun.com/knowledge_detail/39455.html?spm=5176.7839451.2.4.KKMkQd</a></li>
-<li><a href="https://help.aliyun.com/knowledge_detail/39464.html?spm=5176.7839451.2.13.KKMkQd">https://help.aliyun.com/knowledge_detail/39464.html?spm=5176.7839451.2.13.KKMkQd</a></li>
-</ul>
-
-
-<p>看来阿里云官方确认认为这个错误是正常的。</p>
-
-<p>第二天，又去线上看了下，发现某一台机器上的服务又“挂了”，看了下这次的“车祸现场”，注意到了一点上次没有注意的细节：</p>
-
-<ul>
-<li>有11个状态为<code>ESTABLISHED</code>的连接</li>
-<li>这个11个状态为<code>ESTABLISHED</code>的连接的另一边都是来自阿里云健康检查的网段ip</li>
-<li>此时，如果调用该服务会返回错误，而且会增加一条状态为<code>CLOSE_WAIT</code>的socket连接</li>
-<li>对于目前可用的机器上的服务，没有状态为<code>CLOSE_WAIT</code>的连接，但有几个状态为<code>ESTABLISHED</code>的连接，而且尽管没有人调用它，状态为<code>ESTABLISHED</code>的连接数在慢慢增加。</li>
-</ul>
-
-
-<p>由此，可以基本断定，罪魁祸首就是阿里云的健康检查了。健康检查把当前服务的可用连接数（10个线程只能同时服务10个连接）用完了，并且没有释放，再进来的连接只能wait了。那么现在唯一的问题
-就是：Why？阿里云的健康检查为什么会对thrift服务造成这样的结果？我还没有找到原因。从阿里云的官方文档中看到，所谓的TCP健康检查，是对指定ip的指定端口进行了三次握手然后发送了RST断开了
-连接，没有看到他们说会造成连接一直不释放的情况。</p>
-
-<p>google到一篇阿里云上部署thrift server出问题的文章，里面也提到了健康检查：</p>
-
-<ul>
-<li><a href="http://www.concurrent.work/one-java-thrift-case-caused-by-default-parameters/">http://www.concurrent.work/one-java-thrift-case-caused-by-default-parameters/</a></li>
-</ul>
-
-
-<h3>反思</h3>
-
-<ul>
-<li>不要急于下结论。先把日志完整分析下，服务的使用场景也要了解下，再下结论，而不要看到一点问题就瞎猜。</li>
-<li>需要了解下网络方面的基础知识了。</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[first glance at django admin]]></title>
-    <link href="http://cs50Mu.github.io/blog/2016/09/13/first-glance-at-django-admin/"/>
-    <updated>2016-09-13T17:27:00+08:00</updated>
-    <id>http://cs50Mu.github.io/blog/2016/09/13/first-glance-at-django-admin</id>
-    <content type="html"><![CDATA[<p>主要是一些定制的问题，其实django admin已经集成的非常好了，该有的都有了，一般开箱即用就行了。</p>
-
-<p>如果你对Django Admin不熟悉的话，<a href="http://dokelung-blog.logdown.com/posts/220832-django-notes-6-manage-your-system-admin">这里</a>有一篇很好的介绍。</p>
-
-<h3>dependent select fields</h3>
-
-<p>其实就是子field的可选项是依赖它的父field的，这个需求在admin中没有找到配置方法，找到一个插件<a href="https://github.com/digi604/django-smart-selects"><code>django-smart-selects</code></a></p>
-
-<h3>model field options</h3>
-
-<ul>
-<li><p>blank=True，实际控制的form的validation，允许表单中该字段为空</p></li>
-<li><p>null=True，控制的DB中字段的属性，null或者not null</p></li>
-</ul>
-
-
-<h3>控制某条记录的显示</h3>
-
-<p>需要在model的定义中加入：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span class='line'>  <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>否则，记录显示出来的是Python object</p>
-
-<h3>在view中显示的model名称的自定义</h3>
-
-<p>这个名称默认就是显示的是在代码中定义的model的名称，可以用以下代码来自定义：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
-</span><span class='line'>  <span class="n">verbose_name</span> <span class="o">=</span> <span class="s">u&#39;商品子类&#39;</span>
-</span><span class='line'>  <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s">u&#39;商品子类&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>自定义app名称</h3>
-
-<p>参考<a href="http://stackoverflow.com/questions/612372/can-you-give-a-django-app-a-verbose-name-for-use-throughout-the-admin">这里</a></p>
-
-<h3>多个字段作为一个唯一键</h3>
-
-<p>需要在该表对应的model类的Meta类中增加<code>unique_together</code>定义：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
-</span><span class='line'>  <span class="n">unique_together</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;parent_category&#39;</span><span class="p">,</span> <span class="s">&#39;sub_category&#39;</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">verbose_name</span> <span class="o">=</span> <span class="s">u&#39;商品&#39;</span>
-</span><span class='line'>  <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s">u&#39;商品&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>对显示界面的定制</h3>
-
-<p>比如，控制要显示的字段、哪几个字段是可以点击的、显示搜索框、分页等，这些都是可以配置的，不用自己来实现，非常方便。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">ProductAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;sku&#39;</span><span class="p">,</span> <span class="s">&#39;barcode&#39;</span><span class="p">,</span> <span class="s">&#39;price&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;create_time&#39;</span><span class="p">,</span> <span class="s">&#39;update_time&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">list_display_links</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">exclude</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;sku&#39;</span><span class="p">,)</span>
-</span><span class='line'>    <span class="n">search_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,)</span>
-</span><span class='line'>    <span class="n">list_per_page</span> <span class="o">=</span> <span class="mi">100</span>
-</span><span class='line'>    <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">empty_value_display</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>参考：</p>
-
-<ul>
-<li><a href="https://brobin.me/blog/2015/03/customizing-the-django-admin/">https://brobin.me/blog/2015/03/customizing-the-django-admin/</a></li>
-<li><a href="https://www.webforefront.com/django/setupdjangomodelsindjangoadmin.html#prettyPhoto">https://www.webforefront.com/django/setupdjangomodelsindjangoadmin.html#prettyPhoto</a>  这篇讲的非常详尽，但其实都在官方文档里了，但有时候懒得一个一个去找了。</li>
-</ul>
-
-
-<h3>自定义方法（ModelAdmin methods）</h3>
-
-<p>Django的admin提供了一系列的方法，支持你通过重写这些方法来定制它的默认行为，比如<code>save_model</code>方法可以让你自定义入库的操作，加入一些自己的逻辑。它提供了非常多的方法，具体可以看文档，我目前只用到了一个<code>save_model</code>方法。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">ProductAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;sku&#39;</span><span class="p">,</span> <span class="s">&#39;barcode&#39;</span><span class="p">,</span> <span class="s">&#39;price&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;create_time&#39;</span><span class="p">,</span> <span class="s">&#39;update_time&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">list_display_links</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">exclude</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;sku&#39;</span><span class="p">,)</span>
-</span><span class='line'>    <span class="n">search_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,)</span>
-</span><span class='line'>    <span class="n">list_per_page</span> <span class="o">=</span> <span class="mi">100</span>
-</span><span class='line'>    <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">empty_value_display</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">change</span><span class="p">):</span>
-</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">change</span><span class="p">:</span>         <span class="c"># Add</span>
-</span><span class='line'>            <span class="n">obj</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>         <span class="c">#  save in order to get the auto increment id</span>
-</span><span class='line'>            <span class="n">generate_sku</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">obj</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>         <span class="c">#  save generated sku</span>
-</span><span class='line'>        <span class="k">else</span><span class="p">:</span>                  <span class="c"># Update</span>
-</span><span class='line'><span class="c">#            generate_sku(obj) # sku should not be changed once the record is inserted, even if all the other fields have changed</span>
-</span><span class='line'>            <span class="n">obj</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">generate_sku</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
-</span><span class='line'>    <span class="nb">id</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span>
-</span><span class='line'>    <span class="n">parent_category</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parent_category</span><span class="o">.</span><span class="n">code</span>
-</span><span class='line'>    <span class="n">sub_category</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">sub_category</span><span class="o">.</span><span class="n">code</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">sku_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;XLJ&#39;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">sku_parts</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">parent_category</span><span class="p">,</span> <span class="n">sub_category</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">])</span>
-</span><span class='line'>    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">sku_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">today</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%y%m</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">seq_id</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%06d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">id</span>
-</span><span class='line'>    <span class="n">sku_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq_id</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">sku</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">r&#39;[^a-zA-Z0-9]&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sku_parts</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">obj</span><span class="o">.</span><span class="n">sku</span> <span class="o">=</span> <span class="n">sku</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>参考：</p>
-
-<ul>
-<li><a href="https://docs.djangoproject.com/en/dev/ref/contrib/admin/#modeladmin-methods">https://docs.djangoproject.com/en/dev/ref/contrib/admin/#modeladmin-methods</a></li>
-</ul>
-
 ]]></content>
   </entry>
   

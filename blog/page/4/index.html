@@ -6,7 +6,10 @@
 	<title>首页 - The Hard Way Is Easier</title>
     <meta name="author" content="linuxfish">
     
-	<meta name="description" content="Published on: Jan 20th, 2015 Tags: 今天很高兴，因为解决了几个困扰很久的问题。 OpenVPN 为便于办公，公司提供了VPN，不过只提供了OpenVPN的连接方案，之前在arch上一直是用pptp连接的，大概看了看wiki上OpenVPN的文档，一大堆。。。头大 &hellip;">
+	<meta name="description" content="Published on: Feb 25th, 2016 Tags: Nim Game 这是最简单的题目了，但也想了很久，只想到用递归，看了答案才知道原来一条代码可以解决。。 这个问题的关键是给出一个数字，判断是否一定能赢，而不管过程。 一开始想到递归： nim-game-iter1
+2
+3
+4 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -98,6 +101,1534 @@
 <!-- begin toload --> 
     <div id="content" class="inner">
         
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2016/02/25/leetcode-challenage/">
+		
+			Leetcode Challenage</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-02-25T11:02:00+08:00" pubdate data-updated="true">Feb 25<span>th</span>, 2016</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<h3>Nim Game</h3>
+
+<p>这是最简单的题目了，但也想了很久，只想到用递归，看了答案才知道原来一条代码可以解决。。</p>
+
+<p>这个问题的关键是给出一个数字，判断是否一定能赢，而不管过程。</p>
+
+<p>一开始想到递归：</p>
+
+<figure class='code'><figcaption><span>nim-game-iter</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">canWinNim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type n: int</span>
+</span><span class='line'><span class="sd">        :rtype: bool</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">False</span>
+</span><span class='line'>        <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">True</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>提示超时，继续尝试，增加memorization，对于已经计算过的做缓存，下次遇到直接返回。</p>
+
+<figure class='code'><figcaption><span>nim-game-iter-memo</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">memo</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">canWinNim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memo</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+</span><span class='line'>        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">memo</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNimIter</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memo</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">canWinNimIter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type n: int</span>
+</span><span class='line'><span class="sd">        :rtype: bool</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">False</span>
+</span><span class='line'>        <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">True</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canWinNim</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这次不提示超时了，提示超出最大递归深度，尼玛。。</p>
+
+<p>看了别人的答案，眼泪留下来。。</p>
+
+<figure class='code'><figcaption><span>nim-game-superman</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">canWinNim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">!=</span> <span class="mi">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>思考：对于4个的情况，先拿肯定是输，所以能赢的情况必然是不能被4整除的情况（一个数被4除，要么余1 2 3，要么整除）。设想一次游戏，总数除4后余1，那么你先拿一个，然后剩下总数为4的倍数，不管对方拿多少个，我只要确定我下次拿的数目跟对方上次拿的数目之和等于4即可，这样直至拿完，肯定赢。</p>
+
+<p>参考：<a href="https://www.hrwhisper.me/leetcode-nim-game/">https://www.hrwhisper.me/leetcode-nim-game/</a></p>
+
+<h3>Maximum Depth of Binary Tree</h3>
+
+<p>找出一棵二叉树的最大深度。</p>
+
+<p>思路：递归，先得到左边的深度，再得到右边的深度，最后返回最大的一个即可。</p>
+
+<figure class='code'><figcaption><span>maximum-depth-of-binary-tree</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for a binary tree node.</span>
+</span><span class='line'><span class="c"># class TreeNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.left = None</span>
+</span><span class='line'><span class="c">#         self.right = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">maxDepth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type root: TreeNode</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">left</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxDepth</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">right</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxDepth</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Invert Binary Tree</h3>
+
+<p>递归，先把左右分支交换，然后依次递归反转左右分支</p>
+
+<figure class='code'><figcaption><span>invert-binary-tree</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for a binary tree node.</span>
+</span><span class='line'><span class="c"># class TreeNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.left = None</span>
+</span><span class='line'><span class="c">#         self.right = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">invertTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type root: TreeNode</span>
+</span><span class='line'><span class="sd">        :rtype: TreeNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">None</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">left</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">invertTree</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">invertTree</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">root</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Move Zeroes</h3>
+
+<p>维护两个指针, i用于遍历数组，j初始指向数组开始，当i遇到非零元素时，交换i和j指向的元素，并把i、j各自递增。因此，若一个数组中没有零元素，i和j是始终指向同一个元素的。</p>
+
+<figure class='code'><figcaption><span>move zeroes</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">moveZeroes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type nums: List[int]</span>
+</span><span class='line'><span class="sd">        :rtype: void Do not return anything, modify nums in-place instead.</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)):</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+</span><span class='line'>                <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span class='line'>                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Majority Element</h3>
+
+<p>Moore投票算法，维护两个变量candidate和count，candidate记录的是当前可能的候选人，count记录的是当前可能候选人的票数。遍历数组，当遇到的元素等于候选人时就把票数加1；当遇到的元素不等于候选人的时候就把票数减1；当票数为0的时候说明这个候选人没希望了，将候选人置为当前遍历到的元素，然后票数初始化为0。最后得到的candidate就是这个数组中出现次数最多的元素。</p>
+
+<figure class='code'><figcaption><span>majority-element</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">majorityElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type nums: List[int]</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">candidate</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">candidate</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="n">candidate</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">count</span> <span class="o">-=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">candidate</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Reverse Linked List</h3>
+
+<p>迭代版本：
+基本原理就是新建一个linked list，一边遍历旧的linked list，一边把读出来的元素添加到新建的linked list中，不过注意添加的方法，是从最后一个一个往开始生成的。</p>
+
+<figure class='code'><figcaption><span>reverse linked list iter</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">reverseList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type head: ListNode</span>
+</span><span class='line'><span class="sd">        :rtype: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">dummy</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>   <span class="c"># dummy is indeed a dummy, lol</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">head</span><span class="p">:</span>
+</span><span class='line'>            <span class="nb">next</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">next</span>  <span class="c"># save the next node for later process</span>
+</span><span class='line'>            <span class="n">head</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">dummy</span><span class="o">.</span><span class="n">next</span>  <span class="c"># 先把head接到已处理过的linked lis的前面</span>
+</span><span class='line'>            <span class="n">dummy</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">head</span>   <span class="c"># 再跟原来的dummy连起来</span>
+</span><span class='line'>            <span class="n">head</span> <span class="o">=</span> <span class="nb">next</span>  <span class="c">#  指针指向下一个node</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">dummy</span><span class="o">.</span><span class="n">next</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>递归版本：
+还是递归实现起来简单些</p>
+
+<figure class='code'><figcaption><span>reverse linked list recursion</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">reverseList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type head: ListNode</span>
+</span><span class='line'><span class="sd">        :rtype: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverseListRecursion</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">reverseListRecursion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">new_head</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">new_head</span>
+</span><span class='line'>        <span class="nb">next</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">next</span>   <span class="c"># save the rest temporarily</span>
+</span><span class='line'>        <span class="n">head</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">new_head</span>   <span class="c"># next point to new_head</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverseListRecursion</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span>  <span class="c"># doing this recursively</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Roman to Integer</h3>
+
+<p>自己想出来的，不容易啊。。</p>
+
+<p>首先把罗马数字与阿拉伯数字的映射关系准备好，然后遍历罗马数字的字符，同时维护一个prev变量保存前一个遍历过的字符，当发现当前字符比前一个字符代表的阿拉伯数字小时，使用特殊的累加策略，否则就是简单的把当前字符对应的阿拉伯数字累加到总和total中。</p>
+
+<figure class='code'><figcaption><span>Roman to integer</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type s: str</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="nb">hash</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;I&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;V&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s">&#39;L&#39;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s">&#39;C&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">:</span><span class="mi">500</span><span class="p">,</span> <span class="s">&#39;M&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="p">}</span>
+</span><span class='line'>        <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="n">prev</span> <span class="o">=</span> <span class="bp">None</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">prev</span> <span class="ow">and</span> <span class="nb">hash</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">hash</span><span class="p">[</span><span class="n">prev</span><span class="p">]:</span>
+</span><span class='line'>                <span class="n">total</span> <span class="o">+=</span> <span class="nb">hash</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">hash</span><span class="p">[</span><span class="n">prev</span><span class="p">]</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">total</span> <span class="o">+=</span> <span class="nb">hash</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span class='line'>            <span class="n">prev</span> <span class="o">=</span> <span class="n">i</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">total</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Odd Even Linked List</h3>
+
+<p>思路其实比较简单，就是遍历链表，奇数序元素放到奇数链表中，偶数序元素放到偶数链表中。但是，要维护的指针比较多，不注意就会搞混。。新生成的奇数链表和偶数链表都需要指针来操作。
+而且，在从头生成一个指针时，需要先初始化一个DummyNode，然后再把元素一个一个接在后面，元素添加完成后，<code>DummyNode.next</code>就是这条刚生成的链表的head了。</p>
+
+<figure class='code'><figcaption><span>Odd Even Linked List</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">oddEvenList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type head: ListNode</span>
+</span><span class='line'><span class="sd">        :rtype: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">oddHead</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">oddCurrent</span> <span class="o">=</span> <span class="n">oddHead</span>   <span class="c"># pointer</span>
+</span><span class='line'>        <span class="n">evenHead</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">evenCurrent</span> <span class="o">=</span> <span class="n">evenHead</span>  <span class="c"># pointer</span>
+</span><span class='line'>        <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">head</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">count</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">oddCurrent</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>                <span class="n">oddCurrent</span> <span class="o">=</span> <span class="n">oddCurrent</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">evenCurrent</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>                <span class="n">evenCurrent</span> <span class="o">=</span> <span class="n">evenCurrent</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">head</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">oddCurrent</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">evenHead</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">oddHead</span><span class="o">.</span><span class="n">next</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Remove Duplicates from Sorted List</h3>
+
+<p>维护两个指针，一个prev，一个current，分别指向遍历链表的前一个元素和当前元素，当 前一个元素跟当前元素相同时，舍弃掉当前元素。
+否则，就把prev和current各自向下移动一位元素。</p>
+
+<figure class='code'><figcaption><span>Remove Duplicates from Sorted List</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">deleteDuplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type head: ListNode</span>
+</span><span class='line'><span class="sd">        :rtype: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">prev</span> <span class="o">=</span> <span class="bp">None</span>
+</span><span class='line'>        <span class="n">current</span> <span class="o">=</span> <span class="n">head</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">prev</span> <span class="ow">and</span> <span class="n">prev</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">current</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>                <span class="n">current</span> <span class="o">=</span> <span class="n">prev</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">prev</span> <span class="o">=</span> <span class="n">current</span>
+</span><span class='line'>                <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">head</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Happy Number</h3>
+
+<p>用一个集合来放已经算过的数，如果有数重复出现，说明开始进入循环了。</p>
+
+<figure class='code'><figcaption><span>Happy Number</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">isHappy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type n: int</span>
+</span><span class='line'><span class="sd">        :rtype: bool</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">False</span>
+</span><span class='line'>        <span class="n">number</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">number</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">number</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'>            <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>            <span class="k">while</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">tmp</span> <span class="o">=</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">10</span>
+</span><span class='line'>                <span class="nb">sum</span> <span class="o">+=</span> <span class="n">tmp</span><span class="o">**</span><span class="mi">2</span>
+</span><span class='line'>                <span class="n">n</span> <span class="o">/=</span> <span class="mi">10</span>
+</span><span class='line'>            <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Merge Two Sorted Lists</h3>
+
+<p>比较两个链表当前的元素大小，把符合条件的元素加到新list中，同时把符合条件的元素所在的链表的指针往下移动一个元素，另一个链表的指针不动，
+如此直到至少一个链表遍历完成，最后把剩下的链表未遍历完的元素全部追加到新链表即可。</p>
+
+<figure class='code'><figcaption><span>Merge Two Sorted Lists</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">mergeTwoLists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type l1: ListNode</span>
+</span><span class='line'><span class="sd">        :type l2: ListNode</span>
+</span><span class='line'><span class="sd">        :rtype: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">dummy</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">current</span> <span class="o">=</span> <span class="n">dummy</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">l1</span> <span class="ow">and</span> <span class="n">l2</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">l1</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="n">l2</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">l2</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>                <span class="n">l2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">l1</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>                <span class="n">l1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">l1</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">l1</span>
+</span><span class='line'>        <span class="k">elif</span> <span class="n">l2</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">l2</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">dummy</span><span class="o">.</span><span class="n">next</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Intersection of Two Arrays</h3>
+
+<p>先对两个数组排序，然后对两个数组各自维护一个指针，同时遍历两个数组，当在一个数组中当前指针对应的值小于另一个数组中当前指针对应的值时，把指针往前移动。
+当两个指针对应的元素相等时，说明找到一个interaction了。</p>
+
+<figure class='code'><figcaption><span>Intersection of Two Arrays</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums1</span><span class="p">,</span> <span class="n">nums2</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type nums1: List[int]</span>
+</span><span class='line'><span class="sd">        :type nums2: List[int]</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">nums1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">nums2</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="n">sorted_nums1</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nums1</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">sorted_nums2</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nums2</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">i</span> <span class="o">=</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="n">last</span> <span class="o">=</span> <span class="bp">None</span>
+</span><span class='line'>        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums2</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">sorted_nums1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">sorted_nums2</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+</span><span class='line'>                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">elif</span> <span class="n">sorted_nums1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">sorted_nums2</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+</span><span class='line'>                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">elif</span> <span class="n">sorted_nums1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">sorted_nums2</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+</span><span class='line'>                <span class="k">if</span> <span class="n">sorted_nums1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">last</span><span class="p">:</span>
+</span><span class='line'>                    <span class="n">ans</span> <span class="o">=</span> <span class="n">sorted_nums1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span class='line'>                    <span class="n">last</span> <span class="o">=</span> <span class="n">ans</span>
+</span><span class='line'>                    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+</span><span class='line'>                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">res</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Top K Frequent Elements</h3>
+
+<p>使用桶排序  比较有意思，先遍历一遍找到每个元素的频率存在字典中，然后初始化一个数组，以每个元素的频率为数组的下标（index）把对应的元素存入这个数组，
+最后把这个数组从后往前遍历，得到的结果就是出现频率从高到低的元素</p>
+
+<h3>Binary Tree Preorder Traversal</h3>
+
+<figure class='code'><figcaption><span>Binary Tree Preorder Traversal</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for a binary tree node.</span>
+</span><span class='line'><span class="c"># class TreeNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.left = None</span>
+</span><span class='line'><span class="c">#         self.right = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># recursive version</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">preorderTraversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type root: TreeNode</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">recursive_traversal</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">result</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">recursive_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">root</span><span class="p">:</span>
+</span><span class='line'>            <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">recursive_traversal</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">recursive_traversal</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># another recursive version</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">preorderTraversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type root: TreeNode</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">return</span> <span class="p">[</span><span class="n">root</span><span class="o">.</span><span class="n">val</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">preorderTraversal</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">preorderTraversal</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># iteritive version</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">preorderTraversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">root</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">res</span>
+</span><span class='line'>        <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">root</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">res</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Kth Smallest Element in a BST</h3>
+
+<p>对BST的in-order traversal就是按顺序的遍历，所以执行一个in-order traversal，同时记录遍历到第几个就行了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for a binary tree node.</span>
+</span><span class='line'><span class="c"># class TreeNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.left = None</span>
+</span><span class='line'><span class="c">#         self.right = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">kthSmallest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type root: TreeNode</span>
+</span><span class='line'><span class="sd">        :type k: int</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">node</span> <span class="o">=</span> <span class="n">root</span>
+</span><span class='line'>        <span class="n">stack</span><span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="c"># traverse to the left-most element, aka, the smallest element</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">node</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span>
+</span><span class='line'>        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="c"># in-order traversal using stack</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">stack</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">element</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">temp</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">right</span>
+</span><span class='line'>                <span class="k">while</span> <span class="n">temp</span><span class="p">:</span>
+</span><span class='line'>                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+</span><span class='line'>                    <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">left</span>
+</span><span class='line'>            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">element</span><span class="o">.</span><span class="n">val</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Two Sum II &ndash; Input array is sorted</h3>
+
+<p>维护两个指针，从两边向中间搜索</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">twoSum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type numbers: List[int]</span>
+</span><span class='line'><span class="sd">        :type target: int</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">low</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="n">high</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">s</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="n">low</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">numbers</span><span class="p">[</span><span class="n">high</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">target</span> <span class="o">&gt;</span> <span class="n">s</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">low</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">elif</span> <span class="n">target</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">high</span> <span class="o">-=</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">return</span> <span class="p">[</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">]</span>
+</span><span class='line'>        <span class="k">return</span> <span class="p">[]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Linked List Random Node</h3>
+
+<p>蓄水池抽样（Reservoir Sampling）</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for singly-linked list.</span>
+</span><span class='line'><span class="c"># class ListNode(object):</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.next = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        @param head The linked list&#39;s head.</span>
+</span><span class='line'><span class="sd">        Note that the head is guaranteed to be not null, so it contains at least one node.</span>
+</span><span class='line'><span class="sd">        :type head: ListNode</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">head</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">getRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        Returns a random node&#39;s value.</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span>
+</span><span class='line'>        <span class="k">while</span> <span class="n">node</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">res</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">val</span>
+</span><span class='line'>            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">next</span>
+</span><span class='line'>            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">res</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Your Solution object will be instantiated and called as such:</span>
+</span><span class='line'><span class="c"># obj = Solution(head)</span>
+</span><span class='line'><span class="c"># param_1 = obj.getRandom()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Shuffle an Array</h3>
+
+<p>对于每个i，从0-i随机选择一个数r，交换</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        </span>
+</span><span class='line'><span class="sd">        :type nums: List[int]</span>
+</span><span class='line'><span class="sd">        :type size: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">nums</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[:]</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">original</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[:]</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        Resets the array to its original configuration and return it.</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        Returns a random shuffling of the array.</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nums</span><span class="p">)):</span>
+</span><span class='line'>            <span class="n">rand</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span class='line'>            <span class="bp">self</span><span class="o">.</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nums</span><span class="p">[</span><span class="n">rand</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nums</span><span class="p">[</span><span class="n">rand</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nums</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Your Solution object will be instantiated and called as such:</span>
+</span><span class='line'><span class="c"># obj = Solution(nums)</span>
+</span><span class='line'><span class="c"># param_1 = obj.reset()</span>
+</span><span class='line'><span class="c"># param_2 = obj.shuffle()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Count Numbers with Unique Digits</h3>
+
+<p>排列组合</p>
+
+<p>设i为长度为i的各个位置上数字互不相同的数。</p>
+
+<pre><code>i==1 : 10（0~9共10个数，均不重复）
+i==2: 9 * 9 （第一个位置上除0外有9种选择，第2个位置上除第一个已经选择的数，还包括数字0，也有9种选择）
+i ==3: 9* 9 * 8 （前面两个位置同i==2，第三个位置除前两个位置已经选择的数还有8个数可以用）
+……
+i== n: 9 * 9 * 8 *…… (9-i+2)
+</code></pre>
+
+<p>需要注意的是，9- i + 2 >0 即 i &lt; 11，也就是i最大为10，正好把每个数都用了一遍。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">countNumbersWithUniqueDigits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type n: int</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="o">-</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>                <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">j</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Kth Smallest Element in a Sorted Matrix</h3>
+
+<p>利用优先队列 heapq</p>
+
+<p>先把第一行加入heapq，然后经过k次循环即可得到第k大的元素，在每次循环中，pop出最小的元素，然后push进刚pop出的元素下方的元素（即它同一列上相邻的元素）</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">heapq</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">kthSmallest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type matrix: List[List[int]]</span>
+</span><span class='line'><span class="sd">        :type k: int</span>
+</span><span class='line'><span class="sd">        :rtype: int</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">row_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">col_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">pq</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">col_count</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">pq</span><span class="p">,</span> <span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">val</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">pq</span><span class="p">)</span>
+</span><span class='line'>            <span class="nb">next</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>            <span class="k">if</span> <span class="nb">next</span> <span class="o">&lt;</span> <span class="n">row_count</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">pq</span><span class="p">,</span> <span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="nb">next</span><span class="p">][</span><span class="n">col</span><span class="p">],</span> <span class="nb">next</span><span class="p">,</span> <span class="n">col</span><span class="p">))</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">val</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Product of Array Except Self</h3>
+
+<p>除自己之外的其它数的乘积可以看作由两部分组成：该数左边部分的数的积和改数右边部分的数的积。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">productExceptSelf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="sd">        :type nums: List[int]</span>
+</span><span class='line'><span class="sd">        :rtype: List[int]</span>
+</span><span class='line'><span class="sd">        &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="n">nums_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># calcute left part</span>
+</span><span class='line'>        <span class="n">pre_product</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nums_length</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">pre_product</span> <span class="o">*=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre_product</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># calcute right part and the final result</span>
+</span><span class='line'>        <span class="n">after_product</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nums_length</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">after_product</span> <span class="o">*=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>            <span class="n">output</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">after_product</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">output</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Binary Tree Paths</h3>
+
+<p>DFS 深度优先搜索，在traverse过程中记住经过的node，当到达叶子节点时，把路径打印出来</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Definition for a binary tree node.</span>
+</span><span class='line'><span class="c"># class TreeNode:</span>
+</span><span class='line'><span class="c">#     def __init__(self, x):</span>
+</span><span class='line'><span class="c">#         self.val = x</span>
+</span><span class='line'><span class="c">#         self.left = None</span>
+</span><span class='line'><span class="c">#         self.right = None</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+</span><span class='line'>    <span class="c"># @param {TreeNode} root</span>
+</span><span class='line'>    <span class="c"># @return {string[]}</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">binaryTreePaths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+</span><span class='line'>                <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">dfs</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s">&#39;-&gt;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">dfs</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s">&#39;-&gt;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+</span><span class='line'>        <span class="n">dfs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2016/02/25/leetcode-challenage//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/07/12/continue-blogging-on-macosx-using-octoress/">
+		
+			Continue Blogging on Mac OSX Using Octoress</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-07-12T16:31:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/mac/'>mac</a>, <a class='category' href='/blog/categories/octopress/'>octopress</a>
+
+
+</div>
+    </div>
+		<p>换了Mac，终于可以继续用Octopress写blog了，但首先得把原来的blog从git上同步过来，纪录下在此过程中遇到的坑。</p>
+
+<ol>
+<li><p>clone source分支。</p>
+
+<pre><code> git clone -b source git@github.com:cs50Mu/cs50mu.github.com.git octopress
+</code></pre></li>
+<li><p>clone master分支到<code>octopress/_deploy</code>文件夹中</p>
+
+<pre><code> git clone git@github.com:cs50Mu/cs50mu.github.com.git _deploy 
+</code></pre></li>
+<li>重新安装Octopress环境，这里出现了一堆坑。。。
+
+<ul>
+<li>ruby gems官方源被墙，这个当时在Archlinux上安装时已经遇到，解决办法不再重复</li>
+<li><p>当执行<code>brew install ruby-build</code>提示找不到GCC。这个是因为mac上的gcc用的是苹果自己的编译器llvm，不是GNU版本的gcc，而octopress使用的特定版本的ruby（1.9.3）需要用GNU版的编译器来编译，按照homebrew的提示安装GCC即可</p>
+
+<pre><code>  $ brew update
+  $ brew tap homebrew/dupes
+  $ brew install autoconf automake apple-gcc42
+</code></pre></li>
+<li><p>使用rbenv安装<code>Ruby 1.9.3</code>时，安装的ruby版本不能生效。表现的现象是：当执行<code>ruby --version</code>时仍然给出的时mac系统自带的ruby版本。解决办法就是在<code>.bash_profile</code>中添加</p>
+
+<pre><code>  # Initialize rbenv
+  if which rbenv &gt; /dev/null; then eval "$(rbenv init -)"; fi
+</code></pre>
+
+<p>然后<strong>注意</strong>在zsh shell中需要在<code>.zshrc</code>中添加<code>source ~/.bash_profile</code>，因为zsh shell是不读<code>.bash_profile</code>文件的（或者是因为我安装了oh-my-zsh），还有要记住添加的这一行一定要在<code>.zshrc</code>文件中路径声明的后边！！否则，加这一句也不会起作用。切记，一开始在这个上面被坑了很久。</p></li>
+<li>执行<code>$ rake new_post["something to say"]</code>，zsh会报错：<code>zsh: no matches found: new_post[something to say]</code>，原因是<code>[ ]</code>在zsh中是文件名通配符，解决办法：
+在<code>.zshrc</code>中加入<code>alias rake="noglob rake"</code></li>
+</ul>
+</li>
+</ol>
+
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="http://blog.zerosharp.com/installing-ruby-with-homebrew-and-rbenv-on-mac-os-x-mountain-lion/">Installing Ruby With Homebrew and Rbenv on Mac OS X Mountain Lion</a></li>
+<li><a href="https://ruby-china.org/wiki/rbenv-guide">rbenv-guide</a></li>
+<li><a href="http://octopress.org/docs/setup/">Octopress Setup</a></li>
+<li><a href="https://github.com/imathis/octopress/issues/117">not compatible with zsh</a></li>
+<li><a href="http://liuyix.org/blog/2013/mac-install-octopress/">Mac上安装octopress</a></li>
+<li><a href="http://boboshone.com/blog/2013/06/05/write-octopress-blog-on-multiple-machines/">在多台电脑上写Octopress博客</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/07/12/continue-blogging-on-macosx-using-octoress//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/07/12/test-from-new-mac/">
+		
+			Test From New Mac</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-07-12T13:04:00+08:00" pubdate data-updated="true">Jul 12<span>th</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+</div>
+    </div>
+		<p><strong>if you see this page, then the migration is ok!</strong></p>
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/07/12/test-from-new-mac//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/blog/2015/02/02/logging-module-of-python/">
+		
+			Python的logging模块总结</a>
+	</h2>
+    <div class="entry-content">
+    <div class="meta">
+      <div class="date">Published on: 
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-02-02T10:58:00+08:00" pubdate data-updated="true">Feb 2<span>nd</span>, 2015</time></div>
+      <div class="tags">Tags: 
+
+
+	<a class='category' href='/blog/categories/python/'>Python</a>
+
+
+</div>
+    </div>
+		<p>里面主要有这么几个类：logger handler formatter，其中logger类用于实例化logger对象，handler类负责指定log信息的发送目的地，比如你可能希望log信息发送到终端、文件甚至远程主机上，还支持日志轮转，比如<code>RotatingFileHandler</code>支持按文件轮转，<code>TimedRotatingFileHandler</code>支持按时间轮转，formatter类，顾名思义，负责log信息的格式的设定。</p>
+
+<p>使用logging模块的基本流程为：先通过<code>logging.getlogger('loggername')</code>获取一个logger对象，然后根据需求为这个logger对象添加相应的handler和formatter，这样就算基本配置完了，这样就可以在你的程序里使用<code>logging.debug('debug info')</code>等类似语句来输出log信息了。</p>
+
+<p>在实际开发中一般是通过文件来进行配置的，配置信息全写在一个配置文件中，然后在脚本里读取配置信息，一个简单的示例：</p>
+
+<pre><code>import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+
+# create logger
+logger = logging.getLogger('simpleLogger')
+
+# use it
+logger.debug('debug info')
+logger.info('info message')
+logger.warn('warning info')
+logger.critical(''critical info')
+</code></pre>
+
+<p>配置文件如下，需要遵守一定的格式，具体要求见参考链接</p>
+
+<pre><code>[loggers]
+keys=root, simpleLogger
+
+[handlers]
+keys=consoleHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=DEBUG
+handlers=consoleHandler
+...
+...
+[formatter_simpleFormatter]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=
+</code></pre>
+
+<h2>参考</h2>
+
+<ul>
+<li><a href="https://docs.python.org/2/howto/logging.html">Logging HOWTO</a></li>
+<li><a href="https://docs.python.org/2/library/logging.config.html#logging-config-api">Logging configuration</a>  这里详细讲了配置文件到底该怎么写</li>
+<li><a href="http://kenby.iteye.com/blog/1162698">使用python的logging模块</a></li>
+<li><a href="http://www.cnblogs.com/captain_jack/archive/2011/01/21/1941453.html">Python模块学习——logging</a></li>
+<li><a href="http://blog.csdn.net/ithomer/article/details/16985379">Python 学习入门（14）—— logging</a></li>
+</ul>
+
+
+		
+		
+	</div>
+
+<div class="meta">
+	
+		<span class="comments"><a href="/blog/2015/02/02/logging-module-of-python//blog/page/4/index.html#disqus_thread">Comments</a></span>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -753,637 +2284,6 @@ j.get('persons')[0]['name']
 <div class="meta">
 	
 		<span class="comments"><a href="/blog/2014/10/05/socks-proxy-and-http-proxy//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration/">
-		
-			Binary Search and Spreadsheet Numeration</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-09-18T18:54:00+08:00" pubdate data-updated="true">Sep 18<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/suan-fa/'>算法</a>
-
-
-</div>
-    </div>
-		<p>昨天去知道创宇的面试失败了，很感谢他们能给我这个机会。通过这次面试，我总算迈出了一步，更加明确了自己应该努力的方向。这次面试反映出的一个很严重的问题就是，手太生，学了这么长时间Python，竟然连一些常用的用法，命令都得现查文档。自己反思一下，没有自己动手写多少代码，这个是问题的关键。</p>
-
-<p>面试我的雨哥人非常nice，面对我这么菜的表现没有一点不耐烦，他说的一句话让我印象深刻，“既然是有兴趣，平时就多花点时间，对得起兴趣这两个字”。我会的。</p>
-
-<h2>二分法查找</h2>
-
-<p>我想这个应该是最容易理解的算法了吧，我差点就在面试的时候完成了，well,almost&hellip;</p>
-
-<p>思路很简单，因为给出的列表已经是排好顺序的了，因此直接找到中间的一个记为mid，若是要找的元素，任务完成。若mid比要找的元素大，好的，那么要找的元素肯定在start跟mid之间了，若mid比要找的元素小，那么要找的元素肯定在mid和end之间了。</p>
-
-<figure class='code'><figcaption><span>binary-search</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">binarySearch</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">print</span> <span class="s">&#39;Found, </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mid</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">mid</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>  <span class="c"># 主要处理两个相邻的数的情况，这种情形下mid必然等于start</span>
-</span><span class='line'>            <span class="k">print</span> <span class="s">&#39;Found, </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c"># 因此如果end（也就是mid+1）不等于element的话，则没找到</span>
-</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">print</span> <span class="s">&#39;Not found&#39;</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">element</span> <span class="o">&gt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">binarySearch</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">mid</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">element</span> <span class="o">&lt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">binarySearch</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">binarySearch2</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="s">&#39;Found, </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mid</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="s">&#39;Not found&#39;</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">element</span> <span class="o">&lt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">binarySearch2</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">mid</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">elif</span> <span class="n">element</span> <span class="o">&gt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">binarySearch2</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">binarySearch3</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">element</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span class='line'>    <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
-</span><span class='line'>        <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">==</span> <span class="n">element</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">return</span> <span class="s">&#39;Found&#39;</span><span class="p">,</span> <span class="n">mid</span>
-</span><span class='line'>        <span class="k">elif</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">element</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">end</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">-</span> <span class="mi">1</span>
-</span><span class='line'>        <span class="k">elif</span> <span class="n">lst</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">element</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">start</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span>
-</span><span class='line'>    <span class="k">return</span> <span class="s">&#39;Not found&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>上面的方法一是我自己瞎想的ugly思路，方法三是我在一站式C编程上看到的，方法二是我根据方法三的思路用递归改写的</p>
-
-<h2>spreadsheet numeration</h2>
-
-<p>这个题目其实我之前在CodeForces上做过的，可惜没有理解它的真谛，虽然当时误打误撞做出来了，还是没有效果，现在遇到还是不会做，面试中雨哥一句话点醒我，“进制转换”，是啊，这个问题实质上就是十进制转换26进制的问题。那进制转换无非就是要做除法、取余。但是也不是这么简单，有一个比较tricky的问题，就是在转换26的倍数的时候，需要做一些特殊处理才行。</p>
-
-<figure class='code'><figcaption><span>spreadsheet-numeration</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">numTochar</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-</span><span class='line'>    <span class="n">ori</span> <span class="o">=</span> <span class="n">num</span>
-</span><span class='line'>    <span class="k">while</span> <span class="n">num</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">mod</span> <span class="o">=</span> <span class="n">num</span> <span class="o">%</span> <span class="mi">26</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">mod</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">mod</span> <span class="o">=</span> <span class="mi">26</span>
-</span><span class='line'>            <span class="n">num</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">26</span> <span class="o">-</span> <span class="mi">1</span> <span class="c"># special cases for &#39;Z&#39; </span>
-</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">num</span> <span class="o">/=</span> <span class="mi">26</span>
-</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">mod</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">result</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">result</span><span class="p">,</span><span class="n">ori</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">numTochar2</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-</span><span class='line'>    <span class="n">ori</span> <span class="o">=</span> <span class="n">num</span>
-</span><span class='line'>    <span class="k">while</span> <span class="n">num</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">mod</span> <span class="o">=</span> <span class="n">num</span> <span class="o">%</span> <span class="mi">26</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">mod</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span class='line'>            <span class="n">mod</span> <span class="o">=</span> <span class="mi">26</span>
-</span><span class='line'>        <span class="n">num</span> <span class="o">-=</span> <span class="mi">1</span>       <span class="c"># a more elegant solution</span>
-</span><span class='line'>        <span class="n">num</span> <span class="o">/=</span> <span class="mi">26</span>
-</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">mod</span> <span class="o">+</span> <span class="nb">ord</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">result</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">result</span><span class="p">,</span><span class="n">ori</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>方法一是我自己捣鼓的，方法二是我在CodeForces上看到了，效果应该是一样的，都是为了在转换26的倍数的时候能够得出正确的结果，做出的一点特殊处理，不过显然后者更加优雅，每个数在除26之前先减1,这样既对于非26倍数的数没有影响，又能巧妙的处理26的倍数时的特殊情况。</p>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/09/18/binary-search-and-spreadsheet-numeration//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/07/26/sicp/">
-		
-			Structure and Interpretation of Computer Programs</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-07-26T22:59:00+08:00" pubdate data-updated="true">Jul 26<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/programming/'>programming</a>, <a class='category' href='/blog/categories/python/'>python</a>
-
-
-</div>
-    </div>
-		<p>大名鼎鼎的SICP，下面是我在学习Berkeley的CS61A时做的笔记,非常有意思的一门课！</p>
-
-<h2>高阶函数</h2>
-
-<p>理解这玩意儿有时候确实挺费脑筋。。。下面这个trick花了好久才理解。。关键一开始没想明白返回的到底是匿名函数还是匿名函数的执行结果</p>
-
-<pre><code>def cons(a, b):
-    return lambda m: m(a,b) # 此处返回的是一个参数为m的匿名函数！！并且m是一个函数，m接受两个参数a和b
-
-def car(p):
-    return p(lambda x,y:x) # 
-
-car(cons(1,2)) # 结果应该为1
-</code></pre>
-
-<p>以上代码大概类似于下面的代码：</p>
-
-<pre><code>def fuck(func):
-    def wrapper(a,b):
-        return func(a,b)
-    return wrapper
-
-x = fuck(lambda x,y:x)
-x(1,2) # 输出1
-</code></pre>
-
-<h2>递归  破钱</h2>
-
-<p>下面的函数实现的功能是，给定一个数值，比方说100块，和一堆小面额的纸币，找出用这些小面额纸币来表示这100块总共有几种方法。其中link函数是用来制作链表的，first函数返回链表的第一个元素，rest函数返回链表的剩余所有元素。可以看到函数是用递归实现的，依据大概是这样的：100块的表示方法可以分为两类，一类方法中使用链表中的第一个面额，另一类方法中不使用第一个面额。就这么简单。。。神奇的是它竟然是能工作的！</p>
-
-<pre><code>def count_change(amount, denominations):
-    '''
-    Return the number of ways to make change for amount
-    '''
-    if amount &lt; 0 or denominations == empty:
-        return 0
-    elif amount == 0:
-        return 1
-    using_coin = count_change(amount - first(denominations), denominations)
-    not_using_coin = count_change(amount, rest(denominations))
-    return using_coin + not_using_coin
-
-denominations = link(50, link(25, link(10, link(5, link(1, empty)))))
-&gt;&gt;&gt; print_linked_list(denominations)
-&lt; 50 25 10 5 1 &gt;
-&gt;&gt;&gt; count_change(100, denominations)
-292
-</code></pre>
-
-<h2>ADT(Abstract Data type)</h2>
-
-<p>ADT也属于抽象的一种，目的是控制复杂度，把复杂并且与下面要实现的功能无关的细节隐藏起来，只把几个关键的东西暴露给外部，要形成一个ADT一般需要一个constructor，一个selector，一个mutator等，有了这些，外部就可以用它们进一步实现别的功能了，像链表啊，树啊都属于ADT。其中，deep list和tree属于hierarchical data structure</p>
-
-<h2>Implicit Sequences</h2>
-
-<p>a sequence can be represented <strong>without</strong> each element being stored explicitly in the memory of the computer. That is, we can construct an object that provides access to all of the elements of some sequential dataset without computing all of those elements in advance and storing them. Instead, we compute elements on demand. 很巧妙的一种实现方式，不是把元素全部计算出来放在内存里等着去取，而是需要的时候才计算一个出来，这样可以节省大量的内存。这在计算机科学中叫lazy computation(lazy computation describes any program that delays the computation of a value until that value is needed). 但注意，实现这个强大功能的前提是sequential access(相对于random access)，也就是说只能按顺序依次获取，不能想取哪个就取哪个。嗯，iterator就是在这个背景下诞生了。。An iterator is an object that provides <strong>sequential access</strong> to an underlying sequential dataset. iterator就是为了方便处理那些具有内在顺序结构的数据而诞生的。The iterator abstraction has two components: a mechanism for retrieving the next element in some underlying series of elements and a mechanism for signaling that the end of the series has been reached and no further elements remain. In programming languages with built-in object systems, this abstraction typically corresponds to a particular interface that can be implemented by classes.</p>
-
-<ul>
-<li>iterators与iterables</li>
-</ul>
-
-
-<p>原来这两个不是一个东西。iterators需要实现<code>__next__</code>方法，是具体干活的。   <br/>
-An object is iterable if it <strong>returns an iterator</strong> when its <code>__iter__</code> method is invoked. Iterable values represent data collections, and they provide a fixed representation that may produce more than one iterator. iterator和iterable类似于类和实例的关系吧,iterator负责实现模型、架构，iterable负责实例化。For example, an instance of the <code>Letters</code> class below represents a sequence of consecutive letters. Each time its <code>__iter__</code> method is invoked, a new <code>LetterIter</code> instance is constructed, which allows for sequential access to the contents of the sequence.</p>
-
-<pre><code>&gt;&gt;&gt; class LetterIter:
-    """An iterator over letters of the alphabet in ASCII order."""
-    def __init__(self, start='a', end='e'):
-        self.next_letter = start
-        self.end = end
-    def __next__(self):
-        if self.next_letter == self.end:
-        raise StopIteration
-        letter = self.next_letter
-        self.next_letter = chr(ord(letter)+1)
-        return letter
-
-&gt;&gt;&gt; class Letters:
-    def __init__(self, start='a', end='e'):
-        self.start = start
-        self.end = end
-    def __iter__(self):
-        return LetterIter(self.start, self.end)
-
-&gt;&gt;&gt; b_to_k = Letters('b', 'k')
-&gt;&gt;&gt; first_iterator = b_to_k.__iter__()
-&gt;&gt;&gt; next(first_iterator)
-'b'
-&gt;&gt;&gt; next(first_iterator)
-'c'
-&gt;&gt;&gt; second_iterator = iter(b_to_k)
-&gt;&gt;&gt; second_iterator.__next__()
-'b'
-&gt;&gt;&gt; first_iterator.__next__()
-'d'
-&gt;&gt;&gt; first_iterator.__next__()
-'e'
-&gt;&gt;&gt; second_iterator.__next__()
-'c'
-&gt;&gt;&gt; second_iterator.__next__()
-'d'
-</code></pre>
-
-<p>但是！在Python中<code>__next__</code>和<code>__iter__</code>方法是在同一个类中的！To use an iterator in a for loop, the iterator must also have an <code>__iter__</code> method. The <a href="http://docs.python.org/3/library/stdtypes.html#iterator-types">Iterator types</a> section of the Python docs suggest that an iterator have an <code>__iter__</code> method that returns the iterator itself, so that all iterators are iterable. 只要理解了<code>__iter__</code>方法的作用，也很容易理解的啦。</p>
-
-<ul>
-<li>Generators and Yield Statements</li>
-</ul>
-
-
-<p>Generators属于Iterator，a generator is an <strong>iterator</strong> returned by a special class of function called a generator function. Generator functions are distinguished from regular functions in that rather than containing return statements in their body, they use yield statement to return elements of a series.</p>
-
-<p>The Letters and Positives objects above require us to introduce a new field self.current into our object to keep track of progress through the sequence. With simple sequences like those shown above, this can be done easily. With complex sequences, however, it can be quite difficult for the <code>__next__</code> method to save its place in the calculation. Generators allow us to define more complicated iterations by leveraging the features of the Python interpreter.</p>
-
-<p>Generators do not use attributes of an object to track their progress through a series. Instead, they control the execution of the generator function, which runs until the next yield statement is executed each time the generator&rsquo;s <code>__next__</code> method is invoked. The Letters iterator can be implemented much more compactly using a generator function. 虽然实现的功能是一样的，但Generators与iterators的实现机理是不一样的，yield的机理貌似是coroutines，到底是个神马东东，待查。</p>
-
-<pre><code>&gt;&gt;&gt; def letters_generator():
-    current = 'a'
-    while current &lt;= 'd':
-        yield current
-        current = chr(ord(current)+1)
-
-&gt;&gt;&gt; for letter in letters_generator():
-    print(letter)
-a
-b
-c
-d
-</code></pre>
-
-<p>Even though we never explicitly defined <code>__iter__</code> or <code>__next__</code> methods, the yield statement indicates that we are defining a generator function. When called, a generator function doesn&rsquo;t return a particular yielded value, but instead a generator (which is a type of iterator) that itself can return the yielded values. A generator object has <code>__iter__</code> and <code>__next__</code> methods, and each call to <code>__next__</code> continues execution of the generator function from wherever it left off previously until another yield statement is executed.</p>
-
-<p>The first time <code>__next__</code> is called, the program executes statements from the body of the <code>letters_generator</code> function until it encounters the yield statement. Then, it pauses and returns the value of current. yield statements do not destroy the newly created environment, they preserve it for later. When <code>__next__</code> is called again, execution resumes where it left off. The values of current and of any other bound names in the scope of <code>letters_generator</code> are preserved across subsequent calls to <code>__next__</code>.</p>
-
-<p>这样，可以用yield语句来简化iterables的写法</p>
-
-<pre><code>&gt;&gt;&gt; class LettersWithYield:
-    def __init__(self, start='a', end='e'):
-        self.start = start
-        self.end = end
-    def __iter__(self):
-        next_letter = self.start
-        while next_letter &lt; self.end:
-        yield next_letter
-        next_letter = chr(ord(next_letter)+1)
-</code></pre>
-
-<p>以前没有Generators的时候，还需要定义一个<code>__next__</code>方法来生成iterator，然后用<code>__iter__</code>方法来返回self，这下因为yield本身返回的就是一个Generator(也属于Iterator)，所以无需<code>__next__</code>方法来生成iterator。</p>
-
-<h2>Mutation in for loops</h2>
-
-<p>如果在for循环中对对象做了修改（增加或删除），会出现无法预测的结果</p>
-
-<pre><code># Demo: Mutation in For Loops
-# lst = list(range(10, 20))
-# for item in lst:
-#     print(item)
-#     lst.remove(item)
-# lst
-# 下面是解决办法, 不过原理未搞懂，待查
-class BetterList(list):
-    def __iter__(self):
-    return list.__iter__(self[:])
-</code></pre>
-
-<h2>nonlocal与list</h2>
-
-<p>看下面两段代码</p>
-
-<pre><code>def make_accumulator():
-    """Return an accumulator function that takes a single numeric argument and
-    accumulates that argument into total, then returns total.
-    """
-    total = []
-    def accumulator(amount):
-    total.append(amount)
-    return sum(total)
-    return accumulator
-
-def make_accumulator_nonlocal():
-    """Return an accumulator function that takes a single numeric argument and
-    accumulates that argument into total, then returns total.
-    """
-    total = 0
-    def accumulator(amount):
-    nonlocal total
-    total += amount
-    return total
-    return accumulator
-</code></pre>
-
-<p>为何单个变量(total)在&#8221;全局&#8221;访问的时候需要nonlocal参数，而列表就不用了呢？</p>
-
-<h2>format method of strings</h2>
-
-<pre><code>&gt;&gt;&gt; 'I {0}, you {0}, we all {0} for {1}!'.format('scream', 'ice cream')
-'I scream, you scream, we all scream for ice cream!'
-</code></pre>
-
-<h2>Generic Functions</h2>
-
-<p>Generic functions are methods or functions that apply to arguments of different types. 我理解就是不管对象类型是不是一样，都可以用这个通用函数来做运算。Generic functions主要有下面三种实现方式：
-&ndash; Interfaces
-&ndash; Type dispatching
-&ndash; Coercion</p>
-
-<h2>Memoization</h2>
-
-<p>Keep track of all the calls we have ever made to fib and their answers. Then when we made a repeated recursive call, we immediately return the answer.</p>
-
-<h2>Huffman Encoding</h2>
-
-<p>一种可变编码方式，可针对词频进行优化编码，出现次数多的字母用相对小的位数来编码，出现次数多的字母用相对多的位数来编码，这样相对于固定位编码方式可节省存储空间。  <br/>
-使用方法：</p>
-
-<ul>
-<li>统计字母出现频率，并据此创建霍夫曼二叉树。创建的方法就是对给定的字母、频率，不停的merge掉频率最小的两个，并根据这两个生成一个新的HuffmanTree，它的频率为那两个频率最小的频率之和，以此直至只剩下两个HuffmanTree为止.</li>
-<li>编码</li>
-<li>解码
-编码和解码部分可用递归优雅的实现
-
-<h2>Scheme</h2></li>
-<li>区分symbol和string. When you type things in the interpreter, Scheme will evaluate it. The rule for evaluating a symbol is to get the value bound to that symbol. This is one difference between strings and symbols&mdash;symbols don&rsquo;t evaluate to themselves(which strings do). However, as you saw above, when you type in &lsquo;a, you get a. This is because when you use single quote, you&rsquo;re telling Scheme <strong>not to follow</strong> the normal rules of the evaluation and just have the symbol return as itself.</li>
-<li>Special Forms. 类似于其它语言中的关键字，比如define if and or等等</li>
-<li>Lambdas. 语法： <code>(lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code></li>
-<li>Functions. 语法：<code>(define (&lt;FUNCTIONNAME&gt; &lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code>. Python will automatically transform it to <code>(define &lt;FUNCTIONNAME&gt; (lambda (&lt;PARAMETERS&gt;) &lt;EXPR&gt;)</code> for you.所以在Scheme中，lambda更基础.</li>
-<li>关键字let. 语法：
-  (let ( (<SYMBOL1> <EXPR1>)
-      &hellip;
-      (<SYMBOLN> <EXPRN>) )
-      <BODY> )
-它等价于：<code>( (lambda (&lt;SYMBOL1&gt; ... &lt;SYMBOLN&gt;) &lt;BODY&gt;) &lt;EXPR1&gt; ... &lt;EXPRN&gt;)</code></li>
-<li>Pairs. 创建：<code>(define a (cons 1 2))</code> 获取： <code>(car a)</code> <code>(cdr a)</code></li>
-<li>List. A List is a specific kind of Pair that is either nil(an empty list) or a Pair whose cdr is another List. 比如，(cons 1 (cons 2 nil))，它可以简写成&#8217;(1 2)，检查List是否为空可用null?语句</li>
-</ul>
-
-
-<h2>Tail Recursion 尾递归</h2>
-
-<p>是对递归的一种优化，我们都知道，一般线性递归在新的调用之前需要在堆栈中保存当前调用的信息，这样随着函数调用的增多，对内存的占用会越来越大，而尾递归能够实现这一次的调用使用的堆栈空间直接覆盖上次用过的，因此虽然函数调用在不断进行，但对内存的占用却是不变的！（linuxfish注：看了一堆介绍，我肿么觉得尾递归有点过程语言中循环的感觉，是不是因为函数式编程中没有循环，才用尾递归的？）</p>
-
-<p>注意，要区分尾递归语法和尾递归优化，也就是说，你可以把递归写成尾递归的形式，但底层（解释器、编译器）是否给你优化就不一定了。比如，Python可以写成尾递归的形式，但是没用，照样会stackoverflow，因为解释器并不支持。</p>
-
-<h2>Streams</h2>
-
-<p>这应该是Python中generator的鼻祖了吧。Streams are a clever idea that allows one to use sequence manipulations without incurring the costs of manipulating sequences as list. With streams we can achieve the best of both worlds: We can formulate programs elegantly as sequences manipulations, while attaining the efficiency of <strong>incremental computation</strong>. The basic idea is to arrange to construct a stream only partially, and to pass the partial construction to the program that consumes the stream. If the consumer attempts to access a part of the stream that has not yet been constructed, the stream will automatically construct just enough more of itself to produce the required part, thus preserving the illusion that the entire stream exists. In other words. In other words, although we will write programs as if we were processing complete sequences, we design our stream implemention to automatically and transparently interleave the construction of the stream with its use.感觉这玩意儿纯粹是Schemer们妄图所有问题都用list pair来解决，发现不行后又整出来的一个东东。这也是所谓的函数式语言的懒惰特性，所谓懒就是不到万不得已不动弹。。而不是傻乎乎的一下子就把整个list都计算出来。</p>
-
-<h2>Declarative Programming</h2>
-
-<p>比如SQL语言</p>
-
-<p>data values are often stored in large repositories called databases. A database consists of a data store containing structured data values and an interface for retrieving subsets of the data based on their characteristics. Each value stored in a database is called a record. Records are typically retrieved via a query, which is an expression in a query programming language. By far the most ubiquitous query language in use is called Structure Query Language or SQL.</p>
-
-<p>SQL is an example of a declarative programming language. Expressions do not <strong>describe computations directly</strong>, but instead state the form of the <strong>result</strong> of some computation. It is the role of the <strong>query interpreter</strong> of the database system to design and perform a computational process to produce such a result.</p>
-
-<p>This interaction differs substantially from the procedural programming paradigm of Python or Scheme. In Python, <strong>computational processes are described directly by the programmer.</strong> A declarative language specifies the form of the result, but abstracts away procedural details.</p>
-
-<h2>Concurrency 并行</h2>
-
-<ul>
-<li>并行是一个现实问题，生活中经常会遇到，又是一个提升效率的好办法，并行办事比串行等待效率要高很多！</li>
-<li>由于线程并行所导致的问题可以通过引入锁的机制来解决，不过要注意防止死锁现象。</li>
-<li>还可以通过Message Passing来解决</li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/07/26/sicp//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/07/14/my-first-vps/">
-		
-			捣鼓VPS翻墙</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-07-14T22:19:00+08:00" pubdate data-updated="true">Jul 14<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-
-	<a class='category' href='/blog/categories/gfw/'>GFW</a>, <a class='category' href='/blog/categories/vps/'>vps</a>
-
-
-</div>
-    </div>
-		<p>在学校论坛上看到有人介绍在vps上搭建shadowsocks服务器来翻墙，看到他推荐的vps很便宜，一年才20多，于是立马也想买一个了，其实以前就想折腾vps的，无奈找到的vps价格都太高，一个月要几百块神马的，像我这么小气的人肿么可能舍得。。不过，这个实在是太便宜了啊，虽然配置是最低的了，72M内存，2G硬盘，但一个月有100G的流量，对于翻墙来说够用了，果断注册下单购买，只支持PayPal支付，于是又注册PayPal，在这上面折腾了很久，一开始注册成中国版的了，结果提示无法跨境支付，放狗搜索后发现，需要注册国际版的，以为还要审核神马的，结果直接绑定银行卡后就可以支付了，很方便啊！</p>
-
-<p>可是才用一天就被墙了！！我目前使用的是长城宽带的服务，ssh都无法登陆了，但后来发现使用学校自己的外网还是可以用的，学校的外网应该是用的联通的服务，后来我到V2EX上问了下发现有人用长城宽带的服务也有类似的问题，该死的长城宽带！</p>
-
-<h2>更新（20141002）</h2>
-
-<p>不久前听人说Bandwagon出加州机房了，一直懒得弄，今天花时间看了下，果然有加州机房了，果断迁移过去，给换了个新ip，然后shadowsocks不能用了，一开始以为是shadowsocks服务器端没开，后来发现是服务器端的设置里ip也需要更新下才行。</p>
-
-<p>正好记录下shadowsocks服务器端的配置，省得下次再忘。</p>
-
-<ul>
-<li>shadowsocks在服务器端是以daemon形式运行的。daemon脚本在<code>/etc/init.d/shadowsocks</code>，配置文件在<code>/etc/shadowsocks/config.json</code></li>
-<li>要启动/关闭/重启shadowsocks，只需在命令行执行<code>/etc/init.d/shadowsocks start/stop/restart</code>，它默认开始是自启动的。</li>
-<li>刚刚才知道，原来shadowsocks是socks代理，因此可以无压力访问https网站，再也不会遇到GoAgent一样的证书问题了～～哈哈，真好</li>
-</ul>
-
-
-<p>对了，火狐代理插件换成foxyproxy了，autoproxy已经好久不更新，基本无法使用了，之前一直迟疑不想换是因为听说foxyproxy配置比较麻烦，今天试了试才发现对于经常折腾的人来说根本就不是事～～ foxyproxy也支持订阅gfwlist列表，于是生活又美好起来了～～</p>
-
-<h2>参考</h2>
-
-<ul>
-<li><a href="https://github.com/madeye/shadowsocks-libev">shadowsocks-libev</a></li>
-<li><a href="http://www.lucong.com.cn/lulu/centos-debian-shadowsocks-libev.html">CentOS、Debian下搭建shadowsocks-libev服务端</a></li>
-</ul>
-
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/07/14/my-first-vps//blog/page/4/index.html#disqus_thread">Comments</a></span>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/blog/2014/03/30/two-sort-algorithms/">
-		
-			冒泡排序和插入排序</a>
-	</h2>
-    <div class="entry-content">
-    <div class="meta">
-      <div class="date">Published on: 
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-30T20:07:00+08:00" pubdate data-updated="true">Mar 30<span>th</span>, 2014</time></div>
-      <div class="tags">Tags: 
-
-</div>
-    </div>
-		<h2>冒泡排序</h2>
-
-<p>应该是最简单的吧，但是效率很低。对于给定的n个无序数列，不断的比较相邻的两个数的大小，若满足条件，则互换两个数的位置，这样经过一次循环后，最大的（或者最小的）数就冒出来了，经过n次循环，顺序就排好了。具体伪代码如下：</p>
-
-<pre><code>    for(i=0; i &lt; n; i++) {
-            for(j = 0; j &lt; n - i - 1; j++) {
-                    if(target[j] &gt; target[j+1]) {
-                            temp = target[j+1];
-                            target[j+1] = target[j];
-                            target[j] = temp;
-                    }   
-            }   
-    }   
-</code></pre>
-
-<h2>插入排序</h2>
-
-<p>模仿的是打牌的时候，插牌的方法。对于给定的n个无序数列，从第二个数开始往下循环到第n个数，在处理某个数的时候，依次比较这个数跟它之前的数的大小，直到找到合适的位置后就插入。具体伪代码如下：</p>
-
-<pre><code>    for(i = 1; i &lt; n; i++) {
-            key = target[i];  // 待插的值
-            for(j = i - 1; (j &gt;= 0) &amp;&amp; (target[j] &gt; key); j--) {
-                    target[j+1] = target[j];   // 移位，给要插入的数让位
-            }
-            target[j+1] = key;    // 插进去
-    }
-</code></pre>
-
-		
-		
-	</div>
-
-<div class="meta">
-	
-		<span class="comments"><a href="/blog/2014/03/30/two-sort-algorithms//blog/page/4/index.html#disqus_thread">Comments</a></span>
 	
 </div>
 </article>
